@@ -1,0 +1,14 @@
+<resources>
+    <string name="app_name">SmartList</string>
+    <string name="action_settings">Settings</string>
+    <string name="list_heading"><strong><b>Shopping List</b></strong></string>
+    <string name="items_heading"><strong><b>Suggestions</b></strong></string>
+    <string-array name="frequencies">
+        <item>BiWeekly</item>
+        <item>Weekly</item>
+        <item>Every other week</item>
+        <item>Monthly</item>
+        <item>Unspecified</item>
+    </string-array>
+
+</resources>

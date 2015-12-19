@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <com.symdesign.smartlist.ChkBox
+        android:id="@+id/suggest_cbox"
+        android:layout_alignParentRight="true"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/btn_check_on"
+        android:adjustViewBounds="true"
+        android:scaleType="centerInside"
+        android:baseline="25dp"
+        android:maxHeight="35dp" android:maxWidth="35dp"
+        android:focusable="false"/>
+    <com.symdesign.smartlist.NameBox
+        android:id="@+id/name"
+        android:inputType="textNoSuggestions"
+        android:layout_toLeftOf="@id/suggest_cbox"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:focusable="false"
+        android:textSize="20dp"/>
+    <com.symdesign.smartlist.DeleteButton
+        android:id="@+id/del"
+        android:layout_width="50dp"
+        android:layout_height="40dp"
+        android:layout_alignParentLeft="true"
+        android:src="@android:drawable/ic_delete"
+        android:visibility="invisible"
+        android:focusable="false"
+        />
+</RelativeLayout>
