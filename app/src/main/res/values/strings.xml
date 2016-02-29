@@ -6,7 +6,7 @@
     <string-array name="frequencies">
         <item>BiWeekly</item>
         <item>Weekly</item>
-        <item>Every other week</item>
+        <item>BiMonthly</item>
         <item>Monthly</item>
         <item>Unspecified</item>
     </string-array>

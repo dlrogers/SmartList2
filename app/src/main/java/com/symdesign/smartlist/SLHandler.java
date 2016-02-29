@@ -16,8 +16,12 @@ public class SLHandler extends Handler {
         switch(msg.what) {
             case MSG_REPEAT:
                 Message repeat = Message.obtain(this,MSG_REPEAT);
-                sendMessageDelayed(repeat,1*second);
+                sendMessageDelayed(repeat,MainActivity.repeat_time);
+                MainActivity.log("updateRatios:");
                 SLAdapter.updateRatios();
+//                MainActivity.log("prtSuggestions:");
+//                SLAdapter.prtSuggestions();
+                MainActivity.log("update repeat");
                 break;
         }
     }

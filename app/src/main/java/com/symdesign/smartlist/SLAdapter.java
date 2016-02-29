@@ -32,6 +32,7 @@ public class SLAdapter extends SimpleCursorAdapter  {
     public Cursor cursor;
     public TextHandler textHandler;
     public boolean checked=false;
+    static String[] cols = {"_id","name","inList","last_time","last_avg","ratio"};
 
     public SLAdapter(Context context,int layout,
                      Cursor c,String[] from, int[] to, int flag) {
@@ -43,10 +44,10 @@ public class SLAdapter extends SimpleCursorAdapter  {
     }
     public static void updateAdapters(){
 
-        String[] cols = {"_id","name","inList","last_time","last_avg","ratio"};  	// Columns to return
 
         // get cursor for shopping list
-        listItems = MainActivity.db.query("itemDb",cols,"inList=1",null,"","","ratio DESC");
+        updateRatios();
+        listItems = MainActivity.db.query("itemDb",cols,"inList=1 OR inList=-1",null,"","","ratio DESC");
         listAdapter = new SLAdapter(MainActivity.context,
                 R.layout.list_entry,listItems,new String[] {"name"},
                 new int[] {R.id.name},CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
@@ -62,41 +63,49 @@ public class SLAdapter extends SimpleCursorAdapter  {
 //		}
         suggestAdapter.checked = true;
         MainActivity.suggestView.setAdapter(suggestAdapter);
-        updateRatios();
-        prtSuggestions();
+        prtSuggestions();   // debug
 //		setListeners(suggestItems,suggestAdapter,MainActivity.suggestView);
 //		listItems.close();
     }
+    /**
+     *      Update ratio column in database
+     */
     static public void updateRatios() {
 
+        suggestItems = MainActivity.db.query("itemDb",cols,"inList=0",null,"","","ratio DESC");
         for(suggestItems.moveToFirst();!suggestItems.isAfterLast(); suggestItems.moveToNext()){
             MainActivity.listValues.clear();
-            MainActivity.listValues.put("ratio",((float)(System.currentTimeMillis()- suggestItems.getLong(3)))/
-                    ((float)(suggestItems.getLong(4))));
+            float rat = ((float)(System.currentTimeMillis()- suggestItems.getLong(3)))/
+                    ((float)(suggestItems.getLong(4)));
+            MainActivity.listValues.put("ratio",rat);
+            logF("%s = %f",suggestItems.getString(1),rat);
             long id = suggestItems.getLong(0);
-            MainActivity.db.update("itemDb",MainActivity.listValues,"_id="+Long.toString(id),null);
+            MainActivity.db.update("itemDb", MainActivity.listValues, "_id="+Long.toString(id),null);
         }
     }
     public static void log(String str) {
         Log.v("smartlist", str);
     }
-    public static void logF(String fmt,Object... arg){
+    public static void logF(String fmt, Object... arg){
         Log.v("smartlist",String.format(fmt,arg));
     }
 
     public static void prtSuggestions() {
         log("list:");
+        listItems = MainActivity.db.query("itemDb",cols,"inList=1 OR inList=-1",null,"","","ratio DESC");
         for(listItems.moveToFirst();!listItems.isAfterLast(); listItems.moveToNext()){
-            logF("id=%d nm=%s, la=%d, rat=%f",
-                    listItems.getLong(0),listItems.getString(1),listItems.getLong(4),
+            logF("id=%d, nm=%s, la=%d, rat=%f",
+                    listItems.getLong(0),listItems.getString(1),listItems.getLong(4)/MainActivity.hour,
                     listItems.getFloat(5));
         }
         log("suggestion:");
+        suggestItems = MainActivity.db.query("itemDb",cols,"inList=0",null,"","","ratio DESC");
         for(suggestItems.moveToFirst();!suggestItems.isAfterLast(); suggestItems.moveToNext()){
-            logF("id=%d nm=%s, la=%d, rat=%f",
-                    suggestItems.getLong(0),suggestItems.getString(1),suggestItems.getLong(4),
+            logF("id=%d, nm=%s, la=%d, rat=%f",
+                    suggestItems.getLong(0),suggestItems.getString(1),suggestItems.getLong(4)/MainActivity.hour,
                     suggestItems.getFloat(5));
         }
     }
+
 
 }
