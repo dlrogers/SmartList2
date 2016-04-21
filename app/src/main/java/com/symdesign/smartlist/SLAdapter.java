@@ -21,6 +21,14 @@ import android.widget.ListView;
 import android.widget.ImageView;
 import android.widget.SimpleCursorAdapter;
 import com.symdesign.smartlist.TextHandler;
+import static com.symdesign.smartlist.MainActivity.db;
+import static com.symdesign.smartlist.MainActivity.clickLocation;
+import static com.symdesign.smartlist.MainActivity.context;
+import static com.symdesign.smartlist.MainActivity.listView;
+import static com.symdesign.smartlist.MainActivity.suggestView;
+import static com.symdesign.smartlist.MainActivity.listValues;
+import static com.symdesign.smartlist.MainActivity.minute;
+import static com.symdesign.smartlist.MainActivity.getTime;
 
 
 public class SLAdapter extends SimpleCursorAdapter  {
@@ -40,31 +48,31 @@ public class SLAdapter extends SimpleCursorAdapter  {
         this.context=context;
         this.cursor = c;
         this.activity=(Activity) context;
-        MainActivity.clickLocation = MainActivity.ClickLocation.none;
+        clickLocation = MainActivity.ClickLocation.none;
     }
     public static void updateAdapters(){
 
 
         // get cursor for shopping list
         updateRatios();
-        listItems = MainActivity.db.query("itemDb",cols,"inList=1 OR inList=-1",null,"","","ratio DESC");
+        listItems = db.query("itemDb",cols,"inList=1 OR inList=-1",null,"","","ratio DESC");
         listAdapter = new SLAdapter(MainActivity.context,
                 R.layout.list_entry,listItems,new String[] {"name"},
                 new int[] {R.id.name},CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
         listAdapter.checked = false;
-        MainActivity.listView.setAdapter(listAdapter);
+        listView.setAdapter(listAdapter);
 
         // get cursor for suggestion list
-        suggestItems = MainActivity.db.query("itemDb",cols,"inList=0",null,"","",
+        suggestItems = db.query("itemDb",cols,"inList=0",null,"","",
                 "ratio DESC");
         suggestAdapter = new SLAdapter(MainActivity.context,
                 R.layout.suggest_entry,suggestItems,new String[] {"name"},
                 new int[] {R.id.name},CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
 //		}
         suggestAdapter.checked = true;
-        MainActivity.suggestView.setAdapter(suggestAdapter);
-        prtSuggestions();   // debug
-//		setListeners(suggestItems,suggestAdapter,MainActivity.suggestView);
+        suggestView.setAdapter(suggestAdapter);
+//        prtSuggestions();   // debug
+//		setListeners(suggestItems,suggestAdapter,suggestView);
 //		listItems.close();
     }
     /**
@@ -72,15 +80,16 @@ public class SLAdapter extends SimpleCursorAdapter  {
      */
     static public void updateRatios() {
 
-        suggestItems = MainActivity.db.query("itemDb",cols,"inList=0",null,"","","ratio DESC");
+        suggestItems = db.query("itemDb",cols,"inList=0",null,"","","ratio DESC");
         for(suggestItems.moveToFirst();!suggestItems.isAfterLast(); suggestItems.moveToNext()){
-            MainActivity.listValues.clear();
-            float rat = ((float)(System.currentTimeMillis()- suggestItems.getLong(3)))/
+            listValues.clear();
+            float rat = ((float)(getTime()- suggestItems.getLong(3)))/
                     ((float)(suggestItems.getLong(4)));
-            MainActivity.listValues.put("ratio",rat);
-            logF("%s = %f",suggestItems.getString(1),rat);
+            listValues.put("ratio",rat);
+//            logF("%s, rat = %f, lt = %d, la = %d",suggestItems.getString(1),rat,
+//                    suggestItems.getLong(3)/minute,suggestItems.getLong(4)/minute);
             long id = suggestItems.getLong(0);
-            MainActivity.db.update("itemDb", MainActivity.listValues, "_id="+Long.toString(id),null);
+            db.update("itemDb", listValues, "_id="+Long.toString(id),null);
         }
     }
     public static void log(String str) {
@@ -92,17 +101,17 @@ public class SLAdapter extends SimpleCursorAdapter  {
 
     public static void prtSuggestions() {
         log("list:");
-        listItems = MainActivity.db.query("itemDb",cols,"inList=1 OR inList=-1",null,"","","ratio DESC");
+        listItems = db.query("itemDb",cols,"inList=1 OR inList=-1",null,"","","ratio DESC");
         for(listItems.moveToFirst();!listItems.isAfterLast(); listItems.moveToNext()){
-            logF("id=%d, nm=%s, la=%d, rat=%f",
-                    listItems.getLong(0),listItems.getString(1),listItems.getLong(4)/MainActivity.hour,
+            logF("id=%d, nm=%s, lt=%d, la=%d, rat=%f",
+                    listItems.getLong(0),listItems.getString(1),listItems.getLong(3)/minute,listItems.getLong(4)/minute,
                     listItems.getFloat(5));
         }
         log("suggestion:");
-        suggestItems = MainActivity.db.query("itemDb",cols,"inList=0",null,"","","ratio DESC");
+        suggestItems = db.query("itemDb",cols,"inList=0",null,"","","ratio DESC");
         for(suggestItems.moveToFirst();!suggestItems.isAfterLast(); suggestItems.moveToNext()){
-            logF("id=%d, nm=%s, la=%d, rat=%f",
-                    suggestItems.getLong(0),suggestItems.getString(1),suggestItems.getLong(4)/MainActivity.hour,
+            logF("id=%d, nm=%s, lt=%d, la=%d, rat=%f",
+                    suggestItems.getLong(0),suggestItems.getString(1),suggestItems.getLong(3)/minute,suggestItems.getLong(4)/minute,
                     suggestItems.getFloat(5));
         }
     }

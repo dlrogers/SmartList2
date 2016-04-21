@@ -17,6 +17,9 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
+import static com.symdesign.smartlist.SLAdapter.log;
+import static com.symdesign.smartlist.SLAdapter.logF;
+import static com.symdesign.smartlist.MainActivity.getTime;
 
 import static com.symdesign.smartlist.SLAdapter.updateAdapters;
 
@@ -24,7 +27,7 @@ import static com.symdesign.smartlist.SLAdapter.updateAdapters;
  * Created by dennis on 11/27/15.
  */
 public class SLDialog extends DialogFragment implements AdapterView.OnItemSelectedListener {
-    final long day = 86400000;
+    final long day = 86400;
     static Spinner frequency;
     long freq;
     static String title="Create new item";
@@ -49,18 +52,18 @@ public class SLDialog extends DialogFragment implements AdapterView.OnItemSelect
         frequency.setOnItemSelectedListener(this);
         if(edit)
             nameView.setText(name);
-        nameView.addTextChangedListener(new TextWatcher(){
+            nameView.addTextChangedListener(new TextWatcher(){
             CharSequence text;
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
 /*                    text = s;
-                MainActivity.log("beforeTC " + s.toString() + " "
+                        log("beforeTC " + s.toString() + " "
                         + s.subSequence(start, start + count).toString());
 */              }
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                MainActivity.logF("onTC: %s\t%s\t%d\t%d\t%d", s,
+                logF("onTC: %s\t%s\t%d\t%d\t%d", s,
                         s.subSequence(start, start + count).toString(),start,before,count);
                 if(count!=0 && s.charAt(start)=='\n'){
-                    Long date = System.currentTimeMillis();
+                    Long date = getTime();
                     name = nameView.getText().toString();
                     // Remove return
                     int ccnt = 0;
@@ -71,28 +74,29 @@ public class SLDialog extends DialogFragment implements AdapterView.OnItemSelect
                     // A negative value of inList indicates a new item
                     int inList = list ? 1 : 0;
                     if(!edit)
-                        MainActivity.addItem((String) str,inList, System.currentTimeMillis(), freq, 0);
+                        MainActivity.addItem((String) str,inList, getTime(), freq, 0);
                     else
-                        MainActivity.changeItem((String) str,-inList,System.currentTimeMillis(),freq,0,SLDialog.id);
+                        MainActivity.changeItem((String) str,-inList,getTime(),freq,0,SLDialog.id);
+                    MainActivity.logF("current time = %l",getTime());
                     updateAdapters();
                     MainActivity.sld.dismiss();
                 }
             }
             public void afterTextChanged(Editable s) {
-//                    MainActivity.log("afterTC " + s.toString());
+//                    log("afterTC " + s.toString());
             }
         });
         //      Process Done button
         doneButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Long date = System.currentTimeMillis();
+//                Long date = getTime();
                 name = nameView.getText().toString();
                     // A negative value of inList indicates a new item
                 if(!edit)
-                    MainActivity.addItem((String) name, -1, System.currentTimeMillis(), freq, 0);
+                    MainActivity.addItem((String) name, -1, getTime(), freq, 0);
                 else
-                    MainActivity.changeItem((String) name,1,System.currentTimeMillis(),freq,0,SLDialog.id);
+                    MainActivity.changeItem((String) name,1,getTime(),freq,0,SLDialog.id);
                 updateAdapters();
                 MainActivity.sld.dismiss();
             }
@@ -125,7 +129,7 @@ public class SLDialog extends DialogFragment implements AdapterView.OnItemSelect
             case 4: freq = 3*day;
                 break;
         }
-        MainActivity.logF("selected item %d",pos);
+        logF("selected item %d",pos);
     }
     public void onNothingSelected(AdapterView<?> parent) {
         // Another interface callback
@@ -133,7 +137,7 @@ public class SLDialog extends DialogFragment implements AdapterView.OnItemSelect
 
 
     public void onClick(DialogInterface dialog,int which) {
-        MainActivity.logF("Selected %d",which);
+        logF("Selected %d",which);
     }
 
     static SLDialog newInstance() {

@@ -64,7 +64,7 @@ public class MainActivity extends AppCompatActivity {
     ItemDb itemDb;
     static Context context;
     static ContentValues listValues = new ContentValues();
-    static SQLiteDatabase db;
+    public static SQLiteDatabase db;
     static ListView listView,suggestView;
     static Button listAdd,doneAdd;
     static EditText nameAdd;
@@ -73,7 +73,7 @@ public class MainActivity extends AppCompatActivity {
     public static enum ClickLocation {none,del,name,box};
     static ClickLocation clickLocation;
     static final long second = 1000, minute = 60*second, hour = 60*minute,
-            day = 24*hour, week = 7*day, repeat_time =40*second;
+            day = 24*hour, week = 7*day, repeat_time =5*minute;
     static int scrn_width,scrn_height,VOICE_RECOGNITION_REQUEST_CODE=2;
     static final int MSG_REPEAT=1;
     static Activity thisActivity;
@@ -148,7 +148,7 @@ public class MainActivity extends AppCompatActivity {
 //		db.execSQL(SQL_CREATE);
 //		initDB(db);
 
-        log("starting smartlist");
+        log(String.format("Starting Smartlist, time=%d",getTime()));
         updateAdapters();
 
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -160,7 +160,6 @@ public class MainActivity extends AppCompatActivity {
                 switch (clickLocation) {
                     case box:
                         clickLocation = ClickLocation.none;
-                        logF("avgCols = %s", avgCols);
                         updateAvgs(id,0);
                         break;
                     case name:
@@ -253,9 +252,8 @@ public class MainActivity extends AppCompatActivity {
         super.onStop();
         db.close();
     }
-
     /**
-     * Update Frequency averages in database
+     * Update Frequency averages in database for item id
      * @param id ID of currently selected item
      * @param inList New state of inList entry
      */
@@ -264,21 +262,24 @@ public class MainActivity extends AppCompatActivity {
         curs.moveToFirst();
         long last = curs.getLong(0);
         long avg = curs.getLong(1);
-        long ct = System.currentTimeMillis();
+        long ct = getTime();
         listValues.clear();
+        //            listValues.put("last_avg",(long) (0.33333*(ct-last)+0.66667*avg));
         if(avg == 0)
             listValues.put("last_avg",ct-last);
-        else {
-            listValues.put("last_avg",(long) (0.33333*(ct-last)+0.66667*avg));
-        }
+        else
+            listValues.put("last_avg", running_avg(ct-last, avg));
         listValues.put("inList", Math.abs(inList));
         listValues.put("last_time", ct);
         db.update("itemDb", listValues, "_id=" + Long.toString(id), null);
         updateAdapters();
         curs.close();
     }
+    public long running_avg(long elapsed_time,long last_avg) {
+        return (long) (0.5*elapsed_time+0.5*last_avg);
+    }
 
-/*    public void setSelected(View view,int pos, boolean on) {
+    /*    public void setSelected(View view,int pos, boolean on) {
         ImageView delView = (ImageView) view.findViewById(R.id.del);
         if(on) {
             selected[pos]=true;
@@ -339,7 +340,7 @@ public class MainActivity extends AppCompatActivity {
 
     public void initDB(SQLiteDatabase db) {
 //		listValues = new ContentValues();
-        Long date = System.currentTimeMillis();
+        Long date = getTime();
         listValues = new ContentValues();
         listValues.clear();
         addItem("apples",1,date,30*second,0.0);
@@ -365,7 +366,7 @@ public class MainActivity extends AppCompatActivity {
         listValues.clear();
         listValues.put("name",nm);
         listValues.put("inList", il);
-        listValues.put("last_time", Math.abs(lt));
+        listValues.put("last_time", lt);
         listValues.put("last_avg", la);
         listValues.put("ratio", r);
         db.insert("itemDb", null, listValues);
@@ -383,7 +384,15 @@ public class MainActivity extends AppCompatActivity {
         db.delete("itemDb", "_id=" + Long.toString(id), null);
     }
     public static void newItem(String nm){
-        addItem(nm, 1, System.currentTimeMillis(), 3 * day, 0);
+        addItem(nm, 1, getTime(), 3 * day, 0);
+    }
+
+    /**
+     * Returns time in seconds since 1/1/1970 epoch
+     * @return
+     */
+    public static long getTime(){
+        return System.currentTimeMillis()/1000;
     }
     public static void log(String str) {
         Log.v("smartlist", str);
@@ -406,10 +415,10 @@ public class MainActivity extends AppCompatActivity {
 
             // in “matches” array we holding a results... let’s show the most relevant
             if (matches.size() > 0) Toast.makeText(this, ((CharSequence) matches.get(0)), Toast.LENGTH_LONG).show();
-            Long date = System.currentTimeMillis();
+            Long date = getTime();
             String name = (String) matches.get(0);
             // A negative value of inList indicates a new item
-            MainActivity.addItem((String) name, -1, System.currentTimeMillis(), 7*day, 0);
+            MainActivity.addItem((String) name, -1, getTime(), 7*day, 0);
             updateAdapters();
 
         }

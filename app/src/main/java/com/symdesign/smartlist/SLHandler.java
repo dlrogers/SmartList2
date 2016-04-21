@@ -3,6 +3,7 @@ package com.symdesign.smartlist;
 import android.os.Message;
 import android.os.Handler;
 
+import static com.symdesign.smartlist.SLAdapter.updateAdapters;
 import static com.symdesign.smartlist.SLAdapter.updateRatios;
 
 /**
@@ -17,11 +18,9 @@ public class SLHandler extends Handler {
             case MSG_REPEAT:
                 Message repeat = Message.obtain(this,MSG_REPEAT);
                 sendMessageDelayed(repeat,MainActivity.repeat_time);
-                MainActivity.log("updateRatios:");
-                SLAdapter.updateRatios();
-//                MainActivity.log("prtSuggestions:");
-//                SLAdapter.prtSuggestions();
-                MainActivity.log("update repeat");
+//                MainActivity.log("updateRatios:");
+                updateAdapters();
+//                MainActivity.log("update repeat");
                 break;
         }
     }
