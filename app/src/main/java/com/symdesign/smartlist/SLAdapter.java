@@ -104,14 +104,14 @@ public class SLAdapter extends SimpleCursorAdapter  {
         listItems = db.query("itemDb",cols,"inList=1 OR inList=-1",null,"","","ratio DESC");
         for(listItems.moveToFirst();!listItems.isAfterLast(); listItems.moveToNext()){
             logF("id=%d, nm=%s, lt=%d, la=%d, rat=%f",
-                    listItems.getLong(0),listItems.getString(1),listItems.getLong(3)/minute,listItems.getLong(4)/minute,
+                    listItems.getLong(0),listItems.getString(1),listItems.getLong(3),listItems.getLong(4),
                     listItems.getFloat(5));
         }
         log("suggestion:");
         suggestItems = db.query("itemDb",cols,"inList=0",null,"","","ratio DESC");
         for(suggestItems.moveToFirst();!suggestItems.isAfterLast(); suggestItems.moveToNext()){
             logF("id=%d, nm=%s, lt=%d, la=%d, rat=%f",
-                    suggestItems.getLong(0),suggestItems.getString(1),suggestItems.getLong(3)/minute,suggestItems.getLong(4)/minute,
+                    suggestItems.getLong(0),suggestItems.getString(1),suggestItems.getLong(3),suggestItems.getLong(4),
                     suggestItems.getFloat(5));
         }
     }

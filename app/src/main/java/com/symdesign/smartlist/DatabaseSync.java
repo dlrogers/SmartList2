@@ -1,63 +1,119 @@
 package com.symdesign.smartlist;
 
+import android.database.Cursor;
 import android.os.AsyncTask;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.BufferedOutputStream;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import static com.symdesign.smartlist.MainActivity.db;
+import static com.symdesign.smartlist.MainActivity.log;
+import static com.symdesign.smartlist.MainActivity.logF;
+import static com.symdesign.smartlist.MainActivity.logF;
+import static com.symdesign.smartlist.SLAdapter.cols;
+import static com.symdesign.smartlist.SLAdapter.updateAdapters;
+import static com.symdesign.smartlist.MainActivity.listValues;
 
 /**
  * Created by dennis on 2/18/16.
  */
-public class DatabaseSync extends AsyncTask<Void,Void,String> {
+public class DatabaseSync extends AsyncTask<Void,Void,String>  {
 
-    HttpURLConnection conn;
-    String link = "http://sym-designs.com/cgi-bin/test.php";
+    HttpURLConnection dB;
+    String link = "http://sym-designs.com/cgi-bin/smartlist.php";
     char[] buf = new char[140];
+    Cursor items;
     protected String doInBackground(Void... arg0) {
-        try {
-            URL url = new URL(link);
-            conn = (HttpURLConnection) url.openConnection();
-            conn.setRequestMethod("POST");
-            conn.setDoInput(true);
-            conn.setDoOutput(true);
-            OutputStream os = conn.getOutputStream();
-            BufferedWriter writer = new BufferedWriter(
-                    new OutputStreamWriter(os,"UTF-8"));
-            writer.write("&name=Dennis");
-            writer.flush();
-            writer.close();
-            os.close();
+        xferDb();
+        return "Done";
+    }
 
-            int status = conn.getResponseCode();
-//            MainActivity.logF("status = %d", status);
-//            MainActivity.log("Input Stream opened");
-//            MainActivity.log(conn.getResponseMessage());
-            InputStream is = conn.getInputStream();
-            BufferedReader reader = new BufferedReader(new InputStreamReader(is));
-            String text;
-            while(null != (text = reader.readLine())){
-                MainActivity.log(text);
+    public boolean xferDb() {
+        try {       // Send post request
+            URL url = new URL(link);
+            dB = (HttpURLConnection) url.openConnection();
+            dB.setRequestMethod("POST");
+            dB.setDoInput(true);
+            dB.setDoOutput(true);
+            items = db.query("itemDb",cols,"inList=0 OR inList=1 OR inList=-1",null,"","","ratio DESC");
+            BufferedOutputStream bos = new BufferedOutputStream(dB.getOutputStream());
+            log("Sending data to server");
+            String cntstr = String.format("%d\n",items.getCount());
+            bos.write(cntstr.getBytes("UTF-8"),0,cntstr.length());
+            for(items.moveToFirst();!items.isAfterLast(); items.moveToNext()) {
+                String str = String.format("%s,%d,%d,%d,%f\n",items.getString(1),
+                        items.getInt(2),items.getInt(3),items.getInt(4),
+                        items.getFloat(5));
+//                str=str.replaceAll("\'","");
+                log(str+"\n");
+                bos.write(str.getBytes("UTF-8"),0,str.length());
             }
+            bos.flush();
+            bos.close();
+                    // Receive Post reply
+            InputStream is = dB.getInputStream();
+            BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+            String col;
+//            SLAdapter.prtSuggestions();
+            log("Receiving data from server");
+            while(null != (col = reader.readLine())){
+                col=col.replaceAll("\n","");
+                String[] cols = col.split(",");
+                switch(cols[0]) {
+                    case "u":   //Time changed on server, update item
+                        logF("%s", col);
+                        listValues.clear();
+                        listValues.put("name", cols[1]);
+                        listValues.put("last_time", cols[2]);
+                        listValues.put("last_avg", cols[3]);
+                        listValues.put("ratio", cols[4]);
+//                        logF("%s : %s : %s : %s", cols[1], cols[2], cols[3], cols[4]);
+                        long id = db.update("itemDb", listValues, "name=?", new String[]{cols[1]});
+                        break;
+                    case "i":   //Item added to server, insert into database
+                        logF("%s",col);
+                        listValues.clear();
+                        listValues.put("name", cols[1]);
+                        listValues.put("inList", cols[2]);
+                        listValues.put("last_time", cols[3]);
+                        listValues.put("last_avg", cols[4]);
+                        listValues.put("ratio", cols[5]);
+                        db.insert("itemDb",null,listValues);
+//                        updateAdapters();
+                        break;
+    //                logF("cols changed = %d",id);
+//                log(col);
+//                String[] st = text.split(",");
+                }
+            }
+            is.close();
+            dB.disconnect();
         } catch (MalformedURLException e) {
             MainActivity.log("Malformed URL: "+e.toString());
+            return false;
         } catch (IOException e) {
             MainActivity.log("IOException: "+e.toString());
+            return false;
         }
-        return "Done";
+        return true;
     }
     protected void onProgressUpdate(Integer... progress) {
 
     }
     protected void onPostExecute(Long result) {
-
+        log("post execute");
+        updateAdapters();
+        MainActivity.listView.invalidate();
+        MainActivity.suggestView.invalidate();
     }
 }
 

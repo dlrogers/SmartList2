@@ -105,9 +105,7 @@ public class MainActivity extends AppCompatActivity {
         });
         syncButton.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v) {
-                new DatabaseSync().execute();
-            }
+            public void onClick(View v) { new DatabaseSync().execute(); }
         });
         testButton.setOnClickListener(new View.OnClickListener() {
             @Override
