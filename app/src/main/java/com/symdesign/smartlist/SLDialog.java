@@ -1,5 +1,7 @@
 package com.symdesign.smartlist;
 
+import android.app.AlertDialog;
+import android.app.Dialog;
 import android.app.DialogFragment;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
@@ -20,13 +22,17 @@ import android.widget.Spinner;
 import static com.symdesign.smartlist.SLAdapter.log;
 import static com.symdesign.smartlist.SLAdapter.logF;
 import static com.symdesign.smartlist.MainActivity.getTime;
+import static com.symdesign.smartlist.MainActivity.sld;
+import static com.symdesign.smartlist.MainActivity.changeItem;
+import static com.symdesign.smartlist.MainActivity.addItem;
+import static com.symdesign.smartlist.MainActivity.deleteItem;
 
 import static com.symdesign.smartlist.SLAdapter.updateAdapters;
 
 /**
  * Created by dennis on 11/27/15.
  */
-public class SLDialog extends DialogFragment implements AdapterView.OnItemSelectedListener {
+public class SLDialog extends DialogFragment implements AdapterView.OnItemSelectedListener{
     final long day = 86400;
     static Spinner frequency;
     long freq;
@@ -35,33 +41,41 @@ public class SLDialog extends DialogFragment implements AdapterView.OnItemSelect
     static boolean edit,list;
     static long id;
 
-    public View onCreateView(LayoutInflater inflater,ViewGroup container,Bundle state) {
-        View v = inflater.inflate(R.layout.sl_dialog,container,false);
-        getDialog().setTitle(title);
-        final Button doneButton = (Button) v.findViewById(R.id.done);
+    public static SLDialog newInstance(int title) {
+        SLDialog frag = new SLDialog();
+        Bundle args = new Bundle();
+        args.putInt("title",title);
+        frag.setArguments(args);
+        return frag;
+    }
+    @Override
+    public Dialog onCreateDialog(Bundle state) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        LayoutInflater inflater = getActivity().getLayoutInflater();
+        View v = inflater.inflate(R.layout.sl_dialog,null);
+        builder.setView(v);
         final EditText nameView = (EditText) v.findViewById(R.id.name);
-        final Button deleteButton = (Button) v.findViewById(R.id.delete);
+        frequency = (Spinner) v.findViewById(R.id.freq);
         if(nameView.requestFocus()) {
             InputMethodManager imgr = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
             imgr.showSoftInput(nameView, InputMethodManager.SHOW_IMPLICIT);
         }
-        frequency = (Spinner) v.findViewById(R.id.freq);
         ArrayAdapter<CharSequence> freq_adapter = ArrayAdapter.createFromResource(MainActivity.context,
                 R.array.frequencies,android.R.layout.simple_spinner_dropdown_item);
         frequency.setAdapter(freq_adapter);
-        frequency.setOnItemSelectedListener(this);
         if(edit)
             nameView.setText(name);
-            nameView.addTextChangedListener(new TextWatcher(){
+        frequency.setOnItemSelectedListener(this);
+        nameView.addTextChangedListener(new TextWatcher(){      // Set up text listener
             CharSequence text;
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
 /*                    text = s;
-                        log("beforeTC " + s.toString() + " "
-                        + s.subSequence(start, start + count).toString());
-*/              }
+                    log("beforeTC " + s.toString() + " "
+                    + s.subSequence(start, start + count).toString());
+*/          }
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                logF("onTC: %s\t%s\t%d\t%d\t%d", s,
-                        s.subSequence(start, start + count).toString(),start,before,count);
+//                logF("onTC: %s\t%s\t%d\t%d\t%d", s,
+//                        s.subSequence(start, start + count).toString(),start,before,count);
                 if(count!=0 && s.charAt(start)=='\n'){
                     Long date = getTime();
                     name = nameView.getText().toString();
@@ -74,45 +88,54 @@ public class SLDialog extends DialogFragment implements AdapterView.OnItemSelect
                     // A negative value of inList indicates a new item
                     int inList = list ? 1 : 0;
                     if(!edit)
-                        MainActivity.addItem((String) str,inList, getTime(), freq, 0);
+                        addItem((String) str,inList, getTime(), freq, 0);
                     else
-                        MainActivity.changeItem((String) str,-inList,getTime(),freq,0,SLDialog.id);
+                        changeItem((String) str,-inList,getTime(),freq,0,SLDialog.id);
                     MainActivity.logF("current time = %l",getTime());
                     updateAdapters();
-                    MainActivity.sld.dismiss();
+                    sld.dismiss();
                 }
             }
             public void afterTextChanged(Editable s) {
 //                    log("afterTC " + s.toString());
             }
         });
-        //      Process Done button
-        doneButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-//                Long date = getTime();
-                name = nameView.getText().toString();
-                    // A negative value of inList indicates a new item
-                if(!edit)
-                    MainActivity.addItem((String) name, -1, getTime(), freq, 0);
-                else
-                    MainActivity.changeItem((String) name,1,getTime(),freq,0,SLDialog.id);
-                updateAdapters();
-                MainActivity.sld.dismiss();
-            }
-        });
 
-        deleteButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                MainActivity.deleteItem(SLDialog.id);
-                updateAdapters();
-                MainActivity.sld.dismiss();
-            }
-        });
+        builder.setPositiveButton(R.string.done,new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        long date = getTime();
+                        name = nameView.getText().toString();
+                        if(!edit)
+                            addItem((String) name,1,getTime(),freq,0);
+                        else
+                            if(sld.list)
+                                changeItem((String) name,1,getTime(),freq,0,SLDialog.id);
+                            else
+                                changeItem((String) name,0,getTime(),freq,0,SLDialog.id);
+                        updateAdapters();
+                        logF("Got name: %s\n",name.toString());
+                        sld.dismiss();
+                    }
+                }).setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        updateAdapters();
+                        sld.dismiss();
+                        log("Cancel pressed");
+                    }
+                });
+        if(edit)
+            builder.setNeutralButton(R.string.delete, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        deleteItem(SLDialog.id);
+                        updateAdapters();
+                        log("Delete pressed");
+                        sld.dismiss();
+                    }
+                 });
+        return builder.create();
 
-        return v;
     }
+
     public void onItemSelected(AdapterView<?> parent, View view,
                                int pos, long id) {
         // An item was selected. You can retrieve the selected item using
@@ -129,7 +152,7 @@ public class SLDialog extends DialogFragment implements AdapterView.OnItemSelect
             case 4: freq = 3*day;
                 break;
         }
-        logF("selected item %d",pos);
+    //    logF("selected item %d",pos);
     }
     public void onNothingSelected(AdapterView<?> parent) {
         // Another interface callback

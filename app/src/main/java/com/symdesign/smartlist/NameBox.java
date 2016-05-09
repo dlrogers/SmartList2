@@ -13,7 +13,6 @@ public class NameBox extends EditText {
 
     public NameBox(Context context,AttributeSet attrs) {
         super(context, attrs);
-
     }
 
     @Override public boolean onTouchEvent(MotionEvent event) {

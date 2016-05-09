@@ -2,8 +2,7 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:backgroundTintMode="src_in"
-    android:background="#f8f8f8">
+    android:backgroundTintMode="src_in">
     <com.symdesign.smartlist.ChkBox
         android:id="@+id/list_cbox"
         android:layout_alignParentRight="true"
@@ -21,8 +20,10 @@
         android:layout_toLeftOf="@id/list_cbox"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:background="@layout/item_bk"
         android:focusable="false"
         android:textSize="18sp"
+        android:textColor="#ffffff"
         android:gravity="right"/>
     <com.symdesign.smartlist.DeleteButton
         android:id="@+id/del"
