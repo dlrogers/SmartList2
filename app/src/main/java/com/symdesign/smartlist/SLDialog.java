@@ -26,6 +26,7 @@ import static com.symdesign.smartlist.MainActivity.sld;
 import static com.symdesign.smartlist.MainActivity.changeItem;
 import static com.symdesign.smartlist.MainActivity.addItem;
 import static com.symdesign.smartlist.MainActivity.deleteItem;
+import static com.symdesign.smartlist.MainActivity.day;
 
 import static com.symdesign.smartlist.SLAdapter.updateAdapters;
 
@@ -33,7 +34,7 @@ import static com.symdesign.smartlist.SLAdapter.updateAdapters;
  * Created by dennis on 11/27/15.
  */
 public class SLDialog extends DialogFragment implements AdapterView.OnItemSelectedListener{
-    final long day = 86400;
+//    final long day = 86400;
     static Spinner frequency;
     long freq;
     static String title="Create new item";
@@ -149,7 +150,7 @@ public class SLDialog extends DialogFragment implements AdapterView.OnItemSelect
                     break;
             case 3: freq = 30*day;
                 break;
-            case 4: freq = 3*day;
+            case 4: freq = 36500*day;
                 break;
         }
     //    logF("selected item %d",pos);
