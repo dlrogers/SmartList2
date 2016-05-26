@@ -131,7 +131,7 @@ public class MainActivity extends AppCompatActivity {
         for(int i=0; i<256; i++)
             selected[i] = false;
         clickLocation = ClickLocation.none;
-        listAdd = (Button) findViewById(R.id.list_add);
+//        listAdd = (Button) findViewById(R.id.list_add);
         listView=(ListView) findViewById(R.id.list_view);
         suggestView = (ListView) findViewById(R.id.suggest_view);
         Display display = getWindowManager().getDefaultDisplay();
@@ -153,7 +153,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onItemClick(AdapterView<?> parent, View item, int position, long id) {
                 //               logF("clickLocation = %d, adapter = %s",clickLocation,parent.getAdapter().toString());
-                ImageView delView = (ImageView) item.findViewById(R.id.del);
+//                ImageView delView = (ImageView) item.findViewById(R.id.del);
                 EditText nameView = (EditText) item.findViewById(R.id.name);
                 switch (clickLocation) {
                     case box:
@@ -186,7 +186,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onItemClick(AdapterView<?> parent, View item,
                                     int position, long id) {
-                ImageView delView = (ImageView) item.findViewById(R.id.del);
+//                ImageView delView = (ImageView) item.findViewById(R.id.del);
                 EditText nameView = (EditText) item.findViewById(R.id.name);
                 nameView.setWidth((int) .8*item.getWidth());
 /*                if(!selected[position]){
@@ -224,17 +224,6 @@ public class MainActivity extends AppCompatActivity {
                         log("list del clicked");
                         break;
                 }
-            }
-        });
-        //      Process Add Button
-        listAdd.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                sld = SLDialog.newInstance();
-                FragmentManager fm = getFragmentManager();
-                FragmentTransaction ft = fm.beginTransaction();
-                sld.title="Create new item";
-                sld.show(ft, "sldialog tag");
             }
         });
     }
