@@ -72,7 +72,8 @@ public class MainActivity extends AppCompatActivity {
     static boolean[] selected = new boolean[256];
     public static enum ClickLocation {none,del,name,box};
     static ClickLocation clickLocation;
-    static final long second = 1000, minute = 60*second, hour = 60*minute,
+    static final long second=1000;
+    static final long minute = 60*second, hour = 60*minute,
             day = 24*hour, week = 7*day, repeat_time =5*minute;
     static int scrn_width,scrn_height,VOICE_RECOGNITION_REQUEST_CODE=2;
     static final int MSG_REPEAT=1;
@@ -252,8 +253,8 @@ public class MainActivity extends AppCompatActivity {
         long ct = getTime();
         listValues.clear();
         //            listValues.put("last_avg",(long) (0.33333*(ct-last)+0.66667*avg));
-        if(avg == 0)
-            listValues.put("last_avg",ct-last);
+        if(avg > 36499*day) // Check for "one time item"
+            db.delete("itemDb", "_id=" + Long.toString(id), null); // and delete
         else
             listValues.put("last_avg", running_avg(ct-last, avg));
         listValues.put("inList", Math.abs(inList));
