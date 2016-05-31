@@ -40,6 +40,8 @@ import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.RelativeLayout;
+import android.widget.ScrollView;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.LinearLayout;
@@ -93,6 +95,13 @@ public class MainActivity extends AppCompatActivity {
         ImageView micView = (ImageView) findViewById(R.id.mic);
         Button syncButton = (Button) findViewById(R.id.sync);
         Button testButton = (Button) findViewById(R.id.test);
+        ScrollView scrollView = (ScrollView) findViewById(R.id.scroll_view);
+        scrollView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                log("ScrollView clicked");
+            }
+        });
         setSupportActionBar(toolbar);
         Message repeat = Message.obtain(slHandler,MSG_REPEAT);
         slHandler.sendMessageDelayed(repeat, repeat_time);
