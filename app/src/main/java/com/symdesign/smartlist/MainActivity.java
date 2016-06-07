@@ -344,7 +344,7 @@ public class MainActivity extends AppCompatActivity {
         addItem("oranges",1,date,30*second,0.0);
         addItem("milk", 0, date, 30 *second,0.0);
         addItem("bacon", 0, date, 30 *second,0.0);
-/*        addItem("eggs",0,date,30*second,0.0);
+        addItem("eggs",0,date,30*second,0.0);
         addItem("lettuce",1,date,30*second,0.0);
         addItem("OJ",0,date,30*second,0.0);
         addItem("cereal",0,date,30*second,0.0);
@@ -352,7 +352,7 @@ public class MainActivity extends AppCompatActivity {
         addItem("kefir",0,date,30*second,0.0);
         addItem("potatoes",0,date,30*second,0.0);
         addItem("wine",0,date,30*second,0.0);
-        addItem("beer",1,date,30*second,0.0);
+/*        addItem("beer",1,date,30*second,0.0);
         addItem("chili",1,date,30*second,0.0);
         addItem("chocolate",1,date,30*second,0.0);
         addItem("vitamins",0,date,30*second,0.0);
