@@ -4,7 +4,7 @@
     <string name="list_heading"><strong><b>Shopping List</b></strong></string>
     <string name="items_heading"><strong><b>Suggestions</b></strong></string>
     <string-array name="frequencies">
-        <item>BiWeekly</item>
+        <item>BiWeekly </item>
         <item>Weekly</item>
         <item>BiMonthly</item>
         <item>Monthly</item>
