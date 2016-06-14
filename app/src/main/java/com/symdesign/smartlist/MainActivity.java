@@ -359,7 +359,7 @@ public class MainActivity extends AppCompatActivity {
         addItem("selzer",0,date,30*second,0.0);
         addItem("bananas",1,date,30*second,0.0);
 */    }
-    public static void addItem(String nm,int il,long lt,long la,double r){
+    public static void addItem(String nm,int il,long lt,long la,double r) {
         listValues.clear();
         listValues.put("name",nm);
         listValues.put("inList", il);
