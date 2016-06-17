@@ -21,6 +21,9 @@ import android.widget.ListView;
 import android.widget.ImageView;
 import android.widget.SimpleCursorAdapter;
 import com.symdesign.smartlist.TextHandler;
+
+import java.util.ArrayList;
+
 import static com.symdesign.smartlist.MainActivity.db;
 import static com.symdesign.smartlist.MainActivity.clickLocation;
 import static com.symdesign.smartlist.MainActivity.context;
@@ -41,6 +44,12 @@ public class SLAdapter extends SimpleCursorAdapter  {
     public TextHandler textHandler;
     public boolean checked=false;
     static String[] cols = {"_id","name","inList","last_time","last_avg","ratio"};
+    static class item {
+        int _id;
+        String[] name;
+        int inList,lt,la;
+    }
+    static ArrayList<item> items = new ArrayList();
 
     public SLAdapter(Context context,int layout,
                      Cursor c,String[] from, int[] to, int flag) {
@@ -55,7 +64,11 @@ public class SLAdapter extends SimpleCursorAdapter  {
 
         // get cursor for shopping list
         updateRatios();
-        listItems = db.query("itemDb",cols,"inList=1 OR inList=-1",null,"","","ratio DESC");
+        listItems = db.query("itemDb",cols,"inList=1 OR inList=-1",null,"","",null);
+        int i=0;
+        for(listItems.moveToFirst();!listItems.isAfterLast(); listItems.moveToNext()){
+
+        }
         listAdapter = new SLAdapter(MainActivity.context,
                 R.layout.list_entry,listItems,new String[] {"name"},
                 new int[] {R.id.name},CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
