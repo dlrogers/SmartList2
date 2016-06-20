@@ -66,10 +66,10 @@ public class SLAdapter extends SimpleCursorAdapter  {
         updateRatios();
         listItems = db.query("itemDb",cols,"inList=1 OR inList=-1",null,"","",null);
         int i=0;
-        for(listItems.moveToFirst();!listItems.isAfterLast(); listItems.moveToNext()){
+/*        for(listItems.moveToFirst();!listItems.isAfterLast(); listItems.moveToNext()){
 
         }
-        listAdapter = new SLAdapter(MainActivity.context,
+*/        listAdapter = new SLAdapter(MainActivity.context,
                 R.layout.list_entry,listItems,new String[] {"name"},
                 new int[] {R.id.name},CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
         listAdapter.checked = false;
