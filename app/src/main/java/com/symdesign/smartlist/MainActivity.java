@@ -62,6 +62,8 @@ import java.util.List;
 
 import static com.symdesign.smartlist.SLAdapter.*;
 
+// Version of SmartList that uses file to store databae on phone
+
 public class MainActivity extends AppCompatActivity {
 
     ItemDb itemDb;
