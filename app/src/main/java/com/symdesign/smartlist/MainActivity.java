@@ -48,6 +48,7 @@ import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -151,6 +152,14 @@ public class MainActivity extends AppCompatActivity {
         scrn_height = size.y;
         itemDb = new ItemDb(context);
         db = itemDb.getWritableDatabase();
+        File itemsFile = new File("sl_items");
+        try {
+            itemsFile.createNewFile();
+            InputStream itemInputStream = openFileInput("itemsFile");
+        } catch (IOException e) {
+
+        }
+
 
 //		db.execSQL("DROP TABLE itemDb");
 //		db.execSQL(SQL_CREATE);
