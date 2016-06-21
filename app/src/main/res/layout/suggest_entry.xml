@@ -12,7 +12,7 @@
         android:adjustViewBounds="true"
         android:scaleType="centerInside"
         android:baseline="25dp"
-        android:maxHeight="35dp" android:maxWidth="35dp"
+        android:maxHeight="50dp" android:maxWidth="50dp"
         android:focusable="false"/>
     <com.symdesign.smartlist.NameBox
         android:id="@+id/name"
