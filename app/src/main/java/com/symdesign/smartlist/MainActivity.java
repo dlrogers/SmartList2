@@ -59,6 +59,7 @@ import java.net.URL;
 import java.net.HttpURLConnection;
 import java.util.ArrayList;
 import java.util.List;
+import java.lang.Comparable;
 
 import static com.symdesign.smartlist.SLAdapter.*;
 
@@ -154,14 +155,14 @@ public class MainActivity extends AppCompatActivity {
         scrn_height = size.y;
         itemDb = new ItemDb(context);
         db = itemDb.getWritableDatabase();
-        File itemsFile = new File("sl_items");
+/*        File itemsFile = new File("sl_items");
         try {
             itemsFile.createNewFile();
             InputStream itemInputStream = openFileInput("itemsFile");
         } catch (IOException e) {
 
         }
-
+*/
 
 //		db.execSQL("DROP TABLE itemDb");
 //		db.execSQL(SQL_CREATE);
@@ -248,6 +249,25 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
+    public class Item implements Comparable<Item>  {
+        int _id;
+        String name;
+        int inList,last_time,last_avg;
+        float ratio;
+        public Item(int id,String nm,int il,int lt,int la,float rat) {
+            this._id = id;
+            this.name = nm;
+            this.inList = il;
+            this.last_time = lt;
+            this.last_avg = la;
+            this.ratio = rat;
+        }
+        @Override
+        public int compareTo(Item compare_item) {
+             return (this.ratio < compare_item.ratio) ? 1 : -1;
+        }
+    }
+
     @Override public void onPause() {
         super.onPause();
     }

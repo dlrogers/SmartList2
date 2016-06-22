@@ -4,22 +4,27 @@
 package com.symdesign.smartlist;
 
 import android.app.Activity;
+import android.content.ClipData;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.os.HandlerThread;
 import android.support.v4.widget.CursorAdapter;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnTouchListener;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.ImageView;
 import android.widget.SimpleCursorAdapter;
+import android.widget.TextView;
+
 import com.symdesign.smartlist.TextHandler;
 
 import java.util.ArrayList;
@@ -32,44 +37,49 @@ import static com.symdesign.smartlist.MainActivity.suggestView;
 import static com.symdesign.smartlist.MainActivity.listValues;
 import static com.symdesign.smartlist.MainActivity.minute;
 import static com.symdesign.smartlist.MainActivity.getTime;
+import static com.symdesign.smartlist.MainActivity.Item;
 
 
-public class SLAdapter extends SimpleCursorAdapter  {
-    Context context;
+public class SLAdapter extends ArrayAdapter<Item> {
     Activity activity;
     static Cursor listItems,suggestItems;
     static SLAdapter listAdapter,suggestAdapter;
     static ContentValues values = new ContentValues();
+    static ArrayList<Item> items = new ArrayList<Item>();
     public Cursor cursor;
     public TextHandler textHandler;
     public boolean checked=false;
     static String[] cols = {"_id","name","inList","last_time","last_avg","ratio"};
-    static class item {
-        int _id;
-        String[] name;
-        int inList,lt,la;
-    }
-    static ArrayList<item> items = new ArrayList();
 
-    public SLAdapter(Context context,int layout,
-                     Cursor c,String[] from, int[] to, int flag) {
-        super(context,layout,c,from,to,flag);
-        this.context=context;
-        this.cursor = c;
-        this.activity=(Activity) context;
-        clickLocation = MainActivity.ClickLocation.none;
+    public SLAdapter(Context context,ArrayList<Item> items) {
+        super(context,0,items);
     }
+
+    @Override
+    public View getView(int position, View convertView, ViewGroup parent) {
+        Item item = getItem(position);
+        if(convertView == null)
+            convertView = LayoutInflater.from(getContext()).inflate(R.layout.list_entry,parent,false);
+        TextView slName = (TextView) convertView.findViewById(R.id.name);
+        slName.setText(item.name);
+        ChkBox ck = (ChkBox) convertView.findViewById(R.id.list_cbox);
+        return convertView;
+    }
+
     public static void updateAdapters(){
 
 
         // get cursor for shopping list
         updateRatios();
         listItems = db.query("itemDb",cols,"inList=1 OR inList=-1",null,"","",null);
-        int i=0;
-/*        for(listItems.moveToFirst();!listItems.isAfterLast(); listItems.moveToNext()){
-
+        int i=0; items.clear();
+        for(listItems.moveToFirst();!listItems.isAfterLast(); listItems.moveToNext()){
+            items.add(new Item(listItems.getInt(0),listItems.getString(1),
+                    listItems.getInt(2), listItems.getInt(3), listItems.getInt(4),
+                    ((float)(getTime()- suggestItems.getLong(3)))/
+                    ((float)(suggestItems.getLong(4)))));
         }
-*/        listAdapter = new SLAdapter(MainActivity.context,
+        listAdapter = new SLAdapter(MainActivity.context,
                 R.layout.list_entry,listItems,new String[] {"name"},
                 new int[] {R.id.name},CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
         listAdapter.checked = false;
