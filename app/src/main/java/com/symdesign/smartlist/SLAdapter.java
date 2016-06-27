@@ -28,6 +28,7 @@ import android.widget.TextView;
 import com.symdesign.smartlist.TextHandler;
 
 import java.util.ArrayList;
+import java.util.Collections;
 
 import static com.symdesign.smartlist.MainActivity.db;
 import static com.symdesign.smartlist.MainActivity.clickLocation;
@@ -37,7 +38,6 @@ import static com.symdesign.smartlist.MainActivity.suggestView;
 import static com.symdesign.smartlist.MainActivity.listValues;
 import static com.symdesign.smartlist.MainActivity.minute;
 import static com.symdesign.smartlist.MainActivity.getTime;
-import static com.symdesign.smartlist.MainActivity.Item;
 
 
 public class SLAdapter extends ArrayAdapter<Item> {
@@ -45,7 +45,8 @@ public class SLAdapter extends ArrayAdapter<Item> {
     static Cursor listItems,suggestItems;
     static SLAdapter listAdapter,suggestAdapter;
     static ContentValues values = new ContentValues();
-    static ArrayList<Item> items = new ArrayList<Item>();
+    static ArrayList<Item> itemsList = new ArrayList<Item>();
+    static ArrayList<Item> itemsSuggest = new ArrayList<Item>();
     public Cursor cursor;
     public TextHandler textHandler;
     public boolean checked=false;
@@ -70,49 +71,73 @@ public class SLAdapter extends ArrayAdapter<Item> {
 
 
         // get cursor for shopping list
-        updateRatios();
+        long time = System.currentTimeMillis();
         listItems = db.query("itemDb",cols,"inList=1 OR inList=-1",null,"","",null);
-        int i=0; items.clear();
-        for(listItems.moveToFirst();!listItems.isAfterLast(); listItems.moveToNext()){
-            items.add(new Item(listItems.getInt(0),listItems.getString(1),
-                    listItems.getInt(2), listItems.getInt(3), listItems.getInt(4),
-                    ((float)(getTime()- suggestItems.getLong(3)))/
-                    ((float)(suggestItems.getLong(4)))));
+        itemsList.clear(); int n=0;
+        for(listItems.moveToFirst();!listItems.isAfterLast(); listItems.moveToNext()) {
+            itemsList.add(new Item(listItems.getLong(0),listItems.getString(1),
+                    listItems.getLong(2), listItems.getLong(3), listItems.getLong(4),
+                    ((float)(getTime()- listItems.getLong(3)))/((float)(listItems.getLong(4)))));
+            n++;
         }
-        listAdapter = new SLAdapter(MainActivity.context,
-                R.layout.list_entry,listItems,new String[] {"name"},
-                new int[] {R.id.name},CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
+        prtItems(n,itemsList);
+        prtElapsed(time);
+        Collections.sort(itemsList);
+        prtItems(n,itemsList);
+        prtElapsed(time);
+        listAdapter = new SLAdapter(context,itemsList);
         listAdapter.checked = false;
         listView.setAdapter(listAdapter);
 
         // get cursor for suggestion list
         suggestItems = db.query("itemDb",cols,"inList=0",null,"","",
                 "ratio DESC");
-        suggestAdapter = new SLAdapter(MainActivity.context,
-                R.layout.suggest_entry,suggestItems,new String[] {"name"},
-                new int[] {R.id.name},CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
-//		}
+        itemsSuggest.clear(); n = 0;
+        for(suggestItems.moveToFirst();!suggestItems.isAfterLast(); suggestItems.moveToNext()) {
+            itemsSuggest.add(new Item(suggestItems.getLong(0),suggestItems.getString(1),
+                    suggestItems.getLong(2), suggestItems.getLong(3), suggestItems.getLong(4),
+                    ((float)(getTime()- suggestItems.getLong(3)))/
+                            ((float)(suggestItems.getLong(4)))));
+            n++;
+        }
+        prtElapsed(time);
+        Collections.sort(itemsSuggest);
+        prtElapsed(time);
+        prtItems(n,itemsSuggest);
+        suggestAdapter = new SLAdapter(context,itemsSuggest);
         suggestAdapter.checked = true;
         suggestView.setAdapter(suggestAdapter);
+
 //        prtSuggestions();   // debug
 //		setListeners(suggestItems,suggestAdapter,suggestView);
 //		listItems.close();
+    }
+    static public void prtItems(int n,ArrayList<Item> items) {
+        for(int i=0;i<n;i++) {
+            Item item = items.get(i);
+            logF("id=%d, nm=%s, il=%d, lt=%d, la=%d, rat=%f5.11",
+                    item.id,item.name,item.inList,item.last_time,item.last_avg,item.ratio);
+        }
+
+    }
+    static public void prtElapsed(long time) {
+        logF("Elapsed time = %d",System.currentTimeMillis()-time);
     }
     /**
      *      Update ratio column in database
      */
     static public void updateRatios() {
-
-        suggestItems = db.query("itemDb",cols,"inList=0",null,"","","ratio DESC");
-        for(suggestItems.moveToFirst();!suggestItems.isAfterLast(); suggestItems.moveToNext()){
-            listValues.clear();
-            float rat = ((float)(getTime()- suggestItems.getLong(3)))/
-                    ((float)(suggestItems.getLong(4)));
-            listValues.put("ratio",rat);
-//            logF("%s, rat = %f, lt = %d, la = %d",suggestItems.getString(1),rat,
-//                    suggestItems.getLong(3)/minute,suggestItems.getLong(4)/minute);
-            long id = suggestItems.getLong(0);
-            db.update("itemDb", listValues, "_id="+Long.toString(id),null);
+        Item item;
+        int n,i;
+        n=itemsSuggest.size();
+        for(i=0;i<n;i++) {
+            item = itemsSuggest.get(i);
+            item.ratio = (getTime()-item.last_time)/item.last_avg;
+        }
+        n=itemsList.size();
+        for(i=0;i<n;i++) {
+            item = itemsList.get(i);
+            item.ratio = (getTime()-item.last_time)/item.last_avg;
         }
     }
     public static void log(String str) {

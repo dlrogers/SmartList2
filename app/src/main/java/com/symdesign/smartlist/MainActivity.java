@@ -164,9 +164,9 @@ public class MainActivity extends AppCompatActivity {
         }
 */
 
-//		db.execSQL("DROP TABLE itemDb");
-//		db.execSQL(SQL_CREATE);
-//		initDB(db);
+		db.execSQL("DROP TABLE itemDb");
+		db.execSQL(SQL_CREATE);
+		initDB(db);
 
         log(String.format("Starting Smartlist, time=%d",getTime()));
         updateAdapters();
@@ -174,13 +174,12 @@ public class MainActivity extends AppCompatActivity {
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View item, int position, long id) {
-                //               logF("clickLocation = %d, adapter = %s",clickLocation,parent.getAdapter().toString());
-//                ImageView delView = (ImageView) item.findViewById(R.id.del);
                 EditText nameView = (EditText) item.findViewById(R.id.name);
+                listValues.clear();
                 switch (clickLocation) {
                     case box:
                         clickLocation = ClickLocation.none;
-                        updateAvgs(id,0);
+                        updateAvgs(itemsList.get(position).id,0);
                         break;
                     case name:
                         sld = SLDialog.newInstance();
@@ -195,7 +194,6 @@ public class MainActivity extends AppCompatActivity {
                         log("list name clicked");
                         break;
                     case del:
-                        listValues.clear();
                         db.delete("itemDb", "_id=" + Long.toString(id), null);
                         updateAdapters();
 //                        setSelected(item,position,false);
@@ -211,19 +209,13 @@ public class MainActivity extends AppCompatActivity {
 //                ImageView delView = (ImageView) item.findViewById(R.id.del);
                 EditText nameView = (EditText) item.findViewById(R.id.name);
                 nameView.setWidth((int) .8*item.getWidth());
-/*                if(!selected[position]){
-                    delView.setVisibility(View.VISIBLE);
-                    setSelected(item,position,true);
-                }
-                else {
-                    delView.setVisibility(View.INVISIBLE);
-                    setSelected(item,position,false);
-                }
-*/                switch (clickLocation) {
+                listValues.clear();
+                switch (clickLocation) {
                     case box:
                         clickLocation = ClickLocation.none;
                         listValues.put("inList",1);
-                        db.update("itemDb", listValues, "_id=" + Long.toString(id), null);
+                        db.update("itemDb", listValues,
+                                "_id=" + Long.toString(itemsSuggest.get(position).id), null);
                         updateAdapters();
                         break;
                     case name:
@@ -239,7 +231,6 @@ public class MainActivity extends AppCompatActivity {
                         log("suggest name clicked");
                         break;
                     case del:
-                        listValues.clear();
                         db.delete("itemDb","_id=" + Long.toString(id), null);
                         updateAdapters();
 //                        setSelected(item,position,false);
@@ -248,24 +239,6 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
-    }
-    public class Item implements Comparable<Item>  {
-        int _id;
-        String name;
-        int inList,last_time,last_avg;
-        float ratio;
-        public Item(int id,String nm,int il,int lt,int la,float rat) {
-            this._id = id;
-            this.name = nm;
-            this.inList = il;
-            this.last_time = lt;
-            this.last_avg = la;
-            this.ratio = rat;
-        }
-        @Override
-        public int compareTo(Item compare_item) {
-             return (this.ratio < compare_item.ratio) ? 1 : -1;
-        }
     }
 
     @Override public void onPause() {
@@ -286,6 +259,7 @@ public class MainActivity extends AppCompatActivity {
      * @param inList New state of inList entry
      */
     public void updateAvgs(long id, int inList) {
+
         Cursor curs = db.query("itemDb", avgCols, "_id=" + Long.toString(id), null, "", "", "name ASC");
         curs.moveToFirst();
         long last = curs.getLong(0);
@@ -368,27 +342,27 @@ public class MainActivity extends AppCompatActivity {
 
     public void initDB(SQLiteDatabase db) {
 //		listValues = new ContentValues();
-        Long date = getTime();
+        Long date = getTime()-30;
         listValues = new ContentValues();
         listValues.clear();
-        addItem("apples",1,date,30*second,0.0);
-        addItem("oranges",1,date,30*second,0.0);
-        addItem("milk", 0, date, 30 *second,0.0);
-        addItem("bacon", 0, date, 30 *second,0.0);
-        addItem("eggs",0,date,30*second,0.0);
-        addItem("lettuce",1,date,30*second,0.0);
-        addItem("OJ",0,date,30*second,0.0);
-        addItem("cereal",0,date,30*second,0.0);
-        addItem("blueberries",1,date,30*second,0.0);
-        addItem("kefir",0,date,30*second,0.0);
-        addItem("potatoes",0,date,30*second,0.0);
-        addItem("wine",0,date,30*second,0.0);
-/*        addItem("beer",1,date,30*second,0.0);
-        addItem("chili",1,date,30*second,0.0);
-        addItem("chocolate",1,date,30*second,0.0);
-        addItem("vitamins",0,date,30*second,0.0);
-        addItem("selzer",0,date,30*second,0.0);
-        addItem("bananas",1,date,30*second,0.0);
+        addItem("apples",1,date,30,0.0);
+        addItem("oranges",1,date,30,0.0);
+        addItem("milk", 0, date, 30 ,0.0);
+        addItem("bacon", 0, date, 30 ,0.0);
+        addItem("eggs",0,date,30,0.0);
+        addItem("lettuce",1,date,30,0.0);
+        addItem("OJ",0,date,30,0.0);
+        addItem("cereal",0,date,30,0.0);
+        addItem("blueberries",1,date,30,0.0);
+        addItem("kefir",0,date,30,0.0);
+        addItem("potatoes",0,date,30,0.0);
+        addItem("wine",0,date,30,0.0);
+/*        addItem("beer",1,date,30,0.0);
+        addItem("chili",1,date,30,0.0);
+        addItem("chocolate",1,date,30,0.0);
+        addItem("vitamins",0,date,30,0.0);
+        addItem("selzer",0,date,30,0.0);
+        addItem("bananas",1,date,30,0.0);
 */    }
     public static void addItem(String nm,int il,long lt,long la,double r) {
         listValues.clear();
