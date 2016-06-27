@@ -3,36 +3,33 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:backgroundTintMode="src_in">
-    <com.symdesign.smartlist.ChkBox
-        android:id="@+id/suggest_cbox"
-        android:layout_alignParentRight="true"
+    <LinearLayout
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:src="@drawable/btn_check_on"
-        android:adjustViewBounds="true"
-        android:scaleType="centerInside"
-        android:baseline="25dp"
-        android:maxHeight="50dp" android:maxWidth="60dp"
-        android:paddingLeft="10dp"
-        android:focusable="false"/>
-    <com.symdesign.smartlist.NameBox
-        android:id="@+id/name"
-        android:inputType="textNoSuggestions"
-        android:layout_toLeftOf="@id/suggest_cbox"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:focusable="false"
-        android:textSize="18sp"
-        android:textColor="#ffffff"
-        android:background="@layout/item_bk"
-        android:gravity="right"/>
-    <com.symdesign.smartlist.DeleteButton
-        android:id="@+id/del"
-        android:layout_width="50dp"
-        android:layout_height="40dp"
-        android:layout_alignParentLeft="true"
-        android:src="@android:drawable/ic_delete"
-        android:visibility="invisible"
-        android:focusable="false"
-        />
+        android:layout_height="match_parent"
+        android:gravity="end"
+        android:orientation="horizontal"
+        android:layout_alignParentRight="true">
+        <com.symdesign.smartlist.NameBox
+            android:id="@+id/name"
+            android:layout_gravity="center_vertical"
+            android:inputType="textNoSuggestions"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:focusable="false"
+            android:textSize="18sp"
+            android:textColor="#ffffff"
+            android:background="@layout/item_bk"/>
+        <com.symdesign.smartlist.ChkBox
+            android:id="@+id/suggest_cbox"
+            android:layout_gravity="center_vertical"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/btn_check_on"
+            android:adjustViewBounds="true"
+            android:scaleType="centerInside"
+            android:baseline="25dp"
+            android:paddingLeft="10dp"
+            android:maxHeight="50dp"  android:maxWidth="60dp"
+            android:focusable="false"/>
+    </LinearLayout>
 </RelativeLayout>
