@@ -51,16 +51,19 @@ public class SLAdapter extends ArrayAdapter<Item> {
     public TextHandler textHandler;
     public boolean checked=false;
     static String[] cols = {"_id","name","inList","last_time","last_avg","ratio"};
+    int layout;
 
-    public SLAdapter(Context context,ArrayList<Item> items) {
+    public SLAdapter(Context context,ArrayList<Item> items, int box_layout)
+    {
         super(context,0,items);
+        layout = box_layout;
     }
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
         Item item = getItem(position);
         if(convertView == null)
-            convertView = LayoutInflater.from(getContext()).inflate(R.layout.list_entry,parent,false);
+            convertView = LayoutInflater.from(getContext()).inflate(layout,parent,false);
         TextView slName = (TextView) convertView.findViewById(R.id.name);
         slName.setText(item.name);
         ChkBox ck = (ChkBox) convertView.findViewById(R.id.list_cbox);
@@ -85,7 +88,7 @@ public class SLAdapter extends ArrayAdapter<Item> {
         Collections.sort(itemsList);
         prtItems(n,itemsList);
         prtElapsed(time);
-        listAdapter = new SLAdapter(context,itemsList);
+        listAdapter = new SLAdapter(context,itemsList,R.layout.list_entry);
         listAdapter.checked = false;
         listView.setAdapter(listAdapter);
 
@@ -104,7 +107,7 @@ public class SLAdapter extends ArrayAdapter<Item> {
         Collections.sort(itemsSuggest);
         prtElapsed(time);
         prtItems(n,itemsSuggest);
-        suggestAdapter = new SLAdapter(context,itemsSuggest);
+        suggestAdapter = new SLAdapter(context,itemsSuggest,R.layout.suggest_entry);
         suggestAdapter.checked = true;
         suggestView.setAdapter(suggestAdapter);
 
