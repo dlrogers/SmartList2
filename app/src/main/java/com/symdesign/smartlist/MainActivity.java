@@ -109,6 +109,7 @@ public class MainActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
         Message repeat = Message.obtain(slHandler,MSG_REPEAT);
         slHandler.sendMessageDelayed(repeat, repeat_time);
+        //  Microphone button
         micView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -117,6 +118,7 @@ public class MainActivity extends AppCompatActivity {
                 SpeechRecognitionHelper.run(thisActivity);
             }
         });
+        //  Sync Button
         syncButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) { new DatabaseSync().execute(); }
@@ -128,6 +130,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+        //  Add Button
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -176,17 +179,18 @@ public class MainActivity extends AppCompatActivity {
             public void onItemClick(AdapterView<?> parent, View item, int position, long id) {
                 EditText nameView = (EditText) item.findViewById(R.id.name);
                 listValues.clear();
+                long dBid = itemsList.get(position).id;
                 switch (clickLocation) {
                     case box:
                         clickLocation = ClickLocation.none;
-                        updateAvgs(itemsList.get(position).id,0);
+                        updateAvgs(dBid,0);
                         break;
                     case name:
                         sld = SLDialog.newInstance();
                         sld.edit=true;
                         sld.list=true;
                         sld.name = nameView.getText();
-                        sld.id=id;
+                        sld.id=dBid;
                         sld.title = "Edit Item";
                         FragmentManager fm = getFragmentManager();
                         FragmentTransaction ft = fm.beginTransaction();
@@ -194,7 +198,8 @@ public class MainActivity extends AppCompatActivity {
                         log("list name clicked");
                         break;
                     case del:
-                        db.delete("itemDb", "_id=" + Long.toString(id), null);
+                        db.delete("itemDb", "_id=" + Long.toString(dBid), null);
+                        itemsList.remove(id);
                         updateAdapters();
 //                        setSelected(item,position,false);
                         log("list del clicked");
@@ -210,12 +215,13 @@ public class MainActivity extends AppCompatActivity {
                 EditText nameView = (EditText) item.findViewById(R.id.name);
                 nameView.setWidth((int) .8*item.getWidth());
                 listValues.clear();
+                long dBid = itemsSuggest.get(position).id;
                 switch (clickLocation) {
                     case box:
                         clickLocation = ClickLocation.none;
                         listValues.put("inList",1);
                         db.update("itemDb", listValues,
-                                "_id=" + Long.toString(itemsSuggest.get(position).id), null);
+                                "_id=" + Long.toString(dBid), null);
                         updateAdapters();
                         break;
                     case name:
@@ -223,7 +229,7 @@ public class MainActivity extends AppCompatActivity {
                         sld.edit=true;
                         sld.list=false;
                         sld.name = nameView.getText();
-                        sld.id=id;
+                        sld.id=dBid;
                         sld.title = "Edit Item";
                         FragmentManager fm = getFragmentManager();
                         FragmentTransaction ft = fm.beginTransaction();
@@ -231,7 +237,8 @@ public class MainActivity extends AppCompatActivity {
                         log("suggest name clicked");
                         break;
                     case del:
-                        db.delete("itemDb","_id=" + Long.toString(id), null);
+                        db.delete("itemDb","_id=" + Long.toString(dBid), null);
+                        itemsSuggest.remove(id);
                         updateAdapters();
 //                        setSelected(item,position,false);
                         log("list del clicked");
@@ -240,7 +247,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
-
     @Override public void onPause() {
         super.onPause();
     }
