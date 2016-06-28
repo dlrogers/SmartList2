@@ -89,10 +89,10 @@ public class SLDialog extends DialogFragment implements AdapterView.OnItemSelect
                     // A negative value of inList indicates a new item
                     int inList = list ? 1 : 0;
                     if(!edit)
-                        addItem((String) str,inList, getTime(), freq, 0);
+                        addItem((String) str,inList, date, freq, 0);
                     else
-                        changeItem((String) str,-inList,getTime(),freq,0,SLDialog.id);
-                    MainActivity.logF("current time = %l",getTime());
+                        changeItem((String) str,-inList,date,freq,0,SLDialog.id);
+                    MainActivity.logF("current time = %l",date);
                     updateAdapters();
                     sld.dismiss();
                 }
@@ -101,18 +101,17 @@ public class SLDialog extends DialogFragment implements AdapterView.OnItemSelect
 //                    log("afterTC " + s.toString());
             }
         });
-
         builder.setPositiveButton(R.string.done,new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
                         long date = getTime();
                         name = nameView.getText().toString();
                         if(!edit)
-                            addItem((String) name,1,getTime(),freq,0);
+                            addItem((String) name,1,date,freq,0);
                         else
                             if(sld.list)
-                                changeItem((String) name,1,getTime(),freq,0,SLDialog.id);
+                                changeItem((String) name,1,date,freq,0,SLDialog.id);
                             else
-                                changeItem((String) name,0,getTime(),freq,0,SLDialog.id);
+                                changeItem((String) name,0,date,freq,0,SLDialog.id);
                         updateAdapters();
                         logF("Got name: %s\n",name.toString());
                         sld.dismiss();

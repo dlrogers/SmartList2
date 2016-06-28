@@ -29,7 +29,7 @@
             android:scaleType="centerInside"
             android:baseline="25dp"
             android:paddingLeft="10dp"
-            android:maxHeight="50dp"  android:maxWidth="60dp"
+            android:maxHeight="55dp"  android:maxWidth="65dp"
             android:focusable="false"/>
     </LinearLayout>
 </RelativeLayout>

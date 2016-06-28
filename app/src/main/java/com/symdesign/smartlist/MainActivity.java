@@ -78,13 +78,12 @@ public class MainActivity extends AppCompatActivity {
     static boolean[] selected = new boolean[256];
     public static enum ClickLocation {none,del,name,box};
     static ClickLocation clickLocation;
-    static final long second=1000;
-    static final long minute = 60*second, hour = 60*minute,
+    static final long second=1, minute = 60*second, hour = 60*minute,
             day = 24*hour, week = 7*day, repeat_time =5*minute;
     static int scrn_width,scrn_height,VOICE_RECOGNITION_REQUEST_CODE=2;
     static final int MSG_REPEAT=1;
     static Activity thisActivity;
-    private static final String SQL_CREATE =
+    static final String SQL_CREATE =
             "CREATE TABLE itemDb(_id INTEGER PRIMARY KEY, name TEXT, inList INT, last_time INT, last_avg INT, ratio REAL)";
     static Handler slHandler = new SLHandler();
     final String[] avgCols={"last_time","last_avg","inList"};
@@ -118,19 +117,20 @@ public class MainActivity extends AppCompatActivity {
                 SpeechRecognitionHelper.run(thisActivity);
             }
         });
-        //  Sync Button
+        //          Sync Button
         syncButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) { new DatabaseSync().execute(); }
         });
+        //          Test button
         testButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                SLAdapter.prtSuggestions();
+                SLAdapter.updateAdapters();
             }
         });
+        //          Add Button
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        //  Add Button
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -158,18 +158,10 @@ public class MainActivity extends AppCompatActivity {
         scrn_height = size.y;
         itemDb = new ItemDb(context);
         db = itemDb.getWritableDatabase();
-/*        File itemsFile = new File("sl_items");
-        try {
-            itemsFile.createNewFile();
-            InputStream itemInputStream = openFileInput("itemsFile");
-        } catch (IOException e) {
 
-        }
-*/
-
-		db.execSQL("DROP TABLE itemDb");
-		db.execSQL(SQL_CREATE);
-		initDB(db);
+//		db.execSQL("DROP TABLE itemDb");
+//		db.execSQL(SQL_CREATE);
+//		initDB(db);
 
         log(String.format("Starting Smartlist, time=%d",getTime()));
         updateAdapters();
@@ -249,10 +241,14 @@ public class MainActivity extends AppCompatActivity {
     }
     @Override public void onPause() {
         super.onPause();
+        log("Pausing");
+        itemDb.close();
     }
     @Override public void onResume() {
         super.onResume();
+        itemDb = new ItemDb(context);
         db = itemDb.getWritableDatabase();
+        log("Resuming");
     }
     @Override
     protected void onStop() {
@@ -273,8 +269,9 @@ public class MainActivity extends AppCompatActivity {
         long ct = getTime();
         listValues.clear();
         //            listValues.put("last_avg",(long) (0.33333*(ct-last)+0.66667*avg));
-        if(avg > 36499*day) // Check for "one time item"
+        if (avg > 36499 * day){ // Check for "one time item"
             db.delete("itemDb", "_id=" + Long.toString(id), null); // and delete
+        }
         else
             listValues.put("last_avg", running_avg(ct-last, avg));
         listValues.put("inList", Math.abs(inList));
@@ -287,19 +284,7 @@ public class MainActivity extends AppCompatActivity {
         return (long) (0.5*elapsed_time+0.5*last_avg);
     }
 
-    /*    public void setSelected(View view,int pos, boolean on) {
-        ImageView delView = (ImageView) view.findViewById(R.id.del);
-        if(on) {
-            selected[pos]=true;
-            view.setBackgroundColor(Color.CYAN);
-            delView.setVisibility(View.VISIBLE);
-        } else {
-            selected[pos]=false;
-            delView.setVisibility(View.INVISIBLE);
-            view.setBackgroundColor(Color.parseColor("#f8f8f8"));
-        }
-    }
-*/    @Override
+    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
     getMenuInflater().inflate(R.menu.menu_main, menu);
@@ -320,32 +305,6 @@ public class MainActivity extends AppCompatActivity {
 
         return super.onOptionsItemSelected(item);
     }
-
-/*    public void onCheckboxClicked(CheckBox view) {
-        boolean checked = view.isChecked();
-        if(checked)
-            view.setChecked(false);
-        else
-            view.setChecked(true);
-        log("checkbox clicked.");
-    }
-*/
-    public class ItemDb extends SQLiteOpenHelper {
-
-        public ItemDb(Context context) {
-            super(context,"items.db",null,1);
-        }
-        public void onCreate(SQLiteDatabase db) {
-            db.execSQL(SQL_CREATE);
-        }
-        public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-            db.execSQL("DROP TABLE IF EXISTS itemDb");
-        }
-        public void onDownGrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-            onUpgrade(db,oldVersion,newVersion);
-        }
-    }
-
     public void initDB(SQLiteDatabase db) {
 //		listValues = new ContentValues();
         Long date = getTime()-30;
