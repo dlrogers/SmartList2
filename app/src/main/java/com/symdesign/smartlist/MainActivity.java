@@ -1,21 +1,16 @@
 package com.symdesign.smartlist;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.database.Cursor;
-import android.database.sqlite.SQLiteCursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteOpenHelper;
-import android.graphics.Color;
 import android.graphics.Point;
-import android.graphics.drawable.ColorDrawable;
-import android.graphics.drawable.Drawable;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -23,43 +18,20 @@ import android.speech.RecognizerIntent;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.util.Log;
 import android.view.Display;
-import android.view.MotionEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ListView;
-import android.widget.RelativeLayout;
 import android.widget.ScrollView;
-import android.widget.Spinner;
-import android.widget.TextView;
-import android.widget.LinearLayout;
 import android.widget.Toast;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.HttpURLConnection;
 import java.util.ArrayList;
-import java.util.List;
-import java.lang.Comparable;
 
 import static com.symdesign.smartlist.SLAdapter.*;
 
@@ -72,11 +44,9 @@ public class MainActivity extends AppCompatActivity {
     static ContentValues listValues = new ContentValues();
     public static SQLiteDatabase db;
     static ListView listView,suggestView;
-    static Button listAdd,doneAdd;
-    static EditText nameAdd;
     static SLDialog sld;
     static boolean[] selected = new boolean[256];
-    public static enum ClickLocation {none,del,name,box};
+    public enum ClickLocation {none,del,name,box};
     static ClickLocation clickLocation;
     static final long second=1, minute = 60*second, hour = 60*minute,
             day = 24*hour, week = 7*day, repeat_time =5*minute;
@@ -108,7 +78,7 @@ public class MainActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
         Message repeat = Message.obtain(slHandler,MSG_REPEAT);
         slHandler.sendMessageDelayed(repeat, repeat_time);
-        //  Microphone button
+        //  Microphone button, response received by onActivityResult(...)
         micView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -179,11 +149,11 @@ public class MainActivity extends AppCompatActivity {
                         break;
                     case name:
                         sld = SLDialog.newInstance();
-                        sld.edit=true;
-                        sld.list=true;
-                        sld.name = nameView.getText();
-                        sld.id=dBid;
-                        sld.title = "Edit Item";
+                        SLDialog.edit=true;
+                        SLDialog.list=true;
+                        SLDialog.name = nameView.getText();
+                        SLDialog.id=dBid;
+                        SLDialog.title = "Edit Item";
                         FragmentManager fm = getFragmentManager();
                         FragmentTransaction ft = fm.beginTransaction();
                         sld.show(ft, "sldialog tag");
@@ -203,9 +173,8 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onItemClick(AdapterView<?> parent, View item,
                                     int position, long id) {
-//                ImageView delView = (ImageView) item.findViewById(R.id.del);
                 EditText nameView = (EditText) item.findViewById(R.id.name);
-                nameView.setWidth((int) .8*item.getWidth());
+//                nameView.setWidth((int) .8*item.getWidth());
                 listValues.clear();
                 long dBid = itemsSuggest.get(position).id;
                 switch (clickLocation) {
@@ -218,11 +187,11 @@ public class MainActivity extends AppCompatActivity {
                         break;
                     case name:
                         sld = SLDialog.newInstance();
-                        sld.edit=true;
-                        sld.list=false;
-                        sld.name = nameView.getText();
-                        sld.id=dBid;
-                        sld.title = "Edit Item";
+                        SLDialog.edit=true;
+                        SLDialog.list=false;
+                        SLDialog.name = nameView.getText();
+                        SLDialog.id=dBid;
+                        SLDialog.title = "Edit Item";
                         FragmentManager fm = getFragmentManager();
                         FragmentTransaction ft = fm.beginTransaction();
                         sld.show(ft, "sldialog tag");
@@ -281,7 +250,7 @@ public class MainActivity extends AppCompatActivity {
         curs.close();
     }
     public long running_avg(long elapsed_time,long last_avg) {
-        return (long) (0.5*elapsed_time+0.5*last_avg);
+        return (long) (0.75*elapsed_time+0.25*last_avg);
     }
 
     @Override

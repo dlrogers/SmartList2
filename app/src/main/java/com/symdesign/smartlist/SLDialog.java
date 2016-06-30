@@ -41,6 +41,7 @@ public class SLDialog extends DialogFragment implements AdapterView.OnItemSelect
     static CharSequence name;
     static boolean edit,list;
     static long id;
+    EditText nameView;
 
     public static SLDialog newInstance(int title) {
         SLDialog frag = new SLDialog();
@@ -55,7 +56,7 @@ public class SLDialog extends DialogFragment implements AdapterView.OnItemSelect
         LayoutInflater inflater = getActivity().getLayoutInflater();
         View v = inflater.inflate(R.layout.sl_dialog,null);
         builder.setView(v);
-        final EditText nameView = (EditText) v.findViewById(R.id.name);
+        nameView = (EditText) v.findViewById(R.id.name);
         frequency = (Spinner) v.findViewById(R.id.freq);
         if(nameView.requestFocus()) {
             InputMethodManager imgr = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
@@ -135,7 +136,11 @@ public class SLDialog extends DialogFragment implements AdapterView.OnItemSelect
         return builder.create();
 
     }
-
+    @Override public void onDismiss(DialogInterface dialog) {
+        log("dismissed");
+        updateAdapters();
+        dialog.dismiss();
+    }
     public void onItemSelected(AdapterView<?> parent, View view,
                                int pos, long id) {
         // An item was selected. You can retrieve the selected item using
