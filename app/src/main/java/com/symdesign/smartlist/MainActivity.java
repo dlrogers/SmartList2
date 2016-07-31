@@ -1,13 +1,12 @@
 package com.symdesign.smartlist;
 
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.content.ContentValues;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.res.AssetManager;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Point;
@@ -31,7 +30,11 @@ import android.widget.ListView;
 import android.widget.ScrollView;
 import android.widget.Toast;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
 import static com.symdesign.smartlist.SLAdapter.*;
 
@@ -46,7 +49,7 @@ public class MainActivity extends AppCompatActivity {
     static ListView listView,suggestView;
     static SLDialog sld;
     static boolean[] selected = new boolean[256];
-    public enum ClickLocation {none,del,name,box};
+    public enum ClickLocation {none,del,name,box}
     static ClickLocation clickLocation;
     static final long second=1, minute = 60*second, hour = 60*minute,
             day = 24*hour, week = 7*day, repeat_time =5*minute;
@@ -57,6 +60,7 @@ public class MainActivity extends AppCompatActivity {
             "CREATE TABLE itemDb(_id INTEGER PRIMARY KEY, name TEXT, inList INT, last_time INT, last_avg INT, ratio REAL)";
     static Handler slHandler = new SLHandler();
     final String[] avgCols={"last_time","last_avg","inList"};
+    static AssetManager assetManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,6 +68,7 @@ public class MainActivity extends AppCompatActivity {
         thisActivity=this;
         context = this;
         setContentView(R.layout.activity_main);
+        assetManager = getAssets();
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         ImageView micView = (ImageView) findViewById(R.id.mic);
         Button syncButton = (Button) findViewById(R.id.sync);
@@ -83,7 +88,6 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 log("Microphone clicked");
-                SpeechRecognitionHelper helper = new SpeechRecognitionHelper();
                 SpeechRecognitionHelper.run(thisActivity);
             }
         });
@@ -105,8 +109,8 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 sld = SLDialog.newInstance();
-                sld.edit=false;
-                sld.title = "New Item";
+                SLDialog.edit=false;
+                SLDialog.title = "New Item";
                 FragmentManager fm = getFragmentManager();
                 FragmentTransaction ft = fm.beginTransaction();
                 sld.show(ft, "sldialog tag");
@@ -129,9 +133,11 @@ public class MainActivity extends AppCompatActivity {
         itemDb = new ItemDb(context);
         db = itemDb.getWritableDatabase();
 
-//		db.execSQL("DROP TABLE itemDb");
-//		db.execSQL(SQL_CREATE);
-//		initDB(db);
+/*		db.execSQL("DROP TABLE itemDb");
+		db.execSQL(SQL_CREATE);
+		initDB(db);
+*/
+        PickList.prepareListData();
 
         log(String.format("Starting Smartlist, time=%d",getTime()));
         updateAdapters();

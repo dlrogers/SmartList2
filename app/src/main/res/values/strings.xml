@@ -14,5 +14,26 @@
     <string name="cancel">Cancel</string>
     <string name="delete">Delete</string>
     <string name="title">Edit Item</string>
+    <string-array name="cats">
+        <item>"Fresh Vegetables"</item>
+        <item>"Fresh Fruits"</item>
+        <item>"Refrigerated items"</item>
+        <item>"Frozen"</item>
+        <item>"Condiments/Sauces"</item>
+        <item>"Various"</item>
+        <item>"Canned Food"</item>
+        <item>"Spices and Herbs"</item>
+        <item>"Dairy"</item>
+        <item>"Cheese"</item>
+        <item>"Meat"</item>
+        <item>"Seafood"</item>
+        <item>"Beverages"</item>
+        <item>"Baked Goods"</item>
+        <item>"Baking"</item>
+        <item>"Snacks"</item>
+        <item>"Themed meals"</item>
+        <item>"Baby Stuff"</item>
+        <item>""</item>
+    </string-array>
 
 </resources>

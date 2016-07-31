@@ -3,17 +3,15 @@ package com.symdesign.smartlist;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.DialogFragment;
-import android.app.FragmentManager;
-import android.app.FragmentTransaction;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.inputmethod.InputMethodManager;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -32,10 +30,12 @@ import static com.symdesign.smartlist.SLAdapter.updateAdapters;
 
 /**
  * Created by dennis on 11/27/15.
+ * The dialog that appears when "+" is tapped and when item is touched to edit
  */
 public class SLDialog extends DialogFragment implements AdapterView.OnItemSelectedListener{
 //    final long day = 86400;
     static Spinner frequency;
+    static Button pickButton;
     long freq;
     static String title="Create new item";
     static CharSequence name;
@@ -57,17 +57,24 @@ public class SLDialog extends DialogFragment implements AdapterView.OnItemSelect
         View v = inflater.inflate(R.layout.sl_dialog,null);
         builder.setView(v);
         nameView = (EditText) v.findViewById(R.id.name);
-        frequency = (Spinner) v.findViewById(R.id.freq);
         if(nameView.requestFocus()) {
             InputMethodManager imgr = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
             imgr.showSoftInput(nameView, InputMethodManager.SHOW_IMPLICIT);
         }
         ArrayAdapter<CharSequence> freq_adapter = ArrayAdapter.createFromResource(MainActivity.context,
                 R.array.frequencies,android.R.layout.simple_spinner_dropdown_item);
+        frequency = (Spinner) v.findViewById(R.id.freq);
         frequency.setAdapter(freq_adapter);
         if(edit)
             nameView.setText(name);
         frequency.setOnItemSelectedListener(this);
+        pickButton = (Button) v.findViewById(R.id.pick_button);
+        pickButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                Intent intent = new Intent("com.symdesign.smartlist.intent.action.PickList");
+                MainActivity.context.startActivity(intent);
+            }
+        });
         nameView.addTextChangedListener(new TextWatcher(){      // Set up text listener
             CharSequence text;
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -109,7 +116,7 @@ public class SLDialog extends DialogFragment implements AdapterView.OnItemSelect
                         if(!edit)
                             addItem((String) name,1,date,freq,0);
                         else
-                            if(sld.list)
+                            if(SLDialog.list)
                                 changeItem((String) name,1,date,freq,0,SLDialog.id);
                             else
                                 changeItem((String) name,0,date,freq,0,SLDialog.id);
