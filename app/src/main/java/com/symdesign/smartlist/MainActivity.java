@@ -42,7 +42,7 @@ import static com.symdesign.smartlist.SLAdapter.*;
 
 public class MainActivity extends AppCompatActivity {
 
-    ItemDb itemDb;
+    static ItemDb itemDb;
     static Context context;
     static ContentValues listValues = new ContentValues();
     public static SQLiteDatabase db;
@@ -217,13 +217,13 @@ public class MainActivity extends AppCompatActivity {
     @Override public void onPause() {
         super.onPause();
         log("Pausing");
-        itemDb.close();
+        //itemDb.close();
+        db.close();
     }
     @Override public void onResume() {
         super.onResume();
-        itemDb = new ItemDb(context);
-        db = itemDb.getWritableDatabase();
         log("Resuming");
+        db = itemDb.getWritableDatabase();
     }
     @Override
     protected void onStop() {

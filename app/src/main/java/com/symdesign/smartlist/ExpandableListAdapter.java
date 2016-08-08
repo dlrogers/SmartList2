@@ -8,6 +8,7 @@ import android.view.LayoutInflater;
 import android.widget.BaseExpandableListAdapter;
 import android.widget.TextView;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -16,21 +17,22 @@ import java.util.List;
  */
 public class ExpandableListAdapter extends BaseExpandableListAdapter {
     private Context _context;
-    private List<String> _catagories; // header titles
+    private ArrayList<String> _catagories; // header titles
     // child data in format of header title, child title
-    private HashMap<String, List<String>> _items;
+    private ArrayList<ArrayList<String>> _items;
 
-    public ExpandableListAdapter(Context context, List<String> catagories,
-                                 HashMap<String, List<String>> listChildData) {
+    public ExpandableListAdapter(Context context, ArrayList<String> catagories,
+                                 ArrayList<ArrayList<String>> listChildData) {
         this._context = context;
         this._catagories = catagories;
         this._items = listChildData;
     }
 
     @Override
-    public Object getChild(int groupPosition, int childPosititon) {
-        return this._items.get(this._catagories.get(groupPosition))
-                .get(childPosititon);
+    public Object getChild(int groupPosition, int childPosition) {
+        return this._items.get(groupPosition).get(childPosition);
+//        return this._items.get(this._catagories.get(groupPosition))
+//                .get(childPosititon);
     }
 
     @Override
@@ -59,8 +61,7 @@ public class ExpandableListAdapter extends BaseExpandableListAdapter {
 
     @Override
     public int getChildrenCount(int groupPosition) {
-        return this._items.get(this._catagories.get(groupPosition))
-                .size();
+        return this._items.get(groupPosition).size();
     }
 
     @Override

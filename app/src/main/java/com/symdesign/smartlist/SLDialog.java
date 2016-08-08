@@ -43,6 +43,9 @@ public class SLDialog extends DialogFragment implements AdapterView.OnItemSelect
     static long id;
     EditText nameView;
 
+    public SLDialog() {
+
+    }
     public static SLDialog newInstance(int title) {
         SLDialog frag = new SLDialog();
         Bundle args = new Bundle();

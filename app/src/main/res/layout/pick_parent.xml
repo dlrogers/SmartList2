@@ -4,13 +4,14 @@
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:padding="8dp"
-    android:background="#000000">
+    android:background="#00000000">
     <TextView
         android:id="@+id/pick_parent"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingLeft="?android:attr/expandableListPreferredItemPaddingLeft"
+        android:paddingLeft="10dp"
         android:textSize="17dp"
+        android:background="#00ffffff"
         android:textColor="#f9f93d" />
 
 </LinearLayout>

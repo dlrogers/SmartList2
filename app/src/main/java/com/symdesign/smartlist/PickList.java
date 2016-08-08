@@ -1,8 +1,11 @@
 package com.symdesign.smartlist;
 
 import android.app.Activity;
+import android.content.ContentValues;
+import android.content.Intent;
 import android.content.res.AssetManager;
 import android.content.Context;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
@@ -17,6 +20,8 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import static com.symdesign.smartlist.MainActivity.logF;
+
 
 /**
  * Created by dennis on 7/1/16.
@@ -24,11 +29,14 @@ import java.util.List;
 public class PickList extends Activity {
     Activity thisActivity;
     Context context;
-    ExpandableListAdapter listAdapter;
+    ExpandableListAdapter expListAdapter;
     ExpandableListView expListView;
 
-    static List<String> catagories;         // Food catagories
-    static HashMap<String, List<String>> items; // Mapping from catagories to lists of food items
+    static ArrayList<String> catagories;         // Food catagories
+    static ArrayList<ArrayList<String>> items = new ArrayList<ArrayList<String>>(); // Mapping from catagories to lists of food items
+    static ArrayList<String> currItems = new ArrayList<String>();
+    static SQLiteDatabase db;
+    ;
 
 
     @Override
@@ -40,10 +48,10 @@ public class PickList extends Activity {
         expListView = (ExpandableListView) findViewById(R.id.lvExp);
 
 
-        listAdapter = new ExpandableListAdapter(this, catagories, items);
+        expListAdapter = new ExpandableListAdapter(this, catagories, items);
 
         // setting list adapter
-        expListView.setAdapter(listAdapter);
+        expListView.setAdapter(expListAdapter);
 
         // Listview Group click listener
         expListView.setOnGroupClickListener(new ExpandableListView.OnGroupClickListener() {
@@ -51,10 +59,10 @@ public class PickList extends Activity {
             @Override
             public boolean onGroupClick(ExpandableListView parent, View v,
                                         int groupPosition, long id) {
-                // Toast.makeText(getApplicationContext(),
-                // "Group Clicked " + catagories.get(groupPosition),
-                // Toast.LENGTH_SHORT).show();
-                return false;
+                Toast.makeText(getApplicationContext(),
+                "Group Clicked " + catagories.get(groupPosition),
+                Toast.LENGTH_SHORT).show();
+                return false;   // continue click processing
             }
         });
 
@@ -88,17 +96,29 @@ public class PickList extends Activity {
             public boolean onChildClick(ExpandableListView parent, View v,
                                         int groupPosition, int childPosition, long id) {
                 // TODO Auto-generated method stub
-                Toast.makeText(
-                        getApplicationContext(),
-                        catagories.get(groupPosition)
-                                + " : "
-                                + items.get(
-                                catagories.get(groupPosition)).get(
-                                childPosition), Toast.LENGTH_SHORT)
-                        .show();
+                long time = System.currentTimeMillis();
+                db = MainActivity.itemDb.getWritableDatabase();
+                newItem(items.get(groupPosition).get(childPosition));
+                db.close();
+              Intent intent = new Intent(context,MainActivity.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                startActivity(intent);
                 return false;
             }
         });
+    }
+    public static void addItem(String nm,int il,long lt,long la,double r) {
+        ContentValues listValues = new ContentValues();
+        listValues.clear();
+        listValues.put("name",nm);
+        listValues.put("inList", il);
+        listValues.put("last_time", lt);
+        listValues.put("last_avg", la);
+        listValues.put("ratio", r);
+        db.insert("itemDb", null, listValues);
+    }
+    public static void newItem(String nm){
+        addItem(nm, 1, MainActivity.getTime(), 3 * MainActivity.day, 0);
     }
     /*
      * Preparing the list data
@@ -107,10 +127,8 @@ public class PickList extends Activity {
 
         BufferedReader rdr;
         InputStream input;
+        String currCat;
         catagories = new ArrayList<String>();
-        items = new HashMap<String, List<String>>();
-        String currCat = null;
-        List<String> currItems = new ArrayList<String>();
 
         try{
             input = MainActivity.assetManager.open("Master_Grocery_List.txt");
@@ -123,27 +141,33 @@ public class PickList extends Activity {
                 if(chr==-1) break;
                 if(!(chr==61551)) {      // is a Catagory
                     if(!first) {
-                        items.put(currCat,currItems);
+                        items.add(currItems);
                         first = false;
                     }
                     first = false;
                     if((currCat = rdr.readLine())==null) break;
                     currCat = ((char) chr)+currCat;
-                    currItems.clear();
                     catagories.add(currCat);
+                    currItems = new ArrayList<String>();
+//                    logF("Catagory = %s",currCat);
+
                 }
                 else {                      // is item
-                    currItems.add(rdr.readLine());
+                    String itm =rdr.readLine();
+                    currItems.add(itm);
+//                    logF("item = %s",itm);
                 }
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
-        for(String cat : catagories){
-            MainActivity.logF("catagory = %s",cat);
-            for(String str : items.get(cat))
-                MainActivity.logF("item = %s",str);
+  /*      logF("Printing info\n");
+
+        for(int i=0; i<items.size(); i++){
+            logF("catagory %s",catagories.get(i));
+            for(int j=0; j<items.get(i).size(); j++)
+                logF("\titem = %s",items.get(i).get(j));
         }
-    }
+ */   }
 
 }
