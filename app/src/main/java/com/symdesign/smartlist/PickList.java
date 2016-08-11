@@ -44,12 +44,13 @@ public class PickList extends Activity {
         super.onCreate(savedInstanceState);
         thisActivity=this;
         context = this;
+//        Bundle extras = getIntent().getExtras();
+//        long id = extras.getLong("id");
         setContentView(R.layout.pick_list);
+
         expListView = (ExpandableListView) findViewById(R.id.lvExp);
 
-
         expListAdapter = new ExpandableListAdapter(this, catagories, items);
-
         // setting list adapter
         expListView.setAdapter(expListAdapter);
 
@@ -100,7 +101,7 @@ public class PickList extends Activity {
                 db = MainActivity.itemDb.getWritableDatabase();
                 newItem(items.get(groupPosition).get(childPosition));
                 db.close();
-              Intent intent = new Intent(context,MainActivity.class);
+                Intent intent = new Intent(context,MainActivity.class);
                 intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
                 startActivity(intent);
                 return false;

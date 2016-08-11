@@ -43,7 +43,7 @@ public class SLAdapter extends ArrayAdapter<Item> {
             convertView = LayoutInflater.from(getContext()).inflate(layout,parent,false);
         TextView slName = (TextView) convertView.findViewById(R.id.name);
         slName.setText(item.name);
-        ChkBox ck = (ChkBox) convertView.findViewById(R.id.list_cbox);
+//        ChkBox ck = (ChkBox) convertView.findViewById(R.id.list_cbox);
         return convertView;
     }
 

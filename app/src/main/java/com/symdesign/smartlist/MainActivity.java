@@ -71,8 +71,8 @@ public class MainActivity extends AppCompatActivity {
         assetManager = getAssets();
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         ImageView micView = (ImageView) findViewById(R.id.mic);
-        Button syncButton = (Button) findViewById(R.id.sync);
-        Button testButton = (Button) findViewById(R.id.test);
+//        Button syncButton = (Button) findViewById(R.id.sync);
+        Button addButton = (Button) findViewById(R.id.add);
         ScrollView scrollView = (ScrollView) findViewById(R.id.scroll_view);
         scrollView.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -92,30 +92,16 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         //          Sync Button
-        syncButton.setOnClickListener(new View.OnClickListener() {
+/*        syncButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) { new DatabaseSync().execute(); }
         });
-        //          Test button
-        testButton.setOnClickListener(new View.OnClickListener() {
+*/        //          Add button
+        addButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                SLAdapter.updateAdapters();
-            }
-        });
-        //          Add Button
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                sld = SLDialog.newInstance();
-                SLDialog.edit=false;
-                SLDialog.title = "New Item";
-                FragmentManager fm = getFragmentManager();
-                FragmentTransaction ft = fm.beginTransaction();
-                sld.show(ft, "sldialog tag");
-//                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-//                        .setAction("Action", null).show();
+                Intent intent = new Intent("com.symdesign.smartlist.intent.action.PickList");
+                MainActivity.context.startActivity(intent);
             }
         });
         context=this;
@@ -154,7 +140,10 @@ public class MainActivity extends AppCompatActivity {
                         updateAvgs(dBid,0);
                         break;
                     case name:
-                        sld = SLDialog.newInstance();
+                        Intent intent = new Intent("com.symdesign.smartlist.intent.action.PickList");
+                        intent.putExtra("id",id);
+                        startActivity(intent);
+/*                        sld = SLDialog.newInstance();
                         SLDialog.edit=true;
                         SLDialog.list=true;
                         SLDialog.name = nameView.getText();
@@ -163,7 +152,7 @@ public class MainActivity extends AppCompatActivity {
                         FragmentManager fm = getFragmentManager();
                         FragmentTransaction ft = fm.beginTransaction();
                         sld.show(ft, "sldialog tag");
-                        log("list name clicked");
+*/                      log("list name clicked");
                         break;
                     case del:
                         db.delete("itemDb", "_id=" + Long.toString(dBid), null);
@@ -192,7 +181,10 @@ public class MainActivity extends AppCompatActivity {
                         updateAdapters();
                         break;
                     case name:
-                        sld = SLDialog.newInstance();
+                        Intent intent = new Intent("com.symdesign.smartlist.intent.action.PickList");
+                        intent.putExtra("id",id);
+                        startActivity(intent);
+/*                        sld = SLDialog.newInstance();
                         SLDialog.edit=true;
                         SLDialog.list=false;
                         SLDialog.name = nameView.getText();
@@ -201,7 +193,7 @@ public class MainActivity extends AppCompatActivity {
                         FragmentManager fm = getFragmentManager();
                         FragmentTransaction ft = fm.beginTransaction();
                         sld.show(ft, "sldialog tag");
-                        log("suggest name clicked");
+*/                      log("suggest name clicked");
                         break;
                     case del:
                         db.delete("itemDb","_id=" + Long.toString(dBid), null);

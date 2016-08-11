@@ -4,7 +4,22 @@
     android:layout_height="match_parent"
     android:backgroundTintMode="src_in">
     <LinearLayout
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_centerVertical="true"
+        android:layout_alignParentLeft="true">
+        <com.symdesign.smartlist.DeleteButton
+            android:id="@+id/delete_box"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_gravity="center_vertical"
+            android:paddingLeft="10dp"
+            android:scaleType="centerInside"
+            android:src="@drawable/cross"/>
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:gravity="end"
         android:orientation="horizontal"
@@ -15,10 +30,10 @@
             android:inputType="textNoSuggestions"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:background="@layout/item_bk"
             android:focusable="false"
             android:textSize="18sp"
-            android:textColor="#ffffff"/>
+            android:textColor="#ffffff"
+            android:background="@layout/item_bk"/>
         <com.symdesign.smartlist.ChkBox
             android:id="@+id/list_cbox"
             android:layout_gravity="center_vertical"
@@ -32,4 +47,5 @@
             android:maxHeight="55dp"  android:maxWidth="65dp"
             android:focusable="false"/>
     </LinearLayout>
+
 </RelativeLayout>
