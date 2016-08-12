@@ -142,6 +142,7 @@ public class MainActivity extends AppCompatActivity {
                     case name:
                         Intent intent = new Intent("com.symdesign.smartlist.intent.action.PickList");
                         intent.putExtra("id",id);
+                        intent.putExtra("name",itemsList.get(position).name);
                         startActivity(intent);
 /*                        sld = SLDialog.newInstance();
                         SLDialog.edit=true;
@@ -183,6 +184,7 @@ public class MainActivity extends AppCompatActivity {
                     case name:
                         Intent intent = new Intent("com.symdesign.smartlist.intent.action.PickList");
                         intent.putExtra("id",id);
+                        intent.putExtra("name",itemsSuggest.get(position).name.substring(1));
                         startActivity(intent);
 /*                        sld = SLDialog.newInstance();
                         SLDialog.edit=true;
@@ -320,7 +322,12 @@ public class MainActivity extends AppCompatActivity {
     public static void newItem(String nm){
         addItem(nm, 1, getTime(), 3 * day, 0);
     }
-
+    class params {
+        String nm;
+        int il;
+        long lt,la,id;
+        double r;
+    }
     /**
      * Returns time in seconds since 1/1/1970 epoch
      * @return
@@ -352,9 +359,10 @@ public class MainActivity extends AppCompatActivity {
             Long date = getTime();
             String name = (String) matches.get(0);
             // A negative value of inList indicates a new item
+            db = MainActivity.itemDb.getWritableDatabase();
             MainActivity.addItem((String) name, -1, getTime(), 7*day, 0);
             updateAdapters();
-
+            db.close();
         }
 
         super.onActivityResult(requestCode, resultCode, data);

@@ -22,6 +22,7 @@
         </activity>
         <activity
             android:name=".PickList"
+            android:windowSoftInputMode="stateHidden"
             android:label="Item Picker">
             <intent-filter>
                 <action android:name="com.symdesign.smartlist.intent.action.PickList" />

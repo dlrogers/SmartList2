@@ -11,8 +11,8 @@
         android:layout_alignParentLeft="true">
         <com.symdesign.smartlist.DeleteButton
             android:id="@+id/delete_box"
-            android:layout_width="30dp"
-            android:layout_height="30dp"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
             android:layout_gravity="center_vertical"
             android:paddingLeft="10dp"
             android:scaleType="centerInside"
@@ -37,8 +37,8 @@
         <com.symdesign.smartlist.ChkBox
             android:id="@+id/list_cbox"
             android:layout_gravity="center_vertical"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="42dp"
+            android:layout_height="42dp"
             android:src="@drawable/btn_check_off"
             android:adjustViewBounds="true"
             android:scaleType="centerInside"

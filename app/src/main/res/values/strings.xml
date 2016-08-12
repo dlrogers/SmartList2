@@ -14,6 +14,7 @@
     <string name="cancel">Cancel</string>
     <string name="delete">Delete</string>
     <string name="title">Edit Item</string>
+    <string name="food_cats"><b><i>Food Catagories</i></b></string>
     <string-array name="cats">
         <item>"Fresh Vegetables"</item>
         <item>"Fresh Fruits"</item>
