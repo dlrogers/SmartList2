@@ -16,6 +16,10 @@ public class Item implements Comparable<Item>  {
         this.last_avg = la;
         this.ratio = rat;
     }
+
+    public static Item newItem(String name) {
+        return new Item(0,name,1,MainActivity.getTime(),3*MainActivity.day,0);
+    }
     @Override
     public int compareTo(Item compare_item) {
         return (this.ratio < compare_item.ratio) ? 1 : -1;

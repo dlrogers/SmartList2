@@ -36,7 +36,7 @@ public class SLDialog extends DialogFragment implements AdapterView.OnItemSelect
 //    final long day = 86400;
     static Spinner frequency;
     static Button pickButton;
-    long freq;
+    static long freq;
     static String title="Create new item";
     static CharSequence name;
     static boolean edit,list;

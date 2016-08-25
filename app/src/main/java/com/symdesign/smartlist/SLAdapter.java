@@ -59,10 +59,7 @@ public class SLAdapter extends ArrayAdapter<Item> {
                     ((float)(getTime()- listItems.getLong(3)))/((float)(listItems.getLong(4)))));
             n++;
         }
-//        prtItems(n,itemsList);
         Collections.sort(itemsList);
-        log("list");
-//        prtItems(n,itemsList);
         listAdapter = new SLAdapter(context,itemsList,R.layout.list_entry);
         listAdapter.checked = false;
         listView.setAdapter(listAdapter);
@@ -80,7 +77,7 @@ public class SLAdapter extends ArrayAdapter<Item> {
         }
         Collections.sort(itemsSuggest);
 //        prtElapsed(time_millis);
-        log("suggest\n");
+//        log("suggest\n");
 //        prtItems(n,itemsSuggest);
         suggestAdapter = new SLAdapter(context,itemsSuggest,R.layout.suggest_entry);
         suggestAdapter.checked = true;
@@ -126,14 +123,12 @@ public class SLAdapter extends ArrayAdapter<Item> {
     }
 
     public static void prtSuggestions() {
-        log("list:");
         listItems = db.query("itemDb",cols,"inList=1 OR inList=-1",null,"","","ratio DESC");
         for(listItems.moveToFirst();!listItems.isAfterLast(); listItems.moveToNext()){
             logF("id=%d, nm=%s, lt=%d, la=%d, rat=%f",
                     listItems.getLong(0),listItems.getString(1),listItems.getLong(3),listItems.getLong(4),
                     listItems.getFloat(5));
         }
-        log("suggestion:");
         suggestItems = db.query("itemDb",cols,"inList=0",null,"","","ratio DESC");
         for(suggestItems.moveToFirst();!suggestItems.isAfterLast(); suggestItems.moveToNext()){
             logF("id=%d, nm=%s, lt=%d, la=%d, rat=%f",

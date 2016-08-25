@@ -101,6 +101,9 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent("com.symdesign.smartlist.intent.action.PickList");
+                intent.putExtra("id",-1);
+                intent.putExtra("name","");
+                intent.putExtra("inLists",false);
                 MainActivity.context.startActivity(intent);
             }
         });
@@ -118,6 +121,7 @@ public class MainActivity extends AppCompatActivity {
         scrn_height = size.y;
         itemDb = new ItemDb(context);
         db = itemDb.getWritableDatabase();
+        SLAdapter.prtSuggestions();
 
 /*		db.execSQL("DROP TABLE itemDb");
 		db.execSQL(SQL_CREATE);
@@ -125,7 +129,7 @@ public class MainActivity extends AppCompatActivity {
 */
         PickList.prepareListData();
 
-        log(String.format("Starting Smartlist, time=%d",getTime()));
+        log(String.format("Starting MainActivityt, time=%d",getTime()));
         updateAdapters();
 
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -143,6 +147,7 @@ public class MainActivity extends AppCompatActivity {
                         Intent intent = new Intent("com.symdesign.smartlist.intent.action.PickList");
                         intent.putExtra("id",id);
                         intent.putExtra("name",itemsList.get(position).name);
+                        intent.putExtra("inLists",true);
                         startActivity(intent);
 /*                        sld = SLDialog.newInstance();
                         SLDialog.edit=true;
@@ -153,14 +158,12 @@ public class MainActivity extends AppCompatActivity {
                         FragmentManager fm = getFragmentManager();
                         FragmentTransaction ft = fm.beginTransaction();
                         sld.show(ft, "sldialog tag");
-*/                      log("list name clicked");
-                        break;
+*/                      break;
                     case del:
                         db.delete("itemDb", "_id=" + Long.toString(dBid), null);
                         itemsList.remove(id);
                         updateAdapters();
 //                        setSelected(item,position,false);
-                        log("list del clicked");
                         break;
                 }
             }
@@ -184,7 +187,8 @@ public class MainActivity extends AppCompatActivity {
                     case name:
                         Intent intent = new Intent("com.symdesign.smartlist.intent.action.PickList");
                         intent.putExtra("id",id);
-                        intent.putExtra("name",itemsSuggest.get(position).name.substring(1));
+                        intent.putExtra("name",itemsSuggest.get(position).name);
+                        intent.putExtra("inLists",true);
                         startActivity(intent);
 /*                        sld = SLDialog.newInstance();
                         SLDialog.edit=true;
@@ -195,8 +199,7 @@ public class MainActivity extends AppCompatActivity {
                         FragmentManager fm = getFragmentManager();
                         FragmentTransaction ft = fm.beginTransaction();
                         sld.show(ft, "sldialog tag");
-*/                      log("suggest name clicked");
-                        break;
+*/                      break;
                     case del:
                         db.delete("itemDb","_id=" + Long.toString(dBid), null);
                         itemsSuggest.remove(id);
@@ -208,21 +211,10 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
-    @Override public void onPause() {
-        super.onPause();
-        log("Pausing");
-        //itemDb.close();
-        db.close();
-    }
-    @Override public void onResume() {
-        super.onResume();
-        log("Resuming");
-        db = itemDb.getWritableDatabase();
-    }
     @Override
     protected void onStop() {
         super.onStop();
-        db.close();
+//        db.close();
     }
     /**
      * Update Frequency averages in database for item id
@@ -291,13 +283,7 @@ public class MainActivity extends AppCompatActivity {
         addItem("kefir",0,date,30,0.0);
         addItem("potatoes",0,date,30,0.0);
         addItem("wine",0,date,30,0.0);
-/*        addItem("beer",1,date,30,0.0);
-        addItem("chili",1,date,30,0.0);
-        addItem("chocolate",1,date,30,0.0);
-        addItem("vitamins",0,date,30,0.0);
-        addItem("selzer",0,date,30,0.0);
-        addItem("bananas",1,date,30,0.0);
-*/    }
+    }
     public static void addItem(String nm,int il,long lt,long la,double r) {
         listValues.clear();
         listValues.put("name",nm);
@@ -317,16 +303,10 @@ public class MainActivity extends AppCompatActivity {
         db.update("itemDb", listValues, "_id=" + Long.toString(id), null);
     }
     public static void deleteItem(long id) {
-        db.delete("itemDb", "_id=" + Long.toString(id), null);
+        db.delete("itemDb","_id=" + Long.toString(id), null);
     }
     public static void newItem(String nm){
         addItem(nm, 1, getTime(), 3 * day, 0);
-    }
-    class params {
-        String nm;
-        int il;
-        long lt,la,id;
-        double r;
     }
     /**
      * Returns time in seconds since 1/1/1970 epoch
@@ -370,4 +350,15 @@ public class MainActivity extends AppCompatActivity {
     /**
      * Created by dennis on 2/18/16.
      */
+    @Override public void onPause() {
+        super.onPause();
+        log("Pausing MainActivity");
+        //itemDb.close();
+        db.close();
+    }
+    @Override public void onResume() {
+        super.onResume();
+        log("Resuming MainActivity");
+        db = itemDb.getWritableDatabase();
+    }
 }
