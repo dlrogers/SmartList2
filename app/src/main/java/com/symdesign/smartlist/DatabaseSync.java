@@ -29,9 +29,10 @@ import static com.symdesign.smartlist.MainActivity.listValues;
 public class DatabaseSync extends AsyncTask<Void,Void,String>  {
 
     HttpURLConnection dB;
-    String link = "http://sym-designs.com/cgi-bin/smartlist.php";
+    String link = "http://symdesigns.ddns.net/cgi-bin/smartlist.php";
     char[] buf = new char[140];
     Cursor items;
+
     protected String doInBackground(Void... arg0) {
         xferDb();
         return "Done";
@@ -48,14 +49,14 @@ public class DatabaseSync extends AsyncTask<Void,Void,String>  {
             BufferedOutputStream bos = new BufferedOutputStream(dB.getOutputStream());
             log("Sending data to server");
             String cntstr = String.format("%d\n",items.getCount());
-            bos.write(cntstr.getBytes("UTF-8"),0,cntstr.length());
+            bos.write(cntstr.getBytes("UTF-8"),0,cntstr.length());  //write to server
             for(items.moveToFirst();!items.isAfterLast(); items.moveToNext()) {
                 String str = String.format("%s,%d,%d,%d,%f\n",items.getString(1),
                         items.getInt(2),items.getInt(3),items.getInt(4),
                         items.getFloat(5));
 //                str=str.replaceAll("\'","");
                 log(str+"\n");
-                bos.write(str.getBytes("UTF-8"),0,str.length());
+                bos.write(str.getBytes("UTF-8"),0,str.length());    //write to server
             }
             bos.flush();
             bos.close();
@@ -73,11 +74,12 @@ public class DatabaseSync extends AsyncTask<Void,Void,String>  {
                         logF("%s", col);
                         listValues.clear();
                         listValues.put("name", cols[1]);
-                        listValues.put("last_time", cols[2]);
-                        listValues.put("last_avg", cols[3]);
-                        listValues.put("ratio", cols[4]);
-//                        logF("%s : %s : %s : %s", cols[1], cols[2], cols[3], cols[4]);
-                        long id = db.update("itemDb", listValues, "name=?", new String[]{cols[1]});
+                        listValues.put("inList", cols[2]);
+                        listValues.put("last_time", cols[3]);
+                        listValues.put("last_avg", cols[4]);
+                        listValues.put("ratio", cols[5]);
+                        log("name='" + cols[1] + "'");
+                        long id = db.update("itemDb", listValues, "name='" + cols[1] + "'", null);
                         break;
                     case "i":   //Item added to server, insert into database
                         logF("%s",col);
@@ -88,7 +90,6 @@ public class DatabaseSync extends AsyncTask<Void,Void,String>  {
                         listValues.put("last_avg", cols[4]);
                         listValues.put("ratio", cols[5]);
                         db.insert("itemDb",null,listValues);
-//                        updateAdapters();
                         break;
     //                logF("cols changed = %d",id);
 //                log(col);
@@ -109,7 +110,7 @@ public class DatabaseSync extends AsyncTask<Void,Void,String>  {
     protected void onProgressUpdate(Integer... progress) {
 
     }
-    protected void onPostExecute(Long result) {
+    protected void onPostExecute(String result) {
         log("post execute");
         updateAdapters();
         MainActivity.listView.invalidate();

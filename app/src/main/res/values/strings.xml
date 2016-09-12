@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Shopping Helper</string>
+    <string name="app_name">Shopping Mate</string>
     <string name="action_settings">Settings</string>
     <string name="list_heading"><strong><b>Shopping List</b></strong></string>
     <string name="items_heading"><strong><b>Suggestions</b></strong></string>

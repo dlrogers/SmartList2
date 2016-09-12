@@ -54,7 +54,7 @@ public class PickList extends Activity implements AdapterView.OnItemSelectedList
     static ArrayList<String> currItems = new ArrayList<String>();
     static SQLiteDatabase db;
     static CharSequence name;
-    static int id;
+    static int dBid,id;
     static boolean inLists;
     final String[] cols = {"_id","name","inList","last_time","last_avg","ratio"};
 
@@ -70,7 +70,7 @@ public class PickList extends Activity implements AdapterView.OnItemSelectedList
             name = extras.getString("name");
             inLists = extras.getBoolean("inLists");
             nameView.setText(name);
-            id=extras.getInt("id");
+            dBid=extras.getInt("id");
         }
         checkView = (Button) findViewById(R.id.pick_button);
         freq = -1;
@@ -80,7 +80,20 @@ public class PickList extends Activity implements AdapterView.OnItemSelectedList
         frequency = (Spinner) findViewById(R.id.freq);
         frequency.setAdapter(freq_adapter);
         frequency.setOnItemSelectedListener(this);
-
+        db = MainActivity.itemDb.getWritableDatabase();
+        if(inLists) {
+            Item item = getDbItem(name.toString());
+            if(item.last_avg < 433600)
+                frequency.setSelection(0);
+            else if(item.last_avg <907200)
+                frequency.setSelection(1);
+            else if(item.last_avg < 1900800)
+                frequency.setSelection(2);
+            else if(item.last_avg < 3888000)
+                frequency.setSelection(3);
+            else if(item.last_avg == 36500*day)
+                frequency.setSelection(4);
+        }
         expListView = (ExpandableListView) findViewById(R.id.lvExp);
         expListAdapter = new ExpandableListAdapter(this, catagories, pickItems);
         // setting list adapter
@@ -201,7 +214,7 @@ public class PickList extends Activity implements AdapterView.OnItemSelectedList
                                int pos, long id) {
         // An item was selected. You can retrieve the selected item using
         // parent.getItemAtPosition(pos)
-        logF("item = %s",parent.getItemAtPosition(pos));
+//        logF("item = %s",parent.getItemAtPosition(pos));
         switch(pos){
             case 0: freq = (long) (3.5*day);
                 break;

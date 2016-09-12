@@ -22,7 +22,7 @@ import static com.symdesign.smartlist.MainActivity.getTime;
 
 
 public class SLAdapter extends ArrayAdapter<Item> {
-    static Cursor listItems,suggestItems;
+    static Cursor listCursor,suggestCursor;
     static SLAdapter listAdapter,suggestAdapter;
     static ArrayList<Item> itemsList = new ArrayList<>();
     static ArrayList<Item> itemsSuggest = new ArrayList<>();
@@ -51,12 +51,12 @@ public class SLAdapter extends ArrayAdapter<Item> {
 
         // get cursor for shopping list
         long time_millis = System.currentTimeMillis();
-        listItems = db.query("itemDb",cols,"inList=1 OR inList=-1",null,"","",null);
+        listCursor = db.query("itemDb",cols,"inList=1 OR inList=-1",null,"","",null);
         itemsList.clear(); int n=0;
-        for(listItems.moveToFirst();!listItems.isAfterLast(); listItems.moveToNext()) {
-            itemsList.add(new Item(listItems.getLong(0),listItems.getString(1),
-                    listItems.getLong(2), listItems.getLong(3), listItems.getLong(4),
-                    ((float)(getTime()- listItems.getLong(3)))/((float)(listItems.getLong(4)))));
+        for(listCursor.moveToFirst();!listCursor.isAfterLast(); listCursor.moveToNext()) {
+            itemsList.add(new Item(listCursor.getLong(0),listCursor.getString(1),
+                    listCursor.getLong(2), listCursor.getLong(3), listCursor.getLong(4),
+                    ((float)(getTime()- listCursor.getLong(3)))/((float)(listCursor.getLong(4)))));
             n++;
         }
         Collections.sort(itemsList);
@@ -65,14 +65,14 @@ public class SLAdapter extends ArrayAdapter<Item> {
         listView.setAdapter(listAdapter);
 
         // get cursor for suggestion list
-        suggestItems = db.query("itemDb",cols,"inList=0",null,"","",
+        suggestCursor = db.query("itemDb",cols,"inList=0",null,"","",
                 "ratio DESC");
         itemsSuggest.clear(); n = 0;
-        for(suggestItems.moveToFirst();!suggestItems.isAfterLast(); suggestItems.moveToNext()) {
-            itemsSuggest.add(new Item(suggestItems.getLong(0),suggestItems.getString(1),
-                    suggestItems.getLong(2), suggestItems.getLong(3), suggestItems.getLong(4),
-                    ((float)(getTime()- suggestItems.getLong(3)))/
-                            ((float)(suggestItems.getLong(4)))));
+        for(suggestCursor.moveToFirst();!suggestCursor.isAfterLast(); suggestCursor.moveToNext()) {
+            itemsSuggest.add(new Item(suggestCursor.getLong(0),suggestCursor.getString(1),
+                    suggestCursor.getLong(2), suggestCursor.getLong(3), suggestCursor.getLong(4),
+                    ((float)(getTime()- suggestCursor.getLong(3)))/
+                            ((float)(suggestCursor.getLong(4)))));
             n++;
         }
         Collections.sort(itemsSuggest);
@@ -84,8 +84,8 @@ public class SLAdapter extends ArrayAdapter<Item> {
         suggestView.setAdapter(suggestAdapter);
 
 //        prtSuggestions();   // debug
-//		setListeners(suggestItems,suggestAdapter,suggestView);
-//		listItems.close();
+//		setListeners(suggestCursor,suggestAdapter,suggestView);
+//		listCursor.close();
     }
     static public void prtItems(int n,ArrayList<Item> items) {
         for(int i=0;i<n;i++) {
@@ -123,17 +123,17 @@ public class SLAdapter extends ArrayAdapter<Item> {
     }
 
     public static void prtSuggestions() {
-        listItems = db.query("itemDb",cols,"inList=1 OR inList=-1",null,"","","ratio DESC");
-        for(listItems.moveToFirst();!listItems.isAfterLast(); listItems.moveToNext()){
+        listCursor = db.query("itemDb",cols,"inList=1 OR inList=-1",null,"","","ratio DESC");
+        for(listCursor.moveToFirst();!listCursor.isAfterLast(); listCursor.moveToNext()){
             logF("id=%d, nm=%s, lt=%d, la=%d, rat=%f",
-                    listItems.getLong(0),listItems.getString(1),listItems.getLong(3),listItems.getLong(4),
-                    listItems.getFloat(5));
+                    listCursor.getLong(0),listCursor.getString(1),listCursor.getLong(3),listCursor.getLong(4),
+                    listCursor.getFloat(5));
         }
-        suggestItems = db.query("itemDb",cols,"inList=0",null,"","","ratio DESC");
-        for(suggestItems.moveToFirst();!suggestItems.isAfterLast(); suggestItems.moveToNext()){
+        suggestCursor = db.query("itemDb",cols,"inList=0",null,"","","ratio DESC");
+        for(suggestCursor.moveToFirst();!suggestCursor.isAfterLast(); suggestCursor.moveToNext()){
             logF("id=%d, nm=%s, lt=%d, la=%d, rat=%f",
-                    suggestItems.getLong(0),suggestItems.getString(1),suggestItems.getLong(3),suggestItems.getLong(4),
-                    suggestItems.getFloat(5));
+                    suggestCursor.getLong(0),suggestCursor.getString(1),suggestCursor.getLong(3),suggestCursor.getLong(4),
+                    suggestCursor.getFloat(5));
         }
     }
 

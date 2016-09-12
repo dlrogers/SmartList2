@@ -19,6 +19,7 @@ import android.support.v7.widget.Toolbar;
 import android.support.design.widget.FloatingActionButton;
 import android.util.Log;
 import android.view.Display;
+import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -59,7 +60,6 @@ public class MainActivity extends AppCompatActivity {
     static final String SQL_CREATE =
             "CREATE TABLE itemDb(_id INTEGER PRIMARY KEY, name TEXT, inList INT, last_time INT, last_avg INT, ratio REAL)";
     static Handler slHandler = new SLHandler();
-    final String[] avgCols={"last_time","last_avg","inList"};
     static AssetManager assetManager;
 
     @Override
@@ -71,7 +71,7 @@ public class MainActivity extends AppCompatActivity {
         assetManager = getAssets();
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         ImageView micView = (ImageView) findViewById(R.id.mic);
-//        Button syncButton = (Button) findViewById(R.id.sync);
+        Button syncButton = (Button) findViewById(R.id.sync);
         Button addButton = (Button) findViewById(R.id.add);
         ScrollView scrollView = (ScrollView) findViewById(R.id.scroll_view);
         scrollView.setOnClickListener(new View.OnClickListener() {
@@ -81,6 +81,9 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         setSupportActionBar(toolbar);
+        toolbar.setTitle("Helper");
+        toolbar.setLogo(R.mipmap.icon_nobun);
+        toolbar.hideOverflowMenu();
         Message repeat = Message.obtain(slHandler,MSG_REPEAT);
         slHandler.sendMessageDelayed(repeat, repeat_time);
         //  Microphone button, response received by onActivityResult(...)
@@ -92,11 +95,18 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         //          Sync Button
-/*        syncButton.setOnClickListener(new View.OnClickListener() {
+        syncButton.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v) { new DatabaseSync().execute(); }
+            public void onClick(View v) {
+                Toast toast = Toast.makeText(getApplicationContext(),
+                        "\nSyncing\n",
+                        Toast.LENGTH_SHORT);
+                toast.setGravity(Gravity.TOP,0,200);
+                toast.show();
+                new DatabaseSync().execute();
+            }
         });
-*/        //          Add button
+        //          Add button
         addButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -145,7 +155,7 @@ public class MainActivity extends AppCompatActivity {
                         break;
                     case name:
                         Intent intent = new Intent("com.symdesign.smartlist.intent.action.PickList");
-                        intent.putExtra("id",id);
+                        intent.putExtra("id",dBid);
                         intent.putExtra("name",itemsList.get(position).name);
                         intent.putExtra("inLists",true);
                         startActivity(intent);
@@ -179,14 +189,15 @@ public class MainActivity extends AppCompatActivity {
                 switch (clickLocation) {
                     case box:
                         clickLocation = ClickLocation.none;
-                        listValues.put("inList",1);
-                        db.update("itemDb", listValues,
-                                "_id=" + Long.toString(dBid), null);
+                        updateAvgs(dBid,1);
+//                        listValues.put("inList",1);
+//                        db.update("itemDb", listValues,
+//                                "_id=" + Long.toString(dBid), null);
                         updateAdapters();
                         break;
                     case name:
                         Intent intent = new Intent("com.symdesign.smartlist.intent.action.PickList");
-                        intent.putExtra("id",id);
+                        intent.putExtra("id",dBid);
                         intent.putExtra("name",itemsSuggest.get(position).name);
                         intent.putExtra("inLists",true);
                         startActivity(intent);
@@ -222,6 +233,8 @@ public class MainActivity extends AppCompatActivity {
      * @param inList New state of inList entry
      */
     public void updateAvgs(long id, int inList) {
+
+        final String[] avgCols={"last_time","last_avg","inList"};
 
         Cursor curs = db.query("itemDb", avgCols, "_id=" + Long.toString(id), null, "", "", "name ASC");
         curs.moveToFirst();
@@ -260,10 +273,10 @@ public class MainActivity extends AppCompatActivity {
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
+/*        if (id == R.id.action_settings) {
             return true;
         }
-
+*/
         return super.onOptionsItemSelected(item);
     }
     public void initDB(SQLiteDatabase db) {
