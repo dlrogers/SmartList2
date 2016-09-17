@@ -20,11 +20,16 @@ import static com.symdesign.smartlist.MainActivity.log;
 import static com.symdesign.smartlist.MainActivity.logF;
 import static com.symdesign.smartlist.MainActivity.logF;
 import static com.symdesign.smartlist.SLAdapter.cols;
+import static com.symdesign.smartlist.SLAdapter.itemsList;
+import static com.symdesign.smartlist.SLAdapter.itemsSuggest;
 import static com.symdesign.smartlist.SLAdapter.updateAdapters;
 import static com.symdesign.smartlist.MainActivity.listValues;
+import static com.symdesign.smartlist.MainActivity.changed;
 
 /**
  * Created by dennis on 2/18/16.
+ * Class DatabaseSync is a AsyncTask that syncs phone database with
+ * MYSQL database on the Shopping Mate server
  */
 public class DatabaseSync extends AsyncTask<Void,Void,String>  {
 
@@ -39,24 +44,34 @@ public class DatabaseSync extends AsyncTask<Void,Void,String>  {
     }
 
     public boolean xferDb() {
+        Item item;
+
         try {       // Send post request
             URL url = new URL(link);
             dB = (HttpURLConnection) url.openConnection();
             dB.setRequestMethod("POST");
             dB.setDoInput(true);
             dB.setDoOutput(true);
-            items = db.query("itemDb",cols,"inList=0 OR inList=1 OR inList=-1",null,"","","ratio DESC");
             BufferedOutputStream bos = new BufferedOutputStream(dB.getOutputStream());
             log("Sending data to server");
-            String cntstr = String.format("%d\n",items.getCount());
-            bos.write(cntstr.getBytes("UTF-8"),0,cntstr.length());  //write to server
-            for(items.moveToFirst();!items.isAfterLast(); items.moveToNext()) {
-                String str = String.format("%s,%d,%d,%d,%f\n",items.getString(1),
-                        items.getInt(2),items.getInt(3),items.getInt(4),
-                        items.getFloat(5));
-//                str=str.replaceAll("\'","");
+            bos.write((changed ? "1\n" : "0\n").getBytes("UTF-8"));
+            changed=false;
+            int cnt = itemsList.size();
+            for(int i=0; i<cnt; i++){
+                item = itemsList.get(i);
+                String str = String.format("%s,%d,%d,%d,%f\n",
+                    item.name,item.inList,item.last_avg,item.last_time,item.ratio);
                 log(str+"\n");
-                bos.write(str.getBytes("UTF-8"),0,str.length());    //write to server
+                bos.write(str.getBytes("UTF-8"));
+            }
+            cnt = itemsSuggest.size();
+            for(int i=0; i<cnt; i++){
+                item = itemsSuggest.get(i);
+                String str = String.format("%s,%d,%d,%d,%f\n",
+                    item.name,item.inList,item.last_avg,item.last_time,item.ratio);
+                item.inList &= 1;
+                log(str+"\n");
+                bos.write(str.getBytes("UTF-8"));
             }
             bos.flush();
             bos.close();
@@ -113,6 +128,7 @@ public class DatabaseSync extends AsyncTask<Void,Void,String>  {
     protected void onPostExecute(String result) {
         log("post execute");
         updateAdapters();
+        MainActivity.toast.cancel();
         MainActivity.listView.invalidate();
         MainActivity.suggestView.invalidate();
     }

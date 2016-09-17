@@ -20,6 +20,9 @@ import static com.symdesign.smartlist.MainActivity.listView;
 import static com.symdesign.smartlist.MainActivity.suggestView;
 import static com.symdesign.smartlist.MainActivity.getTime;
 
+/**
+ * Adapter class for main display.
+ */
 
 public class SLAdapter extends ArrayAdapter<Item> {
     static Cursor listCursor,suggestCursor;
@@ -47,15 +50,15 @@ public class SLAdapter extends ArrayAdapter<Item> {
         return convertView;
     }
 
-    public static void updateAdapters(){
+     public static void updateAdapters(){
 
         // get cursor for shopping list
         long time_millis = System.currentTimeMillis();
-        listCursor = db.query("itemDb",cols,"inList=1 OR inList=-1",null,"","",null);
+        listCursor = db.query("itemDb",cols,"inList=1",null,"","",null);
         itemsList.clear(); int n=0;
         for(listCursor.moveToFirst();!listCursor.isAfterLast(); listCursor.moveToNext()) {
             itemsList.add(new Item(listCursor.getLong(0),listCursor.getString(1),
-                    listCursor.getLong(2), listCursor.getLong(3), listCursor.getLong(4),
+                    listCursor.getLong(2)&1, listCursor.getLong(3), listCursor.getLong(4),
                     ((float)(getTime()- listCursor.getLong(3)))/((float)(listCursor.getLong(4)))));
             n++;
         }
@@ -65,12 +68,12 @@ public class SLAdapter extends ArrayAdapter<Item> {
         listView.setAdapter(listAdapter);
 
         // get cursor for suggestion list
-        suggestCursor = db.query("itemDb",cols,"inList=0",null,"","",
+        suggestCursor = db.query("itemDb",cols,"(inList=0)|(inList=2)",null,"","",
                 "ratio DESC");
         itemsSuggest.clear(); n = 0;
         for(suggestCursor.moveToFirst();!suggestCursor.isAfterLast(); suggestCursor.moveToNext()) {
             itemsSuggest.add(new Item(suggestCursor.getLong(0),suggestCursor.getString(1),
-                    suggestCursor.getLong(2), suggestCursor.getLong(3), suggestCursor.getLong(4),
+                    suggestCursor.getLong(2)&1, suggestCursor.getLong(3), suggestCursor.getLong(4),
                     ((float)(getTime()- suggestCursor.getLong(3)))/
                             ((float)(suggestCursor.getLong(4)))));
             n++;

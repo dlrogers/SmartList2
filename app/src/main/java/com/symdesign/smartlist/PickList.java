@@ -278,6 +278,8 @@ public class PickList extends Activity implements AdapterView.OnItemSelectedList
     }
     /*
      * Preparing the list data
+     *   Read data from "Master_Grocery_List.txt"
+      *  into pickItems ArrayList
      */
     public static void prepareListData() {
 

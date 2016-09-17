@@ -48,8 +48,6 @@ public class MainActivity extends AppCompatActivity {
     static ContentValues listValues = new ContentValues();
     public static SQLiteDatabase db;
     static ListView listView,suggestView;
-    static SLDialog sld;
-    static boolean[] selected = new boolean[256];
     public enum ClickLocation {none,del,name,box}
     static ClickLocation clickLocation;
     static final long second=1, minute = 60*second, hour = 60*minute,
@@ -61,6 +59,8 @@ public class MainActivity extends AppCompatActivity {
             "CREATE TABLE itemDb(_id INTEGER PRIMARY KEY, name TEXT, inList INT, last_time INT, last_avg INT, ratio REAL)";
     static Handler slHandler = new SLHandler();
     static AssetManager assetManager;
+    static Toast toast;
+    static boolean changed=false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -86,7 +86,8 @@ public class MainActivity extends AppCompatActivity {
         toolbar.hideOverflowMenu();
         Message repeat = Message.obtain(slHandler,MSG_REPEAT);
         slHandler.sendMessageDelayed(repeat, repeat_time);
-        //  Microphone button, response received by onActivityResult(...)
+
+        //          Microphone button, response received by onActivityResult(...)
         micView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -98,9 +99,9 @@ public class MainActivity extends AppCompatActivity {
         syncButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast toast = Toast.makeText(getApplicationContext(),
+                toast = Toast.makeText(getApplicationContext(),
                         "\nSyncing\n",
-                        Toast.LENGTH_SHORT);
+                        Toast.LENGTH_LONG);
                 toast.setGravity(Gravity.TOP,0,200);
                 toast.show();
                 new DatabaseSync().execute();
@@ -118,8 +119,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         context=this;
-        for(int i=0; i<256; i++)
-            selected[i] = false;
         clickLocation = ClickLocation.none;
 //        listAdd = (Button) findViewById(R.id.list_add);
         listView=(ListView) findViewById(R.id.list_view);
@@ -151,24 +150,20 @@ public class MainActivity extends AppCompatActivity {
                 switch (clickLocation) {
                     case box:
                         clickLocation = ClickLocation.none;
+                        changed=true;
                         updateAvgs(dBid,0);
                         break;
                     case name:
+                        changed=true;
+                        itemsList.get(position).inList |= 2; // set chg flag
+                        db.update("itemDb", listValues,
+                                "_id=" + Long.toString(dBid), null);
                         Intent intent = new Intent("com.symdesign.smartlist.intent.action.PickList");
                         intent.putExtra("id",dBid);
                         intent.putExtra("name",itemsList.get(position).name);
                         intent.putExtra("inLists",true);
                         startActivity(intent);
-/*                        sld = SLDialog.newInstance();
-                        SLDialog.edit=true;
-                        SLDialog.list=true;
-                        SLDialog.name = nameView.getText();
-                        SLDialog.id=dBid;
-                        SLDialog.title = "Edit Item";
-                        FragmentManager fm = getFragmentManager();
-                        FragmentTransaction ft = fm.beginTransaction();
-                        sld.show(ft, "sldialog tag");
-*/                      break;
+                      break;
                     case del:
                         db.delete("itemDb", "_id=" + Long.toString(dBid), null);
                         itemsList.remove(id);
@@ -189,28 +184,25 @@ public class MainActivity extends AppCompatActivity {
                 switch (clickLocation) {
                     case box:
                         clickLocation = ClickLocation.none;
-                        updateAvgs(dBid,1);
-//                        listValues.put("inList",1);
-//                        db.update("itemDb", listValues,
-//                                "_id=" + Long.toString(dBid), null);
+                        changed = true;
+                        listValues.put("inList",1);     // set il=1
+                        db.update("itemDb", listValues,
+                                "_id=" + Long.toString(dBid), null);
                         updateAdapters();
                         break;
                     case name:
+                        changed = true;
+                        itemsSuggest.get(position).inList |= 2; // set chg flag
+                        listValues.put("inList",3);             // set il=1, dbChg = true
+                        db.update("itemDb", listValues,
+                                "_id=" + Long.toString(dBid), null);
+                        updateAdapters();
                         Intent intent = new Intent("com.symdesign.smartlist.intent.action.PickList");
                         intent.putExtra("id",dBid);
                         intent.putExtra("name",itemsSuggest.get(position).name);
                         intent.putExtra("inLists",true);
                         startActivity(intent);
-/*                        sld = SLDialog.newInstance();
-                        SLDialog.edit=true;
-                        SLDialog.list=false;
-                        SLDialog.name = nameView.getText();
-                        SLDialog.id=dBid;
-                        SLDialog.title = "Edit Item";
-                        FragmentManager fm = getFragmentManager();
-                        FragmentTransaction ft = fm.beginTransaction();
-                        sld.show(ft, "sldialog tag");
-*/                      break;
+                      break;
                     case del:
                         db.delete("itemDb","_id=" + Long.toString(dBid), null);
                         itemsSuggest.remove(id);
@@ -248,7 +240,7 @@ public class MainActivity extends AppCompatActivity {
         }
         else
             listValues.put("last_avg", running_avg(ct-last, avg));
-        listValues.put("inList", Math.abs(inList));
+        listValues.put("inList", Math.abs(inList));   // set inList, and dbChg true
         listValues.put("last_time", ct);
         db.update("itemDb", listValues, "_id=" + Long.toString(id), null);
         updateAdapters();
@@ -366,7 +358,6 @@ public class MainActivity extends AppCompatActivity {
     @Override public void onPause() {
         super.onPause();
         log("Pausing MainActivity");
-        //itemDb.close();
         db.close();
     }
     @Override public void onResume() {
