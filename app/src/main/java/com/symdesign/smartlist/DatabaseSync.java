@@ -60,7 +60,7 @@ public class DatabaseSync extends AsyncTask<Void,Void,String>  {
             for(int i=0; i<cnt; i++){
                 item = itemsList.get(i);
                 String str = String.format("%s,%d,%d,%d,%f\n",
-                    item.name,item.inList,item.last_avg,item.last_time,item.ratio);
+                    item.name,item.inList,item.last_time,item.last_avg,item.ratio);
                 log(str+"\n");
                 bos.write(str.getBytes("UTF-8"));
             }
@@ -68,7 +68,7 @@ public class DatabaseSync extends AsyncTask<Void,Void,String>  {
             for(int i=0; i<cnt; i++){
                 item = itemsSuggest.get(i);
                 String str = String.format("%s,%d,%d,%d,%f\n",
-                    item.name,item.inList,item.last_avg,item.last_time,item.ratio);
+                    item.name,item.inList,item.last_time,item.last_avg,item.ratio);
                 item.inList &= 1;
                 log(str+"\n");
                 bos.write(str.getBytes("UTF-8"));

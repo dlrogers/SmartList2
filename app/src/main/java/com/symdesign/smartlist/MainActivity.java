@@ -61,6 +61,7 @@ public class MainActivity extends AppCompatActivity {
     static AssetManager assetManager;
     static Toast toast;
     static boolean changed=false;
+    static ArrayList<String> deleteList = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -86,6 +87,7 @@ public class MainActivity extends AppCompatActivity {
         toolbar.hideOverflowMenu();
         Message repeat = Message.obtain(slHandler,MSG_REPEAT);
         slHandler.sendMessageDelayed(repeat, repeat_time);
+        deleteList.clear();
 
         //          Microphone button, response received by onActivityResult(...)
         micView.setOnClickListener(new View.OnClickListener() {
@@ -155,9 +157,6 @@ public class MainActivity extends AppCompatActivity {
                         break;
                     case name:
                         changed=true;
-                        itemsList.get(position).inList |= 2; // set chg flag
-                        db.update("itemDb", listValues,
-                                "_id=" + Long.toString(dBid), null);
                         Intent intent = new Intent("com.symdesign.smartlist.intent.action.PickList");
                         intent.putExtra("id",dBid);
                         intent.putExtra("name",itemsList.get(position).name);
@@ -165,6 +164,7 @@ public class MainActivity extends AppCompatActivity {
                         startActivity(intent);
                       break;
                     case del:
+                        deleteList.add(itemsList.get(position).name);
                         db.delete("itemDb", "_id=" + Long.toString(dBid), null);
                         itemsList.remove(id);
                         updateAdapters();
@@ -192,11 +192,9 @@ public class MainActivity extends AppCompatActivity {
                         break;
                     case name:
                         changed = true;
-                        itemsSuggest.get(position).inList |= 2; // set chg flag
-                        listValues.put("inList",3);             // set il=1, dbChg = true
-                        db.update("itemDb", listValues,
-                                "_id=" + Long.toString(dBid), null);
-                        updateAdapters();
+ //                       db.update("itemDb", listValues,
+ //                               "_id=" + Long.toString(dBid), null);
+ //                       updateAdapters();
                         Intent intent = new Intent("com.symdesign.smartlist.intent.action.PickList");
                         intent.putExtra("id",dBid);
                         intent.putExtra("name",itemsSuggest.get(position).name);
