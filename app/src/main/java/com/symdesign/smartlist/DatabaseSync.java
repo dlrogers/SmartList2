@@ -25,6 +25,8 @@ import static com.symdesign.smartlist.SLAdapter.itemsSuggest;
 import static com.symdesign.smartlist.SLAdapter.updateAdapters;
 import static com.symdesign.smartlist.MainActivity.listValues;
 import static com.symdesign.smartlist.MainActivity.changed;
+import static com.symdesign.smartlist.MainActivity.deleteList;
+import static com.symdesign.smartlist.MainActivity.nDelete;
 
 /**
  * Created by dennis on 2/18/16.
@@ -34,7 +36,7 @@ import static com.symdesign.smartlist.MainActivity.changed;
 public class DatabaseSync extends AsyncTask<Void,Void,String>  {
 
     HttpURLConnection dB;
-    String link = "http://symdesigns.ddns.net/cgi-bin/smartlist.php";
+    String link = "http://symdesigns.ddns.net/cgi-bin/sm_test.php";
     char[] buf = new char[140];
     Cursor items;
 
@@ -55,8 +57,15 @@ public class DatabaseSync extends AsyncTask<Void,Void,String>  {
             BufferedOutputStream bos = new BufferedOutputStream(dB.getOutputStream());
             log("Sending data to server");
             bos.write((changed ? "1\n" : "0\n").getBytes("UTF-8"));
+            bos.write(String.format("%d\n",nDelete).getBytes("UTF-8"));
+            final String[] dc = {"_id","name"};
+            for(int i=0; i<nDelete; i++) {
+                    bos.write((deleteList.get(i)+"\n").getBytes("UTF-8"));
+            }
             changed=false;
-            int cnt = itemsList.size();
+            nDelete=0;
+            deleteList.clear();
+            int cnt = itemsList.size() ;
             for(int i=0; i<cnt; i++){
                 item = itemsList.get(i);
                 String str = String.format("%s,%d,%d,%d,%f\n",

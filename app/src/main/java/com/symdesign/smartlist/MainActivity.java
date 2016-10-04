@@ -14,6 +14,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.speech.RecognizerIntent;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.support.design.widget.FloatingActionButton;
@@ -62,6 +63,7 @@ public class MainActivity extends AppCompatActivity {
     static Toast toast;
     static boolean changed=false;
     static ArrayList<String> deleteList = new ArrayList<>();
+    static int nDelete;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -82,9 +84,11 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         setSupportActionBar(toolbar);
-        toolbar.setTitle("Helper");
+        toolbar.setTitle("");
+        ActionBar abar = getSupportActionBar();
+        if(abar!=null)
+            abar.setDisplayShowTitleEnabled(false);
         toolbar.setLogo(R.mipmap.icon_nobun);
-        toolbar.hideOverflowMenu();
         Message repeat = Message.obtain(slHandler,MSG_REPEAT);
         slHandler.sendMessageDelayed(repeat, repeat_time);
         deleteList.clear();
@@ -140,9 +144,9 @@ public class MainActivity extends AppCompatActivity {
 */
         PickList.prepareListData();
 
-        log(String.format("Starting MainActivityt, time=%d",getTime()));
+        log(String.format("Starting MainActivity, time=%d",getTime()));
         updateAdapters();
-
+        nDelete=0;
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View item, int position, long id) {
@@ -165,6 +169,7 @@ public class MainActivity extends AppCompatActivity {
                       break;
                     case del:
                         deleteList.add(itemsList.get(position).name);
+                        nDelete++;
                         db.delete("itemDb", "_id=" + Long.toString(dBid), null);
                         itemsList.remove(id);
                         updateAdapters();
@@ -202,10 +207,13 @@ public class MainActivity extends AppCompatActivity {
                         startActivity(intent);
                       break;
                     case del:
+                        deleteList.add(itemsSuggest.get(position).name);
+                        nDelete++;
+
                         db.delete("itemDb","_id=" + Long.toString(dBid), null);
                         itemsSuggest.remove(id);
                         updateAdapters();
-//                        setSelected(item,position,false);
+
                         log("list del clicked");
                         break;
                 }
@@ -251,7 +259,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
-    getMenuInflater().inflate(R.menu.menu_main, menu);
+        getMenuInflater().inflate(R.menu.menu_main, menu);
         return true;
     }
 

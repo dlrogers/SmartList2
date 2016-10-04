@@ -12,6 +12,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -66,6 +67,9 @@ public class PickList extends Activity implements AdapterView.OnItemSelectedList
         setContentView(R.layout.pick_list);
         Bundle extras = getIntent().getExtras();
         nameView = (EditText) findViewById(R.id.name);
+        InputMethodManager imm = (InputMethodManager) context.getSystemService(INPUT_METHOD_SERVICE);
+        nameView.requestFocus();
+        imm.showSoftInput(nameView, InputMethodManager.SHOW_IMPLICIT);
         if(extras != null) {
             name = extras.getString("name");
             inLists = extras.getBoolean("inLists");
