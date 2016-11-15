@@ -16,13 +16,14 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_alignParentTop="true">
-            <EditText
+            <AutoCompleteTextView
                 android:id="@+id/name"
                 android:layout_alignParentLeft="true"
                 android:hint="Item Name"
                 android:layout_width="200sp"
                 android:layout_height="wrap_content"
-                android:textSize="18sp"/>
+                android:textColor="#1A0B0B"
+                android:textSize="20sp"/>
 			<Button
 				android:id="@+id/pick_button"
 				android:layout_width="40dp"
@@ -30,7 +31,7 @@
 				android:layout_toRightOf="@id/name"
 				android:background="@drawable/check"/>
         </RelativeLayout>
-        <LinearLayout
+        <RelativeLayout
             android:id="@+id/buy_frequency"
             android:orientation="horizontal"
             android:layout_below="@id/edit_name"
@@ -40,21 +41,27 @@
                 android:id="@+id/prompt"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_alignParentLeft="true"
+                android:layout_centerVertical="true"
+                android:layout_gravity="center_vertical"
                 android:text="Buying Frequency:"
-                android:textSize="18sp"
-                android:paddingTop="10sp"/>
+                android:textSize="20sp"
+                android:textColor="#1A0B0B"/>
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:layout_centerVertical="true"
+                android:layout_alignParentRight="true"
                 android:orientation="vertical">
                 <Spinner
                     android:id="@+id/freq"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textSize="18sp"
-                    android:paddingLeft="25dp"/>
+                    android:textSize="20sp"
+                    android:textColor="#1A0B0B"/>
             </LinearLayout>
-        </LinearLayout>
+        </RelativeLayout>
     </RelativeLayout>
     <TextView
         android:layout_width="wrap_content"

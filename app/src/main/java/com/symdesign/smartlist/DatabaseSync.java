@@ -1,29 +1,24 @@
 package com.symdesign.smartlist;
 
-import android.database.Cursor;
 import android.os.AsyncTask;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.io.BufferedOutputStream;
-import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Locale;
+
 import static com.symdesign.smartlist.MainActivity.db;
 import static com.symdesign.smartlist.MainActivity.log;
 import static com.symdesign.smartlist.MainActivity.logF;
-import static com.symdesign.smartlist.MainActivity.logF;
-import static com.symdesign.smartlist.SLAdapter.cols;
 import static com.symdesign.smartlist.SLAdapter.itemsList;
 import static com.symdesign.smartlist.SLAdapter.itemsSuggest;
 import static com.symdesign.smartlist.SLAdapter.updateAdapters;
-import static com.symdesign.smartlist.MainActivity.listValues;
+import static com.symdesign.smartlist.MainActivity.values;
 import static com.symdesign.smartlist.MainActivity.changed;
 import static com.symdesign.smartlist.MainActivity.deleteList;
 import static com.symdesign.smartlist.MainActivity.nDelete;
@@ -33,32 +28,27 @@ import static com.symdesign.smartlist.MainActivity.nDelete;
  * Class DatabaseSync is a AsyncTask that syncs phone database with
  * MYSQL database on the Shopping Mate server
  */
-public class DatabaseSync extends AsyncTask<Void,Void,String>  {
-
-    HttpURLConnection dB;
-    String link = "http://symdesigns.ddns.net/cgi-bin/sm_test.php";
-    char[] buf = new char[140];
-    Cursor items;
+class DatabaseSync extends AsyncTask<Void,Void,String>  {
 
     protected String doInBackground(Void... arg0) {
         xferDb();
         return "Done";
     }
 
-    public boolean xferDb() {
+    private boolean xferDb() {
         Item item;
 
         try {       // Send post request
-            URL url = new URL(link);
-            dB = (HttpURLConnection) url.openConnection();
+            URL url = new URL("http://symdesigns.ddns.net/cgi-bin/sm_test.php");
+            HttpURLConnection dB = (HttpURLConnection) url.openConnection();
             dB.setRequestMethod("POST");
             dB.setDoInput(true);
             dB.setDoOutput(true);
             BufferedOutputStream bos = new BufferedOutputStream(dB.getOutputStream());
             log("Sending data to server");
             bos.write((changed ? "1\n" : "0\n").getBytes("UTF-8"));
-            bos.write(String.format("%d\n",nDelete).getBytes("UTF-8"));
-            final String[] dc = {"_id","name"};
+            bos.write(String.format(Locale.getDefault(),"%d\n",nDelete).getBytes("UTF-8"));
+//            final String[] dc = {"_id","name"};
             for(int i=0; i<nDelete; i++) {
                     bos.write((deleteList.get(i)+"\n").getBytes("UTF-8"));
             }
@@ -68,7 +58,7 @@ public class DatabaseSync extends AsyncTask<Void,Void,String>  {
             int cnt = itemsList.size() ;
             for(int i=0; i<cnt; i++){
                 item = itemsList.get(i);
-                String str = String.format("%s,%d,%d,%d,%f\n",
+                String str = String.format(Locale.getDefault(),"%s,%d,%d,%d,%f\n",
                     item.name,item.inList,item.last_time,item.last_avg,item.ratio);
                 log(str+"\n");
                 bos.write(str.getBytes("UTF-8"));
@@ -76,7 +66,7 @@ public class DatabaseSync extends AsyncTask<Void,Void,String>  {
             cnt = itemsSuggest.size();
             for(int i=0; i<cnt; i++){
                 item = itemsSuggest.get(i);
-                String str = String.format("%s,%d,%d,%d,%f\n",
+                String str = String.format(Locale.getDefault(),"%s,%d,%d,%d,%f\n",
                     item.name,item.inList,item.last_time,item.last_avg,item.ratio);
                 item.inList &= 1;
                 log(str+"\n");
@@ -96,24 +86,24 @@ public class DatabaseSync extends AsyncTask<Void,Void,String>  {
                 switch(cols[0]) {
                     case "u":   //Time changed on server, update item
                         logF("%s", col);
-                        listValues.clear();
-                        listValues.put("name", cols[1]);
-                        listValues.put("inList", cols[2]);
-                        listValues.put("last_time", cols[3]);
-                        listValues.put("last_avg", cols[4]);
-                        listValues.put("ratio", cols[5]);
+                        values.clear();
+                        values.put("name", cols[1]);
+                        values.put("inList", cols[2]);
+                        values.put("last_time", cols[3]);
+                        values.put("last_avg", cols[4]);
+                        values.put("ratio", cols[5]);
                         log("name='" + cols[1] + "'");
-                        long id = db.update("itemDb", listValues, "name='" + cols[1] + "'", null);
+                        db.update(MainActivity.currList, values, "name='" + cols[1] + "'", null);
                         break;
                     case "i":   //Item added to server, insert into database
                         logF("%s",col);
-                        listValues.clear();
-                        listValues.put("name", cols[1]);
-                        listValues.put("inList", cols[2]);
-                        listValues.put("last_time", cols[3]);
-                        listValues.put("last_avg", cols[4]);
-                        listValues.put("ratio", cols[5]);
-                        db.insert("itemDb",null,listValues);
+                        values.clear();
+                        values.put("name", cols[1]);
+                        values.put("inList", cols[2]);
+                        values.put("last_time", cols[3]);
+                        values.put("last_avg", cols[4]);
+                        values.put("ratio", cols[5]);
+                        db.insert(MainActivity.currList,null,values);
                         break;
     //                logF("cols changed = %d",id);
 //                log(col);
@@ -131,9 +121,10 @@ public class DatabaseSync extends AsyncTask<Void,Void,String>  {
         }
         return true;
     }
-    protected void onProgressUpdate(Integer... progress) {
+/*    protected void onProgressUpdate(Integer... progress) {
 
     }
+   */
     protected void onPostExecute(String result) {
         log("post execute");
         updateAdapters();
