@@ -24,8 +24,7 @@ import android.widget.ImageView;
 import static android.support.v4.widget.CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER;
 import static com.symdesign.smartlist.MainActivity.currList;
 import static com.symdesign.smartlist.MainActivity.db;
-import static com.symdesign.smartlist.SLAdapter.updateAdapters;
-//import static com.symdesign.smartlist.MainActivity.listTable;
+import static com.symdesign.smartlist.MainActivity.log;
 
 /**
  * Created by dennis on 10/17/16.
@@ -33,6 +32,10 @@ import static com.symdesign.smartlist.SLAdapter.updateAdapters;
 
 public class OptionDialog extends DialogFragment {
     AutoCompleteTextView nameView;
+
+    public OptionDialog() {
+        // Empty contstuctor required for DialogFragment
+    }
 
     public static OptionDialog newInstance(int title) {
         OptionDialog frag = new OptionDialog();
@@ -48,8 +51,12 @@ public class OptionDialog extends DialogFragment {
         ImageView checkView = (ImageView) optionView.findViewById(R.id.check);
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(MainActivity.mainActivity,
                 android.R.layout.simple_dropdown_item_1line, PickList.srchItems);
+        getDialog().getWindow().setSoftInputMode(
+                WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE
+        );
         nameView = (AutoCompleteTextView) optionView.findViewById(R.id.name);
         nameView.setAdapter(adapter);
+        nameView.setHint("List Name");
         checkView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -57,10 +64,10 @@ public class OptionDialog extends DialogFragment {
                 currList = listName;
                 if(listName.length() > 0) {
                     addToLists(listName);
-                    String SQL = "CREATE TABLE '"+MainActivity.currList+"'(" +
-                            "_id INTEGER PRIMARY KEY, name TEXT, inList INT, " +
+                    String SQL = "CREATE TABLE '"+currList+"'(" +
+                            "_id INTEGER PRIMARY KEY, name TEXT, flags INT, " +
                             "last_time INT, last_avg INT, ratio REAL)";
-                    MainActivity.log(SQL);
+                    log(SQL);
                     db.execSQL(SQL);
                     showLists();
                 }

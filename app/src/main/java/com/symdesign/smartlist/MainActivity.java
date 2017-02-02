@@ -1,7 +1,6 @@
 package com.symdesign.smartlist;
 
 import android.app.Activity;
-import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.content.ContentValues;
 import android.content.Context;
@@ -17,6 +16,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.speech.RecognizerIntent;
 import android.support.design.widget.FloatingActionButton;
+import android.support.v4.app.FragmentManager;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v4.widget.SimpleCursorAdapter;
 import android.support.v7.app.AppCompatActivity;
@@ -43,72 +43,48 @@ import com.google.android.gms.appindexing.AppIndex;
 import com.google.android.gms.appindexing.Thing;
 import com.google.android.gms.common.api.GoogleApiClient;
 
+import java.net.URL;
 import java.util.ArrayList;
 
 import static android.widget.CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER;
 import static com.symdesign.smartlist.R.id.navList;
 import static com.symdesign.smartlist.SLAdapter.*;
+import static com.symdesign.smartlist.SLAdapter.itemsList;
 
 // Version of SmartList that uses file to store databae on phone
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements AdminDialog.AdminDialogListener {
 
     static ItemDb itemDb;
-    //    static Context context;
+    static String serverAddr="http://192.168.1.209/cgi-bin/";
+    static Context context;
     static ContentValues values = new ContentValues();
     public static SQLiteDatabase db;
     static ListView listView, suggestView;
-    /**
-     * ATTENTION: This was auto-generated to implement the App Indexing API.
-     * See https://g.co/AppIndexing/AndroidStudio for more information.
-     */
-    private GoogleApiClient client;
-
-    /**
-     * ATTENTION: This was auto-generated to implement the App Indexing API.
-     * See https://g.co/AppIndexing/AndroidStudio for more information.
-     */
-    public Action getIndexApiAction() {
-        Thing object = new Thing.Builder()
-                .setName("SmartList") // TODO: Define a title for the content shown.
-                // TODO: Make sure this auto-generated URL is correct.
-                .setUrl(Uri.parse("http://www.symdesign.us/listmate"))
-                .build();
-        return new Action.Builder(Action.TYPE_VIEW)
-                .setObject(object)
-                .setActionStatus(Action.STATUS_TYPE_COMPLETED)
-                .build();
-    }
-
-    @Override
-    public void onStart() {
-        super.onStart();
-
-        // ATTENTION: This was auto-generated to implement the App Indexing API.
-        // See https://g.co/AppIndexing/AndroidStudio for more information.
-        client.connect();
-        AppIndex.AppIndexApi.start(client, getIndexApiAction());
-    }
+    static String adminURL;
 
     public enum ClickLocation {none, del, name, box}
-
     static ClickLocation clickLocation;
     static final long second = 1, minute = 60 * second, hour = 60 * minute,
             day = 24 * hour, week = 7 * day, repeat_time = 10 ;
     static int scrn_width, scrn_height, VOICE_RECOGNITION_REQUEST_CODE = 2;
     static final int MSG_REPEAT = 1;
     static Activity mainActivity;
-    static final String SQL_CREATE =
-            "CREATE TABLE Groceries(_id INTEGER PRIMARY KEY, name TEXT, inList INT, last_time INT, last_avg INT, ratio REAL)";
+    static final String SQL_CREATE_GROCERIES =
+            "CREATE TABLE Groceries(_id INTEGER PRIMARY KEY, name TEXT, flags INT, last_time INT, last_avg INT, ratio REAL)";
+        // name =       name of list item
+        // flags =     flags: bito ? (in shopping list) : 1 (in suggest list)
+        //                     bit1 ? (to be deleted) : (normal)
+        // last_time =  Last time item bought (in seconds since epoch
+        // last_avg =   Running averate of times between buys
+        // ratio =      (time since last purchase)/last_avg
     static final String SQL_LISTS = "CREATE TABLE lists(_id INTEGER PRIMARY KEY, name TEXT, tableid TEXT)";
     static Handler slHandler = new SLHandler();
     static AssetManager assetManager;
     static Toast toast;
-    static boolean changed = false;
     static ArrayList<String> deleteList = new ArrayList<>();
-    static int nDelete;
 //    static ArrayList<ListItem> listTable = new ArrayList<>(5);
-    static String currList,currTable,installed;     // Current Shared Prefs
+    static String currList,currTable,installed,email,passwd;     // Current Shared Prefs
     static android.support.v7.app.ActionBar actionBar;
     static SharedPreferences prefs;
 
@@ -117,7 +93,6 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         mainActivity = this;
-        //          Get Shared Preferences
         itemDb = new ItemDb(getContext());
         db = itemDb.getWritableDatabase();
         prefs = getPreferences(MODE_PRIVATE);
@@ -143,7 +118,9 @@ public class MainActivity extends AppCompatActivity {
 //        Code to do one time install code
 
         installed = prefs.getString("installed","no");
+        String syncEnabled = prefs.getString("sync","no");
 //        installed = "no";
+
         if(installed.equals("no")) {
             db.execSQL("drop table if exists Groceries");   // Remove any exisitng Groceries
             db.execSQL("drop table if exists lists");
@@ -151,15 +128,21 @@ public class MainActivity extends AppCompatActivity {
             ed.putString("installed","yes");
             ed.putString("currList","Groceries");
             ed.putString("currTable","Groceries");
+            ed.putString("email","no_email");
+            ed.putString("passwd","no_passwd");
+            ed.putBoolean("syncReg",false);
             ed.apply();
             db.execSQL(SQL_LISTS);                          // Create "lists" table
             OptionDialog.addToLists("Groceries");
-            db.execSQL(SQL_CREATE);
+            currList = "Groceries";
+            db.execSQL(SQL_CREATE_GROCERIES);
         }
         setupOptions();     // Setup up sidebar
         OptionDialog.showLists();
         printLists();
 
+        email = prefs.getString("email","no_email");
+        passwd = prefs.getString("passwd","no_passwd");
         currList = prefs.getString("currList","Groceries");
         currTable = prefs.getString("currTable","Groceries");
 
@@ -171,11 +154,10 @@ public class MainActivity extends AppCompatActivity {
 
 
 /*		db.execSQL("DROP TABLE itemDb");
-        db.execSQL(SQL_CREATE);
+        db.execSQL(SQL_CREATE_GROCERIES);
 		initDB(db);
         db.execSQL(SQL_LISTS);
 */
-//        final SLOptions slOptions = new SLOptions(drawer);
         setSupportActionBar(toolbar);
         actionBar = getSupportActionBar();
         actionBar.setTitle(currList);
@@ -220,7 +202,6 @@ public class MainActivity extends AppCompatActivity {
 
         log(String.format("Starting MainActivity, time=%d", getTime()));
         updateAdapters();
-        nDelete = 0;
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View item, int position, long id) {
@@ -230,11 +211,9 @@ public class MainActivity extends AppCompatActivity {
                 switch (clickLocation) {
                     case box:
                         clickLocation = ClickLocation.none;
-                        changed = true;
                         updateAvgs(dBid, 0);
                         break;
                     case name:
-                        changed = true;
                         Intent intent = new Intent("com.symdesign.smartlist.intent.action.PickList");
                         intent.putExtra("id", dBid);
                         intent.putExtra("name", itemsList.get(position).name);
@@ -242,10 +221,11 @@ public class MainActivity extends AppCompatActivity {
                         startActivity(intent);
                         break;
                     case del:
-                        deleteList.add(itemsList.get(position).name);
-                        nDelete++;
-                        db.delete(currList, "_id=" + Long.toString(dBid), null);
-                        itemsList.remove(id);
+                        values.clear();
+//                        values.put("flags",(itemsList.get(position).flags)|2);
+                        values.put("flags",2);
+                        db.update(currList,values,"_id="+Long.toString(dBid),null);
+//                        itemsList.get(position).flags |= 2;
                         updateAdapters();
 //                        setSelected(item,position,false);
                         break;
@@ -263,14 +243,12 @@ public class MainActivity extends AppCompatActivity {
                 switch (clickLocation) {
                     case box:
                         clickLocation = ClickLocation.none;
-                        changed = true;
-                        values.put("inList", 1);     // set il=1
+                        values.put("flags", 1);     // set il=1
                         db.update(currList, values,
                                 "_id=" + Long.toString(dBid), null);
                         updateAdapters();
                         break;
                     case name:
-                        changed = true;
                         //                       db.update(currList, values,
                         //                               "_id=" + Long.toString(dBid), null);
                         //                       updateAdapters();
@@ -281,14 +259,12 @@ public class MainActivity extends AppCompatActivity {
                         startActivity(intent);
                         break;
                     case del:
-                        deleteList.add(itemsSuggest.get(position).name);
-                        nDelete++;
-
-                        db.delete(currList, "_id=" + Long.toString(dBid), null);
-                        itemsSuggest.remove(id);
+                        values.clear();
+//                        values.put("flags",(itemsSuggest.get(position).flags)|2);
+                        values.put("flags",2);
+                        db.update(currList,values,"_id="+Long.toString(dBid),null);
+//                        itemsList.get(position).flags = 2;
                         updateAdapters();
-
-                        log("list del clicked");
                         break;
                 }
             }
@@ -355,6 +331,68 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        int id = item.getItemId();
+        switch (item.getItemId()) {
+            case R.id.menu:
+//                openDrawer();
+                log("menu");
+                break;
+            case R.id.mic:
+                log("Microphone clicked");
+                SpeechRecognitionHelper.run(mainActivity);
+                return true;
+            case R.id.sync:     // Sync
+                if(email.equals("no_email")){ // New user
+                    FragmentManager fm = getSupportFragmentManager();
+                    AdminDialog register = new AdminDialog();
+                    register.show(fm,"dialog");
+                } else {
+                    toast = Toast.makeText(getApplicationContext(),
+                            "\nSyncing\n",
+                            Toast.LENGTH_LONG);
+                    toast.setGravity(Gravity.TOP, 0, 200);
+                    toast.show();
+                    new SyncList(this,email,passwd,"Groceries").execute();
+//                    new DatabaseSync().execute();
+                }
+                break;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+    @Override
+    public void onFinishAdminDialog(String email,String passwd) {
+//        Toast.makeText(this, "Email = " + email + ", Password = " + passwd, Toast.LENGTH_SHORT).show();
+        new SyncList(this,email,passwd,"Groceries").execute();
+//        new DatabaseSync().execute();
+    }
+    public void onFinishSyncList(boolean exists) {
+/*        if(prefs.getBoolean("syncReg",false)) {
+            new DatabaseSync();
+        } else {
+            if (exists) {
+                FragmentManager fm = getSupportFragmentManager();
+                AdminDialog adminDialog = new AdminDialog();
+                adminDialog.show(fm, "dialog");
+            } else {
+                // Add entry to users in admin db
+                values.clear();
+                values.put("email", email);
+                values.put("passwd", passwd);
+                values.put("list", "Groceries");
+                db.execSQL("use admin");
+                db.insert("users", null, values);
+                // Update preferences
+                SharedPreferences.Editor ed = prefs.edit();
+                ed.putBoolean("syncReg", true);
+            }
+        }
+*/    }
     //      Show lists table
     static void printLists() {
         Cursor lsts = db.query("lists",new String[] {"name","tableid"},null,null,null,null,null);
@@ -383,11 +421,11 @@ public class MainActivity extends AppCompatActivity {
      * Update Frequency averages in database for item id
      *
      * @param id     ID of currently selected item
-     * @param inList New state of inList entry
+     * @param flags New state of flags entry
      */
-    public void updateAvgs(long id, int inList) {
+    public void updateAvgs(long id, int flags) {
 
-        final String[] avgCols = {"last_time", "last_avg", "inList"};
+        final String[] avgCols = {"last_time", "last_avg", "flags"};
 
         Cursor curs = db.query(currList, avgCols, "_id=" + Long.toString(id), null, "", "", "name ASC");
         curs.moveToFirst();
@@ -400,7 +438,7 @@ public class MainActivity extends AppCompatActivity {
             db.delete(currList, "_id=" + Long.toString(id), null); // and delete
         } else
             values.put("last_avg", running_avg(ct - last, avg));
-        values.put("inList", Math.abs(inList));   // set inList, and dbChg true
+        values.put("flags", Math.abs(flags));   // set flags, and dbChg true
         values.put("last_time", ct);
         logF("last_time = %d\t current time = %d\t, last_avg = %d\t, elapsed = %d",last,ct,avg,ct-last);
         db.update(currList, values, "_id=" + Long.toString(id), null);
@@ -418,37 +456,10 @@ public class MainActivity extends AppCompatActivity {
         getMenuInflater().inflate(R.menu.menu_main, menu);
         return true;
     }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-        switch (item.getItemId()) {
-            case R.id.menu:
-//                openDrawer();
-                log("menu");
-                break;
-            case R.id.mic:
-                log("Microphone clicked");
-                SpeechRecognitionHelper.run(mainActivity);
-                return true;
-            case R.id.sync:
-                toast = Toast.makeText(getApplicationContext(),
-                        "\nSyncing\n",
-                        Toast.LENGTH_LONG);
-                toast.setGravity(Gravity.TOP, 0, 200);
-                toast.show();
-                new DatabaseSync().execute();
-                break;
-        }
  /*       if (id == R.id.action_settings) {
             return true;
         }
 */
-        return super.onOptionsItemSelected(item);
-    }
 
     public void initDB(SQLiteDatabase db) {
 //		values = new ContentValues();
@@ -472,7 +483,7 @@ public class MainActivity extends AppCompatActivity {
     public static void addItem(String nm, int il, long lt, long la, double r) {
         values.clear();
         values.put("name", nm);
-        values.put("inList", il);
+        values.put("flags", il);
         values.put("last_time", lt);
         values.put("last_avg", la);
         values.put("ratio", r);
@@ -482,7 +493,7 @@ public class MainActivity extends AppCompatActivity {
     public static void changeItem(String nm, int il, long lt, long la, double r, long id) {
         values.clear();
         values.put("name", nm);
-        values.put("inList", il);
+        values.put("flags", il);
         values.put("last_time", Math.abs(lt));
         values.put("last_avg", la);
         values.put("ratio", r);
@@ -532,7 +543,7 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(this, ((CharSequence) matches.get(0)), Toast.LENGTH_LONG).show();
             Long date = getTime();
             String name = (String) matches.get(0);
-            // A negative value of inList indicates a new item
+            // A negative value of flags indicates a new item
             db = MainActivity.itemDb.getWritableDatabase();
             MainActivity.addItem((String) name, 1, getTime(), 7 * day, 0);
             updateAdapters();
@@ -558,6 +569,38 @@ public class MainActivity extends AppCompatActivity {
         log("Resuming MainActivity");
         db = itemDb.getWritableDatabase();
     }
+    @Override
+    public void onStart() {
+        super.onStart();
+
+        // ATTENTION: This was auto-generated to implement the App Indexing API.
+        // See https://g.co/AppIndexing/AndroidStudio for more information.
+        client.connect();
+        AppIndex.AppIndexApi.start(client, getIndexApiAction());
+    }
+    /**
+     * ATTENTION: This was auto-generated to implement the App Indexing API.
+     * See https://g.co/AppIndexing/AndroidStudio for more information.
+     */
+    private GoogleApiClient client;
+
+    /**
+     * ATTENTION: This was auto-generated to implement the App Indexing API.
+     * See https://g.co/AppIndexing/AndroidStudio for more information.
+     */
+    public Action getIndexApiAction() {
+        Thing object = new Thing.Builder()
+                .setName("SmartList") // TODO: Define a title for the content shown.
+                // TODO: Make sure this auto-generated URL is correct.
+                .setUrl(Uri.parse("http://www.symdesign.us/listmate"))
+                .build();
+        return new Action.Builder(Action.TYPE_VIEW)
+                .setObject(object)
+                .setActionStatus(Action.STATUS_TYPE_COMPLETED)
+                .build();
+    }
+
+
 }
 
 /*        actionBar.setHomeAsUpIndicator(R.drawable.ic_menu_moreoverflow_normal_holo_dark);

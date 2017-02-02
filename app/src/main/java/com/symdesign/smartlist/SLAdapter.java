@@ -28,7 +28,7 @@ class SLAdapter extends ArrayAdapter<Item> {
     static ArrayList<Item> itemsList = new ArrayList<>();
     static ArrayList<Item> itemsSuggest = new ArrayList<>();
     boolean checked = false;
-    static String[] cols = {"_id", "name", "inList", "last_time", "last_avg", "ratio"};
+    static String[] cols = {"_id", "name", "flags", "last_time", "last_avg", "ratio"};
     int layout;
 
     public SLAdapter(Context context, ArrayList<Item> items, int box_layout) {
@@ -52,7 +52,7 @@ class SLAdapter extends ArrayAdapter<Item> {
         SLAdapter listAdapter, suggestAdapter;
         // get cursor for shopping list
 //        long time_millis = System.currentTimeMillis();
-        listCursor = db.query("'"+MainActivity.currList+"'", cols, "inList=1", null, "", "", null);
+        listCursor = db.query("'"+MainActivity.currList+"'", cols, "flags=1", null, "", "", null);
         itemsList.clear();
         int n = 0;
         for (listCursor.moveToFirst(); !listCursor.isAfterLast(); listCursor.moveToNext()) {
@@ -67,7 +67,7 @@ class SLAdapter extends ArrayAdapter<Item> {
         listView.setAdapter(listAdapter);
 
         // get cursor for suggestion list
-        suggestCursor = db.query("'"+MainActivity.currList+"'", cols, "(inList=0)|(inList=2)", null, "", "",
+        suggestCursor = db.query("'"+MainActivity.currList+"'", cols, "flags=0", null, "", "",
                 "ratio DESC");
         itemsSuggest.clear();
         n = 0;
@@ -94,13 +94,13 @@ class SLAdapter extends ArrayAdapter<Item> {
 }
 /*
     public static void prtSuggestions() {
-        listCursor = db.query(MainActivity.currList, cols, "inList=1 OR inList=-1", null, "", "", "ratio DESC");
+        listCursor = db.query(MainActivity.currList, cols, "flags=1 OR flags=-1", null, "", "", "ratio DESC");
         for (listCursor.moveToFirst(); !listCursor.isAfterLast(); listCursor.moveToNext()) {
             logF("id=%d, nm=%s, lt=%d, la=%d, rat=%f",
                     listCursor.getLong(0), listCursor.getString(1), listCursor.getLong(3), listCursor.getLong(4),
                     listCursor.getFloat(5));
         }
-        suggestCursor = db.query(MainActivity.currList, cols, "inList=0", null, "", "", "ratio DESC");
+        suggestCursor = db.query(MainActivity.currList, cols, "flags=0", null, "", "", "ratio DESC");
         for (suggestCursor.moveToFirst(); !suggestCursor.isAfterLast(); suggestCursor.moveToNext()) {
             logF("id=%d, nm=%s, lt=%d, la=%d, rat=%f",
                     suggestCursor.getLong(0), suggestCursor.getString(1), suggestCursor.getLong(3), suggestCursor.getLong(4),
@@ -118,7 +118,7 @@ class SLAdapter extends ArrayAdapter<Item> {
         for(int i=0;i<n;i++) {
             Item item = items.get(i);
             logF("id=%d, nm=%s, il=%d, t-lt=%d, la=%d, rat=%f5.11",
-                    item.id,item.name,item.inList,(getTime()-item.last_time),item.last_avg,item.ratio);
+                    item.id,item.name,item.flags,(getTime()-item.last_time),item.last_avg,item.ratio);
         }
 
     }

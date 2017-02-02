@@ -56,7 +56,7 @@ public class PickList extends Activity implements AdapterView.OnItemSelectedList
     static CharSequence name;
     static int dBid;
     static boolean inLists;
-    final String[] cols = {"_id","name","inList","last_time","last_avg","ratio"};
+    final String[] cols = {"_id","name","flags","last_time","last_avg","ratio"};
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -258,16 +258,16 @@ public class PickList extends Activity implements AdapterView.OnItemSelectedList
     }
 
     public void addItem(Item item) {
-        addItem(item.name,(int) item.inList,item.last_time,item.last_avg,item.ratio);
+        addItem(item.name,(int) item.flags,item.last_time,item.last_avg,item.ratio);
     }
     public void changeItem(Item item) {
-        changeItem(item.name,(int) item.inList,item.last_time,item.last_avg,item.ratio,item.id);
+        changeItem(item.name,(int) item.flags,item.last_time,item.last_avg,item.ratio,item.id);
     }
     public static void changeItem(String nm,int il,long lt,long la,double r,long id){
         ContentValues listValues = new ContentValues();
         listValues.clear();
         listValues.put("name",nm);
-        listValues.put("inList",il);
+        listValues.put("flags",il);
         listValues.put("last_time", Math.abs(lt));
         listValues.put("last_avg", la);
         listValues.put("ratio", r);
@@ -277,7 +277,7 @@ public class PickList extends Activity implements AdapterView.OnItemSelectedList
         ContentValues listValues = new ContentValues();
         listValues.clear();
         listValues.put("name",nm);
-        listValues.put("inList", il);
+        listValues.put("flags", il);
         listValues.put("last_time", lt);
         listValues.put("last_avg", la);
         listValues.put("ratio", r);

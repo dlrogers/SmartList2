@@ -19,9 +19,9 @@ import static com.symdesign.smartlist.SLAdapter.itemsList;
 import static com.symdesign.smartlist.SLAdapter.itemsSuggest;
 import static com.symdesign.smartlist.SLAdapter.updateAdapters;
 import static com.symdesign.smartlist.MainActivity.values;
-import static com.symdesign.smartlist.MainActivity.changed;
-import static com.symdesign.smartlist.MainActivity.deleteList;
-import static com.symdesign.smartlist.MainActivity.nDelete;
+import static com.symdesign.smartlist.MainActivity.email;
+import static com.symdesign.smartlist.MainActivity.passwd;
+import static com.symdesign.smartlist.MainActivity.currList;
 
 /**
  * Created by dennis on 2/18/16.
@@ -39,43 +39,46 @@ class DatabaseSync extends AsyncTask<Void,Void,String>  {
         Item item;
 
         try {       // Send post request
-            URL url = new URL("http://symdesigns.ddns.net/cgi-bin/sm_test.php");
-            HttpURLConnection dB = (HttpURLConnection) url.openConnection();
-            dB.setRequestMethod("POST");
-            dB.setDoInput(true);
-            dB.setDoOutput(true);
-            BufferedOutputStream bos = new BufferedOutputStream(dB.getOutputStream());
+            URL url = new URL(MainActivity.serverAddr+"sm_test.php");
+//            URL url = new URL("http://209.95.50.135/cgi-bin/admin.php");
+            HttpURLConnection link = (HttpURLConnection) url.openConnection();
+            link.setRequestMethod("POST");
+            link.setDoInput(true);
+            link.setDoOutput(true);
+            BufferedOutputStream bos = new BufferedOutputStream(link.getOutputStream());
             log("Sending data to server");
-            bos.write((changed ? "1\n" : "0\n").getBytes("UTF-8"));
-            bos.write(String.format(Locale.getDefault(),"%d\n",nDelete).getBytes("UTF-8"));
-//            final String[] dc = {"_id","name"};
-            for(int i=0; i<nDelete; i++) {
-                    bos.write((deleteList.get(i)+"\n").getBytes("UTF-8"));
-            }
-            changed=false;
-            nDelete=0;
-            deleteList.clear();
-            int cnt = itemsList.size() ;
+            bos.write((email+"\n").getBytes("UTF-8"));
+            bos.write((passwd+"\n").getBytes("UTF-8"));
+            bos.write((currList+"\n").getBytes("UTF-8"));
+
+            int cnt = itemsList.size();
             for(int i=0; i<cnt; i++){
                 item = itemsList.get(i);
                 String str = String.format(Locale.getDefault(),"%s,%d,%d,%d,%f\n",
-                    item.name,item.inList,item.last_time,item.last_avg,item.ratio);
-                log(str+"\n");
+                        item.name,item.flags,item.last_time,item.last_avg,item.ratio);
                 bos.write(str.getBytes("UTF-8"));
+				if((item.flags&2)>0){
+                    db.delete("'"+currList+"'","name='"+item.name+"'",null);
+                    itemsList.remove(i);
+				}
+                log(str+"\n");
             }
             cnt = itemsSuggest.size();
             for(int i=0; i<cnt; i++){
                 item = itemsSuggest.get(i);
                 String str = String.format(Locale.getDefault(),"%s,%d,%d,%d,%f\n",
-                    item.name,item.inList,item.last_time,item.last_avg,item.ratio);
-                item.inList &= 1;
-                log(str+"\n");
+                        item.name,item.flags,item.last_time,item.last_avg,item.ratio);
                 bos.write(str.getBytes("UTF-8"));
+				if((item.flags&2)>0){
+					db.delete("'"+currList+"'","name='"+item.name+"'",null);
+					itemsList.remove(i);
+				}
+                log(str+"\n");
             }
             bos.flush();
             bos.close();
                     // Receive Post reply
-            InputStream is = dB.getInputStream();
+            InputStream is = link.getInputStream();
             BufferedReader reader = new BufferedReader(new InputStreamReader(is));
             String col;
 //            SLAdapter.prtSuggestions();
@@ -88,7 +91,7 @@ class DatabaseSync extends AsyncTask<Void,Void,String>  {
                         logF("%s", col);
                         values.clear();
                         values.put("name", cols[1]);
-                        values.put("inList", cols[2]);
+                        values.put("flags", cols[2]);
                         values.put("last_time", cols[3]);
                         values.put("last_avg", cols[4]);
                         values.put("ratio", cols[5]);
@@ -99,19 +102,18 @@ class DatabaseSync extends AsyncTask<Void,Void,String>  {
                         logF("%s",col);
                         values.clear();
                         values.put("name", cols[1]);
-                        values.put("inList", cols[2]);
+                        values.put("flags", cols[2]);
                         values.put("last_time", cols[3]);
                         values.put("last_avg", cols[4]);
                         values.put("ratio", cols[5]);
                         db.insert(MainActivity.currList,null,values);
-                        break;
-    //                logF("cols changed = %d",id);
+                        break;    // logF("cols changed = %d",id);
 //                log(col);
 //                String[] st = text.split(",");
                 }
             }
             is.close();
-            dB.disconnect();
+            link.disconnect();
         } catch (MalformedURLException e) {
             MainActivity.log("Malformed URL: "+e.toString());
             return false;

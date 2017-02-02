@@ -10,6 +10,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -32,6 +33,10 @@ public class LongClickDialog extends DialogFragment {
     ContentValues values = new ContentValues();
     int listId;
 
+    public LongClickDialog() {
+        // Empty contstuctor required for DialogFragment
+    }
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View optionView = inflater.inflate(R.layout.long_click, container, false);
@@ -42,6 +47,9 @@ public class LongClickDialog extends DialogFragment {
         deleteView = (Button) optionView.findViewById(R.id.delete_button);
         ImageView checkView = (ImageView) optionView.findViewById(R.id.check);
         values.clear();
+        getDialog().getWindow().setSoftInputMode(
+                WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE
+        );
         checkView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -68,5 +76,4 @@ public class LongClickDialog extends DialogFragment {
         getDialog().getWindow().requestFeature(Window.FEATURE_NO_TITLE);
         return optionView;
     }
-
 }
