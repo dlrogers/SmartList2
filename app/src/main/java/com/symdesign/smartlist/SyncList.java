@@ -84,7 +84,7 @@ public class SyncList extends AsyncTask<Void,Void,Boolean> {
             log("Disconnecting");
             link.disconnect();
         }
-        SystemClock.sleep(2000);
+        SystemClock.sleep(2000)  ;
         if(ans.equals("ok")){
             try {       // Send post request
                 log("starting sync");
