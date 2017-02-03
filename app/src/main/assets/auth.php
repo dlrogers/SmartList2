@@ -4,7 +4,7 @@ ini_set("error_log","/tmp/php_error.log");
 ini_set("max_execution_time",5);
 //ini_set("ignore_user_abort",1);
 error_reporting(E_ALL);
-logError("starting auth");  
+logError("starting auth");
 $config = parse_ini_file("/home/dennis/Mydocs/config.ini");
 //logError("username=".$config['username'].", passwd =".$config['password']);
 $db = new mysqli('localhost',$config['username'],$config['password']);
