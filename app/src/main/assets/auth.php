@@ -1,4 +1,6 @@
 <?php
+// Copyright 2017 Dennis Rogers
+
 ini_set("log_errors",1) ;
 ini_set("error_log","/tmp/php_error.log");
 ini_set("max_execution_time",5);
