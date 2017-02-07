@@ -24,21 +24,22 @@ import static com.symdesign.smartlist.MainActivity.logF;
 
 
 /**
+ * @ Copyright Dennis Rogers 1/23/17
  * Created by dennis on 1/23/17.
  */
 
-public class SyncList extends AsyncTask<Void,Void,Boolean> {
-    String email,passwd,list,ans;
+class SyncList extends AsyncTask<Void,Void,Boolean> {
+    private String email,passwd,list,ans;
     static boolean exists;
-    MainActivity activity;
-	BufferedOutputStream bos;
+    private MainActivity activity;
+//	BufferedOutputStream bos;
 	InputStream is;
-	BufferedReader reader;
+	private BufferedReader reader;
 	static ContentValues values = new ContentValues();
-	HttpURLConnection link;
-    URL url,nurl;
+//	HttpURLConnection link;
+    private URL url,nurl;
 
-    public SyncList (MainActivity a, String em, String pwd, String lst) {
+    SyncList (MainActivity a, String em, String pwd, String lst) {
         this.activity=a;
         email = em;
         passwd = pwd;
@@ -46,22 +47,27 @@ public class SyncList extends AsyncTask<Void,Void,Boolean> {
     }
 
     @Override
+    protected void onPreExecute() {
+        super.onPreExecute();
+    }
+
+    @Override
     protected Boolean doInBackground(Void... arg0) {
 		Item item;
-        InputStream is = null;
-        OutputStream os = null;
+        InputStream is;
+        OutputStream os;
 
 
         try {       // Send post request
             log("starting auth");
             url = new URL(MainActivity.serverAddr+"auth.php");
-            link = (HttpURLConnection) url.openConnection();
+            HttpURLConnection link = (HttpURLConnection) url.openConnection();
             link.setRequestMethod("POST");
             link.setDoInput(true);
             link.setDoOutput(true);
 
             os = link.getOutputStream();
-            bos = new BufferedOutputStream(os);
+            BufferedOutputStream bos = new BufferedOutputStream(os);
             bos.write((email + "\n").getBytes("UTF-8"));
             bos.write((passwd + "\n").getBytes("UTF-8"));
             bos.write((list + "\n").getBytes("UTF-8"));
@@ -72,30 +78,30 @@ public class SyncList extends AsyncTask<Void,Void,Boolean> {
 			is.close();
             os.close();
             log(ans);
+            link.disconnect();
         } catch (MalformedURLException e) {
             log("Malformed URL: " + e.toString());
         } catch (IOException e) {
             log("IOException: " + e.getMessage());
             for(int i=0; i<4; i++) {
                 log(e.getStackTrace()[i].toString());
-                log(String.format("    line no. = %d", e.getStackTrace()[i].getLineNumber()));
+                log(String.format(Locale.getDefault(),"    line no. = %d", e.getStackTrace()[i].getLineNumber()));
             }
         } finally {
             log("Disconnecting");
-            link.disconnect();
         }
         SystemClock.sleep(2000)  ;
         if(ans.equals("ok")){
             try {       // Send post request
                 log("starting sync");
                 url = new URL(MainActivity.serverAddr+"sync.php");
-                link = (HttpURLConnection) url.openConnection();
+                HttpURLConnection link = (HttpURLConnection) url.openConnection();
                 link.setRequestMethod("POST");
 //                link.setDoInput(true);
                 link.setDoOutput(true);
                 link.setConnectTimeout(3000);
-                log(String.format("timeout = %d",link.getConnectTimeout()));
-                bos = new BufferedOutputStream(link.getOutputStream());
+//                log(String.format("timeout = %d",link.getConnectTimeout()));
+                BufferedOutputStream bos = new BufferedOutputStream(link.getOutputStream());
                 bos.write((email + "\n").getBytes("UTF-8"));
                 bos.write((passwd + "\n").getBytes("UTF-8"));
                 bos.write((list + "\n").getBytes("UTF-8"));
@@ -106,17 +112,24 @@ public class SyncList extends AsyncTask<Void,Void,Boolean> {
                 log("IOException: " + e.getMessage());
                 for(int i=0; i<4; i++) {
                     log(e.getStackTrace()[i].toString());
-                    log(String.format("    line no. = %d", e.getStackTrace()[i].getLineNumber()));
+                    log(String.format(Locale.getDefault(),"    line no. = %d", e.getStackTrace()[i].getLineNumber()));
                 }
             } finally {
-                link.disconnect();
+                log("Disconnecting");
             }
         } else {
 
         }
         return true;
     }
-/*            if(ans.equals("exists")) {
+    @Override
+    protected void onPostExecute(Boolean exists) {
+        activity.onFinishSyncList(SyncList.exists);
+    }
+}
+
+
+    /*            if(ans.equals("exists")) {
 				int cnt = itemsList.size();
 				for(int i=0; i<cnt; i++){
 					item = itemsList.get(i);
@@ -188,14 +201,3 @@ public class SyncList extends AsyncTask<Void,Void,Boolean> {
             }
 */
 //            is.close();
-	public void sync(String email,String list,String passwd){
-		  Item item;
-		  MainActivity.log("Sending data to server");
-		  // Receive Post reply
-
-	}
-    @Override
-    protected void onPostExecute(Boolean exists) {
-        activity.onFinishSyncList(SyncList.exists);
-    }
-}

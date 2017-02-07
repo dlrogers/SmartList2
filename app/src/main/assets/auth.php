@@ -1,5 +1,5 @@
 <?php
-// Copyright 2017 Dennis Rogers
+// @ Copyright 2017 Dennis Rogers
 
 ini_set("log_errors",1) ;
 ini_set("error_log","/tmp/php_error.log");
