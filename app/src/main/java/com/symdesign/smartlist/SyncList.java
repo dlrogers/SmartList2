@@ -59,8 +59,8 @@ class SyncList extends AsyncTask<Void,Void,Boolean> {
 
 
         try {       // Send post request
-            log("starting auth");
-            url = new URL(MainActivity.serverAddr+"auth.php");
+            log("starting SyncList");
+            url = new URL(MainActivity.serverAddr+"sync.php");
             HttpURLConnection link = (HttpURLConnection) url.openConnection();
             link.setRequestMethod("POST");
             link.setDoInput(true);
@@ -91,40 +91,11 @@ class SyncList extends AsyncTask<Void,Void,Boolean> {
             log("Disconnecting");
         }
         SystemClock.sleep(2000)  ;
-        if(ans.equals("ok")){
-            try {       // Send post request
-                log("starting sync");
-                url = new URL(MainActivity.serverAddr+"sync.php");
-                HttpURLConnection link = (HttpURLConnection) url.openConnection();
-                link.setRequestMethod("POST");
-//                link.setDoInput(true);
-                link.setDoOutput(true);
-                link.setConnectTimeout(3000);
-//                log(String.format("timeout = %d",link.getConnectTimeout()));
-                BufferedOutputStream bos = new BufferedOutputStream(link.getOutputStream());
-                bos.write((email + "\n").getBytes("UTF-8"));
-                bos.write((passwd + "\n").getBytes("UTF-8"));
-                bos.write((list + "\n").getBytes("UTF-8"));
-                bos.flush();
-            } catch (MalformedURLException e) {
-                log("Malformed URL: " + e.toString());
-            } catch (IOException e) {
-                log("IOException: " + e.getMessage());
-                for(int i=0; i<4; i++) {
-                    log(e.getStackTrace()[i].toString());
-                    log(String.format(Locale.getDefault(),"    line no. = %d", e.getStackTrace()[i].getLineNumber()));
-                }
-            } finally {
-                log("Disconnecting");
-            }
-        } else {
-
-        }
         return true;
     }
     @Override
     protected void onPostExecute(Boolean exists) {
-        activity.onFinishSyncList(SyncList.exists);
+        log("SyncList finished");
     }
 }
 

@@ -39,9 +39,8 @@ public class Auth extends AsyncTask<Void,Void,Boolean> {
 
     @Override
     protected Boolean doInBackground(Void... arg0) {
-        Item item;
-        InputStream is = null;
-        OutputStream os = null;
+        InputStream is;
+        OutputStream os;
 
         try {       // Send post request
             log("starting auth");
@@ -51,7 +50,7 @@ public class Auth extends AsyncTask<Void,Void,Boolean> {
             link.setDoInput(true);
             link.setDoOutput(true);
 
-            os = link.getOutputStream();
+            os=link.getOutputStream();
             bos = new BufferedOutputStream(os);
             bos.write((email + "\n").getBytes("UTF-8"));
             bos.write((passwd + "\n").getBytes("UTF-8"));
@@ -65,16 +64,23 @@ public class Auth extends AsyncTask<Void,Void,Boolean> {
             log(ans);
         } catch (MalformedURLException e) {
             log("Malformed URL: " + e.toString());
+            activity.onFinishAuth("error");
         } catch (IOException e) {
             log("IOException: " + e.getMessage());
             for(int i=0; i<4; i++) {
                 log(e.getStackTrace()[i].toString());
                 log(String.format("    line no. = %d", e.getStackTrace()[i].getLineNumber()));
+                activity.onFinishAuth("error");
             }
         } finally {
             log("Disconnecting");
             link.disconnect();
         }
     return true;
+    }
+    @Override
+    protected void onPostExecute(Boolean result){
+        log("starting PostExecute");
+        new SyncList(this.activity,email,passwd,"Groceries").execute();
     }
 }

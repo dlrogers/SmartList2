@@ -358,7 +358,7 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
                             Toast.LENGTH_LONG);
                     toast.setGravity(Gravity.TOP, 0, 200);
                     toast.show();
-                    new SyncList(this,email,passwd,"Groceries").execute();
+                    new Auth(this,email,passwd,"Groceries").execute();
 //                    new DatabaseSync().execute();
                 }
                 break;
@@ -368,31 +368,18 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
     @Override
     public void onFinishAdminDialog(String email,String passwd) {
 //        Toast.makeText(this, "Email = " + email + ", Password = " + passwd, Toast.LENGTH_SHORT).show();
-        new SyncList(this,email,passwd,"Groceries").execute();
+        new Auth(this,email,passwd,"Groceries").execute();
 //        new DatabaseSync().execute();
     }
-    public void onFinishSyncList(boolean exists) {
-/*        if(prefs.getBoolean("syncReg",false)) {
-            new DatabaseSync();
-        } else {
-            if (exists) {
-                FragmentManager fm = getSupportFragmentManager();
-                AdminDialog adminDialog = new AdminDialog();
-                adminDialog.show(fm, "dialog");
-            } else {
-                // Add entry to users in admin db
-                values.clear();
-                values.put("email", email);
-                values.put("passwd", passwd);
-                values.put("list", "Groceries");
-                db.execSQL("use admin");
-                db.insert("users", null, values);
-                // Update preferences
-                SharedPreferences.Editor ed = prefs.edit();
-                ed.putBoolean("syncReg", true);
-            }
+    public void onFinishAuth(String rslt) {
+        log(rslt);
+        new SyncList(this,"on finish",passwd,"Groceries").execute();
+    }
+    public void onFinishSyncList(String rslt) {
+        if(rslt.equals("ok")){
+            new SyncList(this,"on finish",passwd,"Groceries").execute();
         }
-*/    }
+    }
     //      Show lists table
     static void printLists() {
         Cursor lsts = db.query("lists",new String[] {"name","tableid"},null,null,null,null,null);

@@ -25,10 +25,10 @@ $row=$rslt->fetch_assoc();
 logError($passwd,$row["passwd"]);
 if(strcmp($passwd,$row["passwd"])==0){
 	logError("ok");
-	print("ok");
+	print(uniqid());
 } else {
 	logError("nok");
-	print("nok");
+	print("0");
 }
 register_shutdown_function('shutdown');
 function shutdown(){
