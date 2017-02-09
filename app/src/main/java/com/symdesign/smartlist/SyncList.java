@@ -15,12 +15,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Locale;
 
-import static com.symdesign.smartlist.SLAdapter.itemsList;
-import static com.symdesign.smartlist.SLAdapter.itemsSuggest;
-import static com.symdesign.smartlist.MainActivity.db;
-import static com.symdesign.smartlist.MainActivity.currList;
 import static com.symdesign.smartlist.MainActivity.log;
-import static com.symdesign.smartlist.MainActivity.logF;
 
 
 /**

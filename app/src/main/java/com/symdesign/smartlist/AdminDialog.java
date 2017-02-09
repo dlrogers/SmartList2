@@ -6,7 +6,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
 import android.view.KeyEvent;
-import android.view.LayoutInflater;
+import android.view.LayoutInflater ;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
@@ -21,7 +21,7 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-import static com.symdesign.smartlist.MainActivity.email;
+import static com.symdesign.smartlist.MainActivity.email ;
 import static com.symdesign.smartlist.MainActivity.log;
 import static com.symdesign.smartlist.MainActivity.passwd;
 
