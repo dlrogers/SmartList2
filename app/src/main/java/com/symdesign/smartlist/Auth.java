@@ -16,6 +16,8 @@ import java.net.URL;
 import static com.symdesign.smartlist.MainActivity.log;
 
 /**
+ * An AdyncTask that sends an email, password and list
+ * to the server auth.php.
  * Created by dennis on 2/2/17.
  */
 

@@ -11,5 +11,9 @@
         android:title="sync"
         android:icon="@drawable/stat_notify_sync"
         app:showAsAction="ifRoom"/>
-
+    <item
+        android:id="@+id/settings"
+        android:title="settings"
+        android:icon="@drawable/ic_menu_moreoverflow_normal_holo_dark"
+        app:showAsAction="ifRoom"/>
 </menu>

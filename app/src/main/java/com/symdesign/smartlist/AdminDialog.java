@@ -66,7 +66,7 @@ public class AdminDialog extends DialogFragment {
         });
         return optionView;
     }
-        protected void onPostExecute(String result) {
-            log("post execute admin");
-        }
+//        protected void onPostExecute(String result) {
+//            log("post execute admin");
+//        }
 }

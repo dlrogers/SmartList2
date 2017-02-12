@@ -182,7 +182,8 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
 
 //        Setup left drawer
         drawers = (DrawerLayout) findViewById(R.id.drawer_layout);
-        toolbar.setNavigationIcon(R.drawable.ic_menu_moreoverflow_normal_holo_dark);
+//        toolbar.setNavigationIcon(R.drawable.ic_menu_moreoverflow_normal_holo_dark);
+        toolbar.setNavigationIcon(android.R.drawable.ic_menu_more);
         toolbar.setNavigationOnClickListener(new View.OnClickListener() {
              @Override
              public void onClick(View view) {
@@ -339,9 +340,9 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
         switch (item.getItemId()) {
-            case R.id.menu:
+            case R.id.settings:
 //                openDrawer();
-                log("menu");
+                log("settings");
                 break;
             case R.id.mic:
                 log("Microphone clicked");
@@ -367,9 +368,7 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
     }
     @Override
     public void onFinishAdminDialog(String email,String passwd) {
-//        Toast.makeText(this, "Email = " + email + ", Password = " + passwd, Toast.LENGTH_SHORT).show();
         new Auth(this,email,passwd,"Groceries").execute();
-//        new DatabaseSync().execute();
     }
     public void onFinishAuth(String rslt) {
         log(rslt);
