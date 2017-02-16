@@ -338,11 +338,13 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
         // Handle action bar item clicks here. The action bar will
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
+        FragmentManager fm=getSupportFragmentManager();
         int id = item.getItemId();
         switch (item.getItemId()) {
             case R.id.settings:
-//                openDrawer();
                 log("settings");
+                Settings settings = new Settings();
+                settings.show(fm,"settings");
                 break;
             case R.id.mic:
                 log("Microphone clicked");
@@ -350,9 +352,8 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
                 return true;
             case R.id.sync:     // Sync
                 if(email.equals("no_email")){ // New user
-                    FragmentManager fm = getSupportFragmentManager();
-                    AdminDialog register = new AdminDialog();
-                    register.show(fm,"dialog");
+                    AdminDialog adminDialog = new AdminDialog();
+                    adminDialog.show(fm,"dialog");
                 } else {
                     toast = Toast.makeText(getApplicationContext(),
                             "\nSyncing\n",
