@@ -1,18 +1,22 @@
 <?php
 // @ Copyright 2017 Dennis Rogers
 
+// Set up php
 ini_set("log_errors",1) ;
 ini_set("error_log","/tmp/php_erroradmin.log");
 ini_set("max_execution_time",5);
 //ini_set("ignore_user_abort",1);
 error_reporting(E_ALL);
+
 logError("starting auth");
+
+// Get username and password for mysql and log in
 $config = parse_ini_file("/home/dennis/Mydocs/config.ini");
-//logError("username=".$config['username'].", passwd =".$config['password']);
 $db = new mysqli('localhost',$config['username'],$config['password']);
 $db->set_charset("UTF-8");
+
+// Open data stream and read in command, uid, pw, and list
 $std = fopen("php://input","r");
-// $cmd=sscanf(fgets($std),"%s")[0];
 $cmd=sscanf(fgets($std),"%s")[0];
 $email=sscanf(fgets($std),"%s")[0];
 $passwd=sscanf(fgets($std),"%s")[0];
