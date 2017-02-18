@@ -17,7 +17,9 @@ import static com.symdesign.smartlist.MainActivity.log;
 
 /**
  * An AdyncTask that sends an email, password and list
- * to the server auth.php.
+ * to the server auth.php in order to set up a new list/account
+ * returns: "exists" if it already exists
+ *          "ok" if a new account/list was created
  * Created by dennis on 2/2/17.
  */
 
@@ -83,6 +85,6 @@ public class Auth extends AsyncTask<Void,Void,Boolean> {
     @Override
     protected void onPostExecute(Boolean result){
         log("starting PostExecute");
-        new SyncList(this.activity,email,passwd,"Groceries").execute();
+//        new SyncList(this.activity,email,passwd,"Groceries").execute();
     }
 }

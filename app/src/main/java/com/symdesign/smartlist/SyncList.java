@@ -21,6 +21,9 @@ import static com.symdesign.smartlist.MainActivity.log;
 /**
  * @ Copyright Dennis Rogers 1/23/17
  * Created by dennis on 1/23/17.
+ * Syncs a list on the phone with the server
+ * returns: "ok" if password was ok and sync was successful
+ *          "nok" if account does not exist or password is not valid
  */
 
 class SyncList extends AsyncTask<Void,Void,Boolean> {

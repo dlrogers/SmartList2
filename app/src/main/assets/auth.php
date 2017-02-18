@@ -27,13 +27,12 @@ $db->query("use admin");
 $rslt=$db->query("select * from users where email='".$email."'");
 if($rslt==false) logError("rslt is false");
 $row=$rslt->fetch_assoc();
-logError($passwd,$row["passwd"]);
-if(strcmp($passwd,$row["passwd"])==0){
-	logError("ok");
-	print(uniqid());
+if(row!=null) {
+	print("exists");
 } else {
-	logError("nok");
-	print("0");
+	$db->query("INSERT INTO users VALUES('".$email."','".$list."','".$passwd."')");
+	$db->query("CREATE DATABASE '".$email."'");
+	print("ok");
 }
 register_shutdown_function('shutdown');
 function shutdown(){
