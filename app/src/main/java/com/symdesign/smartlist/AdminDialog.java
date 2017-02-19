@@ -24,6 +24,7 @@ import java.net.URL;
 import static com.symdesign.smartlist.MainActivity.email ;
 import static com.symdesign.smartlist.MainActivity.log;
 import static com.symdesign.smartlist.MainActivity.passwd;
+import static com.symdesign.smartlist.MainActivity.currList;
 
 /**
  * Created by dennis on 11/20/16.

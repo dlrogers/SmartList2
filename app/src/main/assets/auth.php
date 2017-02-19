@@ -3,7 +3,7 @@
 
 // Set up php
 ini_set("log_errors",1) ;
-ini_set("error_log","/tmp/php_erroradmin.log");
+ini_set("error_log","/tmp/php_error.log");
 ini_set("max_execution_time",5);
 //ini_set("ignore_user_abort",1);
 error_reporting(E_ALL);
@@ -17,7 +17,6 @@ $db->set_charset("UTF-8");
 
 // Open data stream and read in command, uid, pw, and list
 $std = fopen("php://input","r");
-$cmd=sscanf(fgets($std),"%s")[0];
 $email=sscanf(fgets($std),"%s")[0];
 $passwd=sscanf(fgets($std),"%s")[0];
 $list=sscanf(fgets($std),"%s")[0];
@@ -27,17 +26,23 @@ $db->query("use admin");
 $rslt=$db->query("select * from users where email='".$email."'");
 if($rslt==false) logError("rslt is false");
 $row=$rslt->fetch_assoc();
-if(row!=null) {
+if($row!=null) {
 	print("exists");
 } else {
-	$db->query("INSERT INTO users VALUES('".$email."','".$list."','".$passwd."')");
-	$db->query("CREATE DATABASE '".$email."'");
+	db_query("INSERT INTO users VALUES('".$email."','".$list."','".$passwd."')");
+	db_query("CREATE DATABASE `".$email."`");
+	db_query("use `".$email."`");
+	db_query("CREATE TABLE `".$list."`(name varchar(40),flags int,last_time int,last_avg int,ratio real)");
 	print("ok");
 }
 register_shutdown_function('shutdown');
 function shutdown(){
-	logError("shutdown");
 	exit();
+}
+function db_query($cmd) {
+	global $db;
+	logError($cmd);
+	return $db->query($cmd);
 }
 function logError($str){
 	error_log($str,0);

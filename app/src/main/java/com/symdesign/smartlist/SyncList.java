@@ -16,6 +16,10 @@ import java.net.URL;
 import java.util.Locale;
 
 import static com.symdesign.smartlist.MainActivity.log;
+import static com.symdesign.smartlist.SLAdapter.itemsList;
+import static com.symdesign.smartlist.SLAdapter.itemsSuggest;
+import static com.symdesign.smartlist.MainActivity.currList;
+import static com.symdesign.smartlist.MainActivity.db;
 
 
 /**
@@ -70,6 +74,31 @@ class SyncList extends AsyncTask<Void,Void,Boolean> {
             bos.write((passwd + "\n").getBytes("UTF-8"));
             bos.write((list + "\n").getBytes("UTF-8"));
             bos.flush();
+            int cnt = itemsList.size();
+            for(int i=0; i<cnt; i++){
+                item = itemsList.get(i);
+                String str = String.format(Locale.getDefault(),"%s,%d,%d,%d,%f\n",
+                        item.name,item.flags,item.last_time,item.last_avg,item.ratio);
+                bos.write(str.getBytes("UTF-8"));
+                if((item.flags&2)>0){
+                    db.delete("'"+currList+"'","name='"+item.name+"'",null);
+                    itemsList.remove(i);
+                }
+                log(str+"\n");
+            }
+            cnt = itemsSuggest.size();
+            for(int i=0; i<cnt; i++){
+                item = itemsSuggest.get(i);
+                String str = String.format(Locale.getDefault(),"%s,%d,%d,%d,%f\n",
+                        item.name,item.flags,item.last_time,item.last_avg,item.ratio);
+                bos.write(str.getBytes("UTF-8"));
+                if((item.flags&2)>0){
+                    db.delete("'"+currList+"'","name='"+item.name+"'",null);
+                    itemsList.remove(i);
+                }
+                log(str+"\n");
+            }
+            bos.flush();
             is = link.getInputStream();
             reader = new BufferedReader(new InputStreamReader(is));
             ans=reader.readLine();
@@ -99,30 +128,6 @@ class SyncList extends AsyncTask<Void,Void,Boolean> {
 
 
     /*            if(ans.equals("exists")) {
-				int cnt = itemsList.size();
-				for(int i=0; i<cnt; i++){
-					item = itemsList.get(i);
-					String str = String.format(Locale.getDefault(),"%s,%d,%d,%d,%f\n",
-							item.name,item.flags,item.last_time,item.last_avg,item.ratio);
-					bos.write(str.getBytes("UTF-8"));
-					if((item.flags&2)>0){
-						db.delete("'"+currList+"'","name='"+item.name+"'",null);
-						itemsList.remove(i);
-					}
-					log(str+"\n");
-				}
-				cnt = itemsSuggest.size();
-				for(int i=0; i<cnt; i++){
-					item = itemsSuggest.get(i);
-					String str = String.format(Locale.getDefault(),"%s,%d,%d,%d,%f\n",
-							item.name,item.flags,item.last_time,item.last_avg,item.ratio);
-					bos.write(str.getBytes("UTF-8"));
-					if((item.flags&2)>0){
-						db.delete("'"+currList+"'","name='"+item.name+"'",null);
-						itemsList.remove(i);
-					}
-					log(str+"\n");
-				}
 //				bos.flush();
 //				bos.close();
 				link.disconnect();

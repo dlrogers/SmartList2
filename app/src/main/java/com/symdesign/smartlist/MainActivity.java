@@ -351,7 +351,8 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
                 SpeechRecognitionHelper.run(mainActivity);
                 return true;
             case R.id.sync:     // Sync
-                if(email.equals("no_email")){ // New user
+//                if(email.equals("no_email")){ // New user
+                if(true){ // New user
                     AdminDialog adminDialog = new AdminDialog();
                     adminDialog.show(fm,"dialog");
                 } else {
@@ -360,7 +361,7 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
                             Toast.LENGTH_LONG);
                     toast.setGravity(Gravity.TOP, 0, 200);
                     toast.show();
-                    new Auth(this,email,passwd,"Groceries").execute();
+                    new SyncList(this,email,passwd,currList).execute();
 //                    new DatabaseSync().execute();
                 }
                 break;
@@ -369,15 +370,21 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
     }
     @Override
     public void onFinishAdminDialog(String email,String passwd) {
-        new Auth(this,email,passwd,"Groceries").execute();
+        new Auth(this,email,passwd,currList).execute();
     }
     public void onFinishAuth(String rslt) {
         log(rslt);
-        new SyncList(this,"on finish",passwd,"Groceries").execute();
+        if(rslt.equals("exists")){
+            FragmentManager fm = getSupportFragmentManager();
+            AdminDialog adminDialog = new AdminDialog();
+            adminDialog.show(fm, "dialog");
+        } else {
+            new SyncList(this,email, passwd, currList).execute();
+        }
     }
     public void onFinishSyncList(String rslt) {
         if(rslt.equals("ok")){
-            new SyncList(this,"on finish",passwd,"Groceries").execute();
+            new SyncList(this,"on finish",passwd,currList).execute();
         }
     }
     //      Show lists table

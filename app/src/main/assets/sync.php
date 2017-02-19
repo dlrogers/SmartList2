@@ -15,21 +15,17 @@ $passwd=sscanf(fgets($std),"%s")[0];
 $list=sscanf(fgets($std),"%s")[0];
 logError($email.",".$passwd.",".$list);
 //logError("select * from users where email='".$email."'");
-$db->query("use admin");
-$rslt=$db->query("select * from users where email='".$email."'");
+db_query("use admin");
+$rslt=db_query("select * from users where email='".$email."'");
 $row=$rslt->fetch_assoc();
 if($db->select_db($email)){
-	$db->query("use `".$email."`");
+	db_query("use `".$email."`");
 	logError($email." exists");
 	print("exists");
 	//			sync($email,$list,$passwd);
-	$db->query("use admin");
-	$sql="select * from users where email=`".$email."` AND list='".$list."'";
-	logError($sql);
-	$db->query($sql);
-	$sql="use `".$email."`";
-	logError($sql);
-	$db->query($sql);
+	db_query("use admin");
+	db_query("select * from users where email=`".$email."` AND list=`".$list."`");
+	db_query("use `".$email."`");
 	//			logError(sprintf("email = %s, passwd = %s, list = %s",$email,$passwd,$list));
 	$names=array();
 	$n=0;
@@ -37,20 +33,17 @@ if($db->select_db($email)){
 		logError($txt);
 		$txt=trim($txt,"\n");				//remove returns
 		$p_cols=explode(',',$txt);			//separate into columns (name,inList,last_time,last_avg,ration)
-		$p_cols[0]=$p_cols[0];
-		$rslt=$db->query("SELECT * from ".$list." where name=" . //Search server for item
+		$rslt=db_query("SELECT * from ".$list." where name=" . //Search server for item
 				sprintf("'%s'",$p_cols[0]));
 		logError($db->error);
 		$names[$n]=$p_cols[0];					//Save names in $names[]
-		logError(sprintf("Read %s",$p_cols[0])) ;
 		if($rslt!=false){
 			//		printf("name = %s, count = %d\n",$p_cols[0],count($rslt));
-			logError("result is true");
 			$row=$rslt->fetch_assoc();
 			$plt=sscanf($p_cols[2],"%s")[0];
 			if($row==null) {		//if(does not exist on server add it)
-				logError("row is null");
-				$db->query(sprintf("INSERT INTO itemDb VALUES ('%s',%s,%s,%s,%s)",
+				logError("adding row");
+				db_query(sprintf("INSERT INTO `".$list."` VALUES ('%s',%s,%s,%s,%s)",
 						$p_cols[0],$p_cols[1],$p_cols[2],$p_cols[3],$p_cols[4]));
 			} else {					//else check if changed
 				if(!$pChg) {	// if phone has not been changed
@@ -60,11 +53,9 @@ if($db->select_db($email)){
 				}
 				else {		// If phone copy changed: update server db
 					logError("pChg=1");
-					$sql=sprintf(
+					$rslt=db_query(sprintf(
 							"UPDATE itemDb SET last_time=%s,last_avg=%s,ratio=%s,inList=%s WHERE name='%s'",
-							$plt,$p_cols[3],$p_cols[4],$p_cols[1],$p_cols[0]);
-					logError($sql);
-					$rslt=$db->query($sql);
+							$plt,$p_cols[3],$p_cols[4],$p_cols[1],$p_cols[0]));
 					if(!$rslt) logError("dB update failed") ;
 				}
 			}
@@ -74,16 +65,20 @@ if($db->select_db($email)){
 }
 else {
 	logError($email." does not exist");
-	if(!$db->query("INSERT INTO users VALUES('".$email."','".$list."','".$passwd."')"))
+	if(!db_query("INSERT INTO users VALUES('".$email."','".$list."','".$passwd."')"))
 		logError("insert error");
-		$rc=$db->query("CREATE DATABASE `".$email."`");
-		$rc=$db->query("USE `".$email."`");
-		$sql="CREATE TABLE `".$list."`(name TEXT, flags INT, last_time INT, last_avg INT, ratio REAL)";
-		$rc=$db->query($sql);
+		$rc=db_query("CREATE DATABASE `".$email."`");
+		$rc=db_query("USE `".$email."`");
+		$rc=db_query("CREATE TABLE `".$list."`(name TEXT, flags INT, last_time INT, last_avg INT, ratio REAL)");
 		print("created");
 }
 logError("done");
 
+function db_query($cmd) {
+	global $db;
+	logError($cmd);
+	return $db->query($cmd);
+}
 function logError($str){
 	error_log($str,0);
 }

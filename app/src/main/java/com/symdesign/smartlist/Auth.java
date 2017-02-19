@@ -2,6 +2,7 @@ package com.symdesign.smartlist;
 
 import android.content.ContentValues;
 import android.os.AsyncTask;
+import android.support.v4.app.FragmentManager;
 
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
@@ -65,7 +66,6 @@ public class Auth extends AsyncTask<Void,Void,Boolean> {
             ans=reader.readLine();
             is.close();
             os.close();
-            log(ans);
         } catch (MalformedURLException e) {
             log("Malformed URL: " + e.toString());
             activity.onFinishAuth("error");
@@ -77,14 +77,13 @@ public class Auth extends AsyncTask<Void,Void,Boolean> {
                 activity.onFinishAuth("error");
             }
         } finally {
-            log("Disconnecting");
+//            log("Disconnecting");
             link.disconnect();
         }
     return true;
     }
     @Override
     protected void onPostExecute(Boolean result){
-        log("starting PostExecute");
-//        new SyncList(this.activity,email,passwd,"Groceries").execute();
+            activity.onFinishAuth(ans);
     }
 }
