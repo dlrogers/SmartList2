@@ -16,6 +16,7 @@ import java.net.URL;
 import java.util.Locale;
 
 import static com.symdesign.smartlist.MainActivity.log;
+import static com.symdesign.smartlist.MainActivity.logF;
 import static com.symdesign.smartlist.SLAdapter.itemsList;
 import static com.symdesign.smartlist.SLAdapter.itemsSuggest;
 import static com.symdesign.smartlist.MainActivity.currList;
@@ -38,6 +39,7 @@ class SyncList extends AsyncTask<Void,Void,Boolean> {
 	InputStream is;
 	private BufferedReader reader;
 	static ContentValues values = new ContentValues();
+    static String col;
 //	HttpURLConnection link;
     private URL url,nurl;
 
@@ -74,6 +76,7 @@ class SyncList extends AsyncTask<Void,Void,Boolean> {
             bos.write((passwd + "\n").getBytes("UTF-8"));
             bos.write((list + "\n").getBytes("UTF-8"));
             bos.flush();
+            //          Send list items to server
             int cnt = itemsList.size();
             for(int i=0; i<cnt; i++){
                 item = itemsList.get(i);
@@ -99,12 +102,43 @@ class SyncList extends AsyncTask<Void,Void,Boolean> {
                 log(str+"\n");
             }
             bos.flush();
+            //          Receive items from server that are not on phone
             is = link.getInputStream();
             reader = new BufferedReader(new InputStreamReader(is));
-            ans=reader.readLine();
-			is.close();
+            log("Reading back from phone");
+            while(null != (col = reader.readLine())){
+                log(col);
+                col=col.replaceAll("\n","");
+                String[] cols = col.split(",");
+                switch(cols[0]) {
+                    case "u":   //Time changed on server, update item
+                        values.clear();
+                        values.put("name", cols[1]);
+                        values.put("flags", cols[2]);
+                        values.put("last_time", cols[3]);
+                        values.put("last_avg", cols[4]);
+                        values.put("ratio", cols[5]);
+                        log("name='" + cols[1] + "'");
+                        db.update(currList, values, "name='" + cols[1] + "'", null);
+                        break;
+                    case "i":   //Item added to server, insert into database
+                        logF("%s",col);
+                        values.clear();
+                        values.put("name", cols[1]);
+                        values.put("flags", cols[2]);
+                        values.put("last_time", cols[3]);
+                        values.put("last_avg", cols[4]);
+                        values.put("ratio", cols[5]);
+                        db.insert(currList,null,values);
+                        break;    // logF("cols changed = %d",id);
+//                log(col);
+//                String[] st = text.split(",");
+                }
+            }
             os.close();
-            log(ans);
+            bos.close();
+            link.disconnect();
+            is.close();
             link.disconnect();
         } catch (MalformedURLException e) {
             log("Malformed URL: " + e.toString());
@@ -139,37 +173,6 @@ class SyncList extends AsyncTask<Void,Void,Boolean> {
 //				link.setDoOutput(true);
 				InputStream is = link.getInputStream();
 				BufferedReader reader = new BufferedReader(new InputStreamReader(is));
-				while(null != (col = reader.readLine())){
-					col=col.replaceAll("\n","");
-					String[] cols = col.split(",");
-					switch(cols[0]) {
-						case "u":   //Time changed on server, update item
-							logF("%s", col);
-							values.clear();
-							values.put("name", cols[1]);
-							values.put("flags", cols[2]);
-							values.put("last_time", cols[3]);
-							values.put("last_avg", cols[4]);
-							values.put("ratio", cols[5]);
-							log("name='" + cols[1] + "'");
-							db.update(MainActivity.currList, values, "name='" + cols[1] + "'", null);
-							break;
-						case "i":   //Item added to server, insert into database
-							logF("%s",col);
-							values.clear();
-							values.put("name", cols[1]);
-							values.put("flags", cols[2]);
-							values.put("last_time", cols[3]);
-							values.put("last_avg", cols[4]);
-							values.put("ratio", cols[5]);
-							db.insert(MainActivity.currList,null,values);
-							break;    // logF("cols changed = %d",id);
-//                log(col);
-//                String[] st = text.split(",");
-					}
-				}
-				bos.close();
-				link.disconnect();
             } else {
                 
             }

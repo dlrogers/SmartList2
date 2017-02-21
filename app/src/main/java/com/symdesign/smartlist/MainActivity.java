@@ -226,7 +226,7 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
 //                        values.put("flags",(itemsList.get(position).flags)|2);
                         values.put("flags",2);
                         db.update(currList,values,"_id="+Long.toString(dBid),null);
-//                        itemsList.get(position).flags |= 2;
+                        itemsList.get(position).flags |= 2;
                         updateAdapters();
 //                        setSelected(item,position,false);
                         break;
@@ -351,8 +351,8 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
                 SpeechRecognitionHelper.run(mainActivity);
                 return true;
             case R.id.sync:     // Sync
-//                if(email.equals("no_email")){ // New user
-                if(true){ // New user
+                if(email.equals("no_email")){ // New user
+//                if(true){ // New user
                     AdminDialog adminDialog = new AdminDialog();
                     adminDialog.show(fm,"dialog");
                 } else {
