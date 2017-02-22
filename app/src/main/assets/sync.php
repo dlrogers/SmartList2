@@ -28,7 +28,6 @@ if(strcmp($row["passwd"],$passwd)==0){
 		$names=array();
 		$n=0;
 		while($txt=fgets($std)) {				//Get an item from phone
-			logError($txt);
 			$txt=trim($txt,"\n");				//remove returns
 			$p_cols=explode(',',$txt);			//separate into columns (name,flags,last_time,last_avg,ration)
 			$rslt=db_query("SELECT * from ".$list." where name=" . //Search server for item
@@ -36,24 +35,37 @@ if(strcmp($row["passwd"],$passwd)==0){
 			logError($db->error);
 			$names[$n]=$p_cols[0];					//Save names in $names[]
 			if($rslt!=false){
+				logError($txt);
 				//		printf("name = %s, count = %d\n",$p_cols[0],count($rslt));
-				$row=$rslt->fetch_assoc();
-				$plt=sscanf($p_cols[2],"%s")[0];
-				$slt=$row["last_time"];
+				$row = $rslt->fetch_assoc();
+				$plt = sscanf($p_cols[2],"%s")[0];
+				$slt = $row["last_time"];
+				$pflg = sscanf($p_cols[1],"%s")[0];
+				$sflg = $row["flags"];				
 				if($row==null) {		//if(does not exist on server add it)
 					logError("adding row");
 					db_query(sprintf("INSERT INTO `".$list."` VALUES ('%s',%s,%s,%s,%s)",
 							$p_cols[0],$p_cols[1],$p_cols[2],$p_cols[3],$p_cols[4]));
 				} else {					//else check if changed
 					if($slt>$plt) {		// if phone has not been changed
+						logError("changing phone");
 						printf("%s,%s,%s,%s,%s,%s\n",
 								"u",$row['name'],$row['flags'],$row['last_time'],$row['last_avg'],$row['ratio']);
-					}
-					else if($slt<$plt) {		// If phone copy changed: update server db
+					} 
+					else if($slt<=$plt) {		// If phone copy changed: update server db
+						logError("changing server");
 						$rslt=db_query(sprintf(
 								"UPDATE `".$list."` SET last_time=%s,last_avg=%s,ratio=%s,flags=%s WHERE name='%s'",
 								$plt,$p_cols[3],$p_cols[4],$p_cols[1],$p_cols[0]));
 						if(!$rslt) logError("dB update failed") ;
+					}
+					else if($sflg!=$pflg) {
+						logError("changing flags");
+						$rslt=db_query(sprintf(
+								"UPDATE `".$list."` SET last_time=%s,last_avg=%s,ratio=%s,flags=%s WHERE name='%s'",
+								$plt,$p_cols[3],$p_cols[4],$p_cols[1],$p_cols[0]));
+						if(!$rslt) logError("dB update failed") ;
+						
 					}
 				}
 				$n+=1;

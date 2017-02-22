@@ -224,9 +224,8 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
                     case del:
                         values.clear();
 //                        values.put("flags",(itemsList.get(position).flags)|2);
-                        values.put("flags",2);
-                        db.update(currList,values,"_id="+Long.toString(dBid),null);
-                        itemsList.get(position).flags |= 2;
+                        values.put("flags",3);
+                        db.update("'"+currList+"'",values,"_id="+Long.toString(dBid),null);
                         updateAdapters();
 //                        setSelected(item,position,false);
                         break;
@@ -263,8 +262,8 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
                         values.clear();
 //                        values.put("flags",(itemsSuggest.get(position).flags)|2);
                         values.put("flags",2);
-                        db.update(currList,values,"_id="+Long.toString(dBid),null);
-//                        itemsList.get(position).flags = 2;
+                        db.update("'"+currList+"'",values,"_id="+Long.toString(dBid),null);
+                        itemsList.get(position).flags = 2;
                         updateAdapters();
                         break;
                 }

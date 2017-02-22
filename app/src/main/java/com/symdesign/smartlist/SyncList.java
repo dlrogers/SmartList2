@@ -1,6 +1,7 @@
 package com.symdesign.smartlist;
 
 import android.content.ContentValues;
+import android.database.Cursor;
 import android.os.AsyncTask;
 import android.os.SystemClock;
 
@@ -119,25 +120,27 @@ class SyncList extends AsyncTask<Void,Void,Boolean> {
                         values.put("last_avg", cols[4]);
                         values.put("ratio", cols[5]);
                         log("name='" + cols[1] + "'");
-                        db.update(currList, values, "name='" + cols[1] + "'", null);
+                        db.update("'"+currList+"'", values, "name='" + cols[1] + "'", null);
                         break;
                     case "i":   //Item added to server, insert into database
-                        logF("%s",col);
                         values.clear();
                         values.put("name", cols[1]);
                         values.put("flags", cols[2]);
                         values.put("last_time", cols[3]);
                         values.put("last_avg", cols[4]);
                         values.put("ratio", cols[5]);
-                        db.insert(currList,null,values);
+                        db.insert("'"+currList+"'",null,values);
                         break;    // logF("cols changed = %d",id);
 //                log(col);
 //                String[] st = text.split(",");
                 }
             }
+            Cursor rows = db.query("'"+currList+"'",new String[] {"name","flags"},"flags=1",null,null,null,null);
+            for(rows.moveToFirst(); !rows.isAfterLast(); rows.moveToNext()) {
+                logF("name = %s, flags = %d",rows.getString(0),rows.getInt(1));
+            }
             os.close();
             bos.close();
-            link.disconnect();
             is.close();
             link.disconnect();
         } catch (MalformedURLException e) {
@@ -156,6 +159,7 @@ class SyncList extends AsyncTask<Void,Void,Boolean> {
     }
     @Override
     protected void onPostExecute(Boolean exists) {
+        SLAdapter.updateAdapters();
         log("SyncList finished");
     }
 }
