@@ -263,7 +263,6 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
 //                        values.put("flags",(itemsSuggest.get(position).flags)|2);
                         values.put("flags",2);
                         db.update("'"+currList+"'",values,"_id="+Long.toString(dBid),null);
-                        itemsList.get(position).flags = 2;
                         updateAdapters();
                         break;
                 }
@@ -368,7 +367,8 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
         return super.onOptionsItemSelected(item);
     }
     @Override
-    public void onFinishAdminDialog(String email,String passwd) {
+    public void onFinishAdminDialog(String email,String passwd,Boolean reg) {
+        if(reg)
         new Auth(this,email,passwd,currList).execute();
     }
     public void onFinishAuth(String rslt) {

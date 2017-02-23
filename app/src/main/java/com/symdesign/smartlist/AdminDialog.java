@@ -11,6 +11,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.view.inputmethod.EditorInfo;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -37,7 +38,7 @@ public class AdminDialog extends DialogFragment {
         // Empty contstuctor required for DialogFragment
     }
     public interface AdminDialogListener {
-        void onFinishAdminDialog(String email,String passwd);
+        void onFinishAdminDialog(String email,String passwd,Boolean reg);
     }
 
     @Override
@@ -45,12 +46,13 @@ public class AdminDialog extends DialogFragment {
         View optionView = inflater.inflate(R.layout.admin, container, false);
         emailView = (EditText) optionView.findViewById(R.id.email);
         passwdView = (EditText) optionView.findViewById(R.id.passwd);
-        ImageView checkView = (ImageView) optionView.findViewById(R.id.check);
-        getDialog().setTitle("Registration");
+        Button checkViewCreate = (Button) optionView.findViewById(R.id.check_create);
+        Button checkViewSign = (Button) optionView.findViewById(R.id.check_sign);
+        getDialog().setTitle(R.string.registration);
         emailView.requestFocus();
         getDialog().getWindow().setSoftInputMode(
                 WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
-        checkView.setOnClickListener(new View.OnClickListener() {
+        checkViewCreate.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 email = emailView.getText().toString();
@@ -61,7 +63,22 @@ public class AdminDialog extends DialogFragment {
                 ed.putBoolean("syncReg",false);
                 ed.apply();
                 AdminDialogListener activity = (AdminDialogListener) getActivity();
-                activity.onFinishAdminDialog(email,passwd);
+                activity.onFinishAdminDialog(email,passwd,true);
+                getDialog().dismiss();
+            }
+        });
+        checkViewSign.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                email = emailView.getText().toString();
+                passwd = passwdView.getText().toString();
+                SharedPreferences.Editor ed = MainActivity.prefs.edit();
+                ed.putString("email",email);
+                ed.putString("passwd",passwd);
+                ed.putBoolean("syncReg",false);
+                ed.apply();
+                AdminDialogListener activity = (AdminDialogListener) getActivity();
+                activity.onFinishAdminDialog(email,passwd,false);
                 getDialog().dismiss();
             }
         });

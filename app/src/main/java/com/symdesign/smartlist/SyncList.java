@@ -61,6 +61,7 @@ class SyncList extends AsyncTask<Void,Void,Boolean> {
 		Item item;
         InputStream is;
         OutputStream os;
+        Cursor cursor;
 
 
         try {       // Send post request
@@ -78,27 +79,28 @@ class SyncList extends AsyncTask<Void,Void,Boolean> {
             bos.write((list + "\n").getBytes("UTF-8"));
             bos.flush();
             //          Send list items to server
-            int cnt = itemsList.size();
-            for(int i=0; i<cnt; i++){
-                item = itemsList.get(i);
-                String str = String.format(Locale.getDefault(),"%s,%d,%d,%d,%f\n",
-                        item.name,item.flags,item.last_time,item.last_avg,item.ratio);
+            String str="";
+            cursor = db.query("'"+MainActivity.currList+"'", SLAdapter.cols, "flags=1 OR flags=3", null, "", "", null);
+            for (cursor.moveToFirst(); !cursor.isAfterLast(); cursor.moveToNext()) {
+                int flgs = cursor.getInt(2);
+                str = String.format(Locale.getDefault(),"%s,%d,%d,%d,%f\n",
+                    cursor.getString(1),cursor.getInt(2),cursor.getInt(3),cursor.getInt(4),cursor.getFloat(5));
                 bos.write(str.getBytes("UTF-8"));
-                if((item.flags&2)>0){
-                    db.delete("'"+currList+"'","name='"+item.name+"'",null);
-                    itemsList.remove(i);
+                if((flgs & 2)>0){
+                    db.delete("'"+currList+"'","name='"+cursor.getString(1)+"'",null);
                 }
                 log(str+"\n");
             }
-            cnt = itemsSuggest.size();
-            for(int i=0; i<cnt; i++){
-                item = itemsSuggest.get(i);
-                String str = String.format(Locale.getDefault(),"%s,%d,%d,%d,%f\n",
-                        item.name,item.flags,item.last_time,item.last_avg,item.ratio);
-                bos.write(str.getBytes("UTF-8"));
-                if((item.flags&2)>0){
-                    db.delete("'"+currList+"'","name='"+item.name+"'",null);
-                    itemsList.remove(i);
+            cursor = db.query("'"+MainActivity.currList+"'", SLAdapter.cols, "flags=0 OR flags=2", null, "", "", null);
+            for (cursor.moveToFirst(); !cursor.isAfterLast(); cursor.moveToNext()) {
+                int flgs = cursor.getInt(2);
+                if(flgs==0||flgs==2) {
+                    str = String.format(Locale.getDefault(),"%s,%d,%d,%d,%f\n",
+                            cursor.getString(1),cursor.getInt(2),cursor.getInt(3),cursor.getInt(4),cursor.getFloat(5));
+                    bos.write(str.getBytes("UTF-8"));
+                }
+                if((flgs & 2)>0){
+                    db.delete("'"+currList+"'","name='"+cursor.getString(1)+"'",null);
                 }
                 log(str+"\n");
             }

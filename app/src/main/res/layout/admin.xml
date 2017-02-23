@@ -5,22 +5,31 @@
     android:layout_gravity="center"
     android:orientation="vertical"
     android:background="@layout/item_bk">
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/sync_inst"
+        android:textSize="16sp"
+        android:padding="10dp"/>
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
-        <TextView
+        <Button
+            android:id="@+id/check_create"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentLeft="true"
-            android:layout_centerVertical="true"
-            android:textSize="18sp"
-            android:textColor="#ffffff"
-            android:text="Create a Sync Account"/>
-        <ImageView android:id="@+id/check"
+            android:text="Create Account"
+            android:background="@layout/title_bk"
+            android:textSize="16sp"/>
+        <Button
+            android:id="@+id/check_sign"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignParentRight="true"
-            android:src="@drawable/check"/>
+            android:layout_toRightOf="@id/check_create"
+            android:text="Sign in"
+            android:background="@layout/title_bk"
+            android:textSize="16sp"/>
     </RelativeLayout>
     <RelativeLayout
         android:layout_width="match_parent"

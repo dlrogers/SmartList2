@@ -13,6 +13,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -26,6 +27,7 @@ import static com.symdesign.smartlist.MainActivity.passwd;
 
 public class Settings extends DialogFragment {
     EditText emailView,passwdView;
+    ImageView saveView;
 
     public Settings() {
         // Empty contstuctor required for DialogFragment
@@ -40,7 +42,10 @@ public class Settings extends DialogFragment {
         View optionView = inflater.inflate(R.layout.settings, container, false);
         emailView = (EditText) optionView.findViewById(R.id.email);
         emailView.requestFocus();
+		emailView.setText(MainActivity.prefs.getString("email","no_email"));
         passwdView = (EditText) optionView.findViewById(R.id.passwd);
+		passwdView.setText(MainActivity.prefs.getString("passwd","no_passwd"));
+        saveView = (ImageView) optionView.findViewById(R.id.check);
         ImageView checkView = (ImageView) optionView.findViewById(R.id.check);
         Dialog dialog = getDialog();
 //        TextView tv = (TextView) dialog.findViewById(android.R.id.title);
@@ -50,19 +55,20 @@ public class Settings extends DialogFragment {
         dialog.getWindow().setSoftInputMode(
                 WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
         dialog.getWindow().requestFeature(Window.FEATURE_NO_TITLE);
-        emailView.setOnClickListener(new View.OnClickListener() {
+        emailView.requestFocus();
+        saveView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-/*                email = emailView.getText().toString();
+                email = emailView.getText().toString();
                 passwd = passwdView.getText().toString();
                 SharedPreferences.Editor ed = MainActivity.prefs.edit();
                 ed.putString("email",email);
                 ed.putString("passwd",passwd);
                 ed.putBoolean("syncReg",false);
                 ed.apply();
-                SettingsListener activity = (SettingsListener) getActivity();
-                activity.onFinishSettings(email,passwd);
-*/                getDialog().dismiss();
+//                SettingsListener activity = (SettingsListener) getActivity();
+//                activity.onFinishSettings(email,passwd);
+                getDialog().dismiss();
             }
         });
         return optionView;

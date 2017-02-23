@@ -39,5 +39,8 @@
     <string name="option_dialog_title"><b>New List</b></string>
     <string name="option_dialog_ok"><b>OK</b></string>
     <string name="settings_title"><center>Settings</center></string>
+    <string name="sync_inst">In order to use the sync feature, you must either create a new account
+        or sign into an existing account.</string>
+    <string name="registration">Registration</string>
 
 </resources>
