@@ -86,7 +86,7 @@ public class PickList extends Activity implements AdapterView.OnItemSelectedList
                 R.array.frequencies,R.layout.dropdown_layout);
         frequency = (Spinner) findViewById(R.id.freq);
         frequency.setAdapter(freq_adapter);
-        frequency.setPopupBackgroundResource(R.drawable.dialog_bk);
+//        frequency.setPopupBackgroundResource(R.drawable.dialog_bk);
         frequency.setOnItemSelectedListener(this);
         db = MainActivity.itemDb.getWritableDatabase();
         if(inLists) {
@@ -173,7 +173,7 @@ public class PickList extends Activity implements AdapterView.OnItemSelectedList
         checkView.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 Item item;
-                String nm = nameView.getText().toString();
+                String nm = (nameView.getText().toString()).replaceAll(" ","");
                 logF("freq = %d",freq);
                 if(inLists) {      // Edit (item selected from list) ?
                     item = getDbItem(name.toString());   // update db entry

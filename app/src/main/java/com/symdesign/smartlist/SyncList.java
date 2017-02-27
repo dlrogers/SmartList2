@@ -34,6 +34,7 @@ import static com.symdesign.smartlist.MainActivity.db;
 
 class SyncList extends AsyncTask<Void,Void,Boolean> {
     private String email,passwd,list,ans;
+    static long lastTime=System.currentTimeMillis();
     static boolean exists;
     private MainActivity activity;
 //	BufferedOutputStream bos;
@@ -66,6 +67,7 @@ class SyncList extends AsyncTask<Void,Void,Boolean> {
 
         try {       // Send post request
             log("starting SyncList");
+            lastTime=System.currentTimeMillis();
             url = new URL(MainActivity.serverAddr+"sync.php");
             HttpURLConnection link = (HttpURLConnection) url.openConnection();
             link.setRequestMethod("POST");
@@ -114,15 +116,23 @@ class SyncList extends AsyncTask<Void,Void,Boolean> {
                 col=col.replaceAll("\n","");
                 String[] cols = col.split(",");
                 switch(cols[0]) {
+                    case "d":
+                        log("deleteing");
+                        db.delete("'"+currList+"'","name='"+cols[1]+"'",null);
+                        break;
                     case "u":   //Time changed on server, update item
-                        values.clear();
-                        values.put("name", cols[1]);
-                        values.put("flags", cols[2]);
-                        values.put("last_time", cols[3]);
-                        values.put("last_avg", cols[4]);
-                        values.put("ratio", cols[5]);
-                        log("name='" + cols[1] + "'");
-                        db.update("'"+currList+"'", values, "name='" + cols[1] + "'", null);
+//                        int delbit = (Integer.parseInt(cols[2]))&2;
+//                        if(delbit<1) {
+                            values.clear();
+                            values.put("name", cols[1]);
+                            values.put("flags", cols[2]);
+                            values.put("last_time", cols[3]);
+                            values.put("last_avg", cols[4]);
+                            values.put("ratio", cols[5]);
+                            log("name='"+cols[1]+"'");
+                            db.update("'"+currList+"'",values,"name='"+cols[1]+"'",null);
+//                        } else {//                           db.delete("'"+currList+"'",null,null);
+//                        }
                         break;
                     case "i":   //Item added to server, insert into database
                         values.clear();
@@ -141,6 +151,7 @@ class SyncList extends AsyncTask<Void,Void,Boolean> {
             for(rows.moveToFirst(); !rows.isAfterLast(); rows.moveToNext()) {
                 logF("name = %s, flags = %d",rows.getString(0),rows.getInt(1));
             }
+            logF("Sync time = %d",System.currentTimeMillis()-lastTime);
             os.close();
             bos.close();
             is.close();

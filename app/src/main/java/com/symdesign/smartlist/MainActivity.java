@@ -225,6 +225,7 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
                         values.clear();
 //                        values.put("flags",(itemsList.get(position).flags)|2);
                         values.put("flags",3);
+                        values.put("last_time",getTime());
                         db.update("'"+currList+"'",values,"_id="+Long.toString(dBid),null);
                         updateAdapters();
 //                        setSelected(item,position,false);
@@ -243,7 +244,14 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
                 switch (clickLocation) {
                     case box:
                         clickLocation = ClickLocation.none;
+                        final String[] avgCols = {"last_time", "last_avg", "flags"};
+                        Cursor curs = db.query(currList, avgCols, "_id=" + Long.toString(dBid), null, "", "", "name ASC");
+                        curs.moveToFirst();
+                        long last = curs.getLong(0);
+                        long avg = curs.getLong(1);
+                        long ct = getTime();
                         values.put("flags", 1);     // set il=1
+                        values.put("last_time",ct+1);
                         db.update(currList, values,
                                 "_id=" + Long.toString(dBid), null);
                         updateAdapters();
@@ -262,6 +270,7 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
                         values.clear();
 //                        values.put("flags",(itemsSuggest.get(position).flags)|2);
                         values.put("flags",2);
+                        values.put("last_time",getTime());
                         db.update("'"+currList+"'",values,"_id="+Long.toString(dBid),null);
                         updateAdapters();
                         break;
@@ -432,7 +441,7 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
         } else
             values.put("last_avg", running_avg(ct - last, avg));
         values.put("flags", Math.abs(flags));   // set flags, and dbChg true
-        values.put("last_time", ct);
+        values.put("last_time", ct+1);
         logF("last_time = %d\t current time = %d\t, last_avg = %d\t, elapsed = %d",last,ct,avg,ct-last);
         db.update(currList, values, "_id=" + Long.toString(id), null);
         updateAdapters();

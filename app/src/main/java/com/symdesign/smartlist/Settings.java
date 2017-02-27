@@ -20,14 +20,15 @@ import android.widget.TextView;
 
 import static com.symdesign.smartlist.MainActivity.email;
 import static com.symdesign.smartlist.MainActivity.passwd;
-
-/**
+import static com.symdesign.smartlist.MainActivity.db;
+import static com.symdesign.smartlist.MainActivity.currList;
+/*
  * Created by dennis on 2/12/17.
  */
 
 public class Settings extends DialogFragment {
     EditText emailView,passwdView;
-    ImageView saveView;
+    ImageView checkView;
 
     public Settings() {
         // Empty contstuctor required for DialogFragment
@@ -45,8 +46,7 @@ public class Settings extends DialogFragment {
 		emailView.setText(MainActivity.prefs.getString("email","no_email"));
         passwdView = (EditText) optionView.findViewById(R.id.passwd);
 		passwdView.setText(MainActivity.prefs.getString("passwd","no_passwd"));
-        saveView = (ImageView) optionView.findViewById(R.id.check);
-        ImageView checkView = (ImageView) optionView.findViewById(R.id.check);
+        checkView = (ImageView) optionView.findViewById(R.id.check);
         Dialog dialog = getDialog();
 //        TextView tv = (TextView) dialog.findViewById(android.R.id.title);
 //        tv.setText("Setting");
@@ -56,7 +56,7 @@ public class Settings extends DialogFragment {
                 WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
         dialog.getWindow().requestFeature(Window.FEATURE_NO_TITLE);
         emailView.requestFocus();
-        saveView.setOnClickListener(new View.OnClickListener() {
+        checkView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 email = emailView.getText().toString();
@@ -66,8 +66,7 @@ public class Settings extends DialogFragment {
                 ed.putString("passwd",passwd);
                 ed.putBoolean("syncReg",false);
                 ed.apply();
-//                SettingsListener activity = (SettingsListener) getActivity();
-//                activity.onFinishSettings(email,passwd);
+				db.execSQL("delete from '"+currList+"'");				
                 getDialog().dismiss();
             }
         });

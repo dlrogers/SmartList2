@@ -29,47 +29,54 @@ if(strcmp($row["passwd"],$passwd)==0){
 		$n=0;
 		while($txt=fgets($std)) {				//Get an item from phone
 			$txt=trim($txt,"\n");				//remove returns
-			$p_cols=explode(',',$txt);			//separate into columns (name,flags,last_time,last_avg,ration)
-			$rslt=db_query("SELECT * from ".$list." where name=" . //Search server for item
+			$p_cols=explode(',',$txt);			//separate into columns (name,flags,last_time,last_avg,ratio)
+			logError(" \n");
+				$rslt=db_query("SELECT * from ".$list." where name=" . //Search server for item
 					sprintf("'%s'",$p_cols[0]));
-			logError($db->error);
+//			logError($db->error);
 			$names[$n]=$p_cols[0];					//Save names in $names[]
 			if($rslt!=false){
-				logError($txt);
+				logError("From phone: ".$txt);
 				//		printf("name = %s, count = %d\n",$p_cols[0],count($rslt));
 				$row = $rslt->fetch_assoc();
 				$plt = sscanf($p_cols[2],"%s")[0];
 				$slt = $row["last_time"];
 				$pflg = sscanf($p_cols[1],"%s")[0];
-				$sflg = $row["flags"];				
+				$sflg = sscanf($row["flags"],"%d")[0];
+				logError(sprintf("From Server: flags = %d, slt = %d, plt = %d, slt-plt = %d",$sflg,$slt,$plt,$sflg-$pflg));
 				if($row==null) {		//if(does not exist on server add it)
 					logError("adding row");
 					db_query(sprintf("INSERT INTO `".$list."` VALUES ('%s',%s,%s,%s,%s)",
 							$p_cols[0],$p_cols[1],$p_cols[2],$p_cols[3],$p_cols[4]));
-				} else {					//else check if changed
-					if($slt>$plt) {		// if phone has not been changed
-						logError("changing phone");
+				} else if($slt>$plt) {		// if phone has not been changed
+					if($sflg&2) {
+						logError("deleting");
+						printf("%s,%s,%s,%s,%s,%s\n",
+								"d",$row['name'],$row['flags'],$row['last_time'],$row['last_avg'],$row['ratio']);
+					} else {
+						logError("changing phone "+"flags = "+$row['flags']);					
 						printf("%s,%s,%s,%s,%s,%s\n",
 								"u",$row['name'],$row['flags'],$row['last_time'],$row['last_avg'],$row['ratio']);
-					} 
-					else if($slt<=$plt) {		// If phone copy changed: update server db
-						logError("changing server");
-						$rslt=db_query(sprintf(
-								"UPDATE `".$list."` SET last_time=%s,last_avg=%s,ratio=%s,flags=%s WHERE name='%s'",
-								$plt,$p_cols[3],$p_cols[4],$p_cols[1],$p_cols[0]));
-						if(!$rslt) logError("dB update failed") ;
-					}
-					else if($sflg!=$pflg) {
-						logError("changing flags");
-						$rslt=db_query(sprintf(
-								"UPDATE `".$list."` SET last_time=%s,last_avg=%s,ratio=%s,flags=%s WHERE name='%s'",
-								$plt,$p_cols[3],$p_cols[4],$p_cols[1],$p_cols[0]));
-						if(!$rslt) logError("dB update failed") ;
-						
 					}
 				}
-				$n+=1;
+				else if($slt<$plt) {		// If phone copy changed: update server db
+					logError("changing server");
+					$rslt=db_query(sprintf(
+							"UPDATE `".$list."` SET last_time=%s,last_avg=%s,ratio=%s,flags=%s WHERE name='%s'",
+							$plt,$p_cols[3],$p_cols[4],$p_cols[1],$p_cols[0]));
+					if(!$rslt) logError("dB update failed") ;
+				}
+				else if($sflg!=$pflg) {
+					logError("changing flags");
+					$rslt=db_query(sprintf(
+							"UPDATE `".$list."` SET last_time=%s,last_avg=%s,ratio=%s,flags=%s WHERE name='%s'",
+							$plt,$p_cols[3],$p_cols[4],$p_cols[1],$p_cols[0]));
+					if(!$rslt) logError("dB update failed");					
+				} else {
+					logError("dates same");					
+				}
 			}
+			$n+=1;
 		}
 		logError("adding items not on phone");
 		$rslt=db_query("SELECT * FROM `".$list."`");
@@ -77,7 +84,8 @@ if(strcmp($row["passwd"],$passwd)==0){
 			logError("checking ".$row['name']);
 			if(!inPhone($row['name'],$n)) {
 				logError("Adding " . $row['name']);
-				printf("%s,%s,%s,%s,%s,%s\n",
+				if(($row["flags"]&2)<1)
+					printf("%s,%s,%s,%s,%s,%s\n",
 						"i",$row['name'],$row['flags'],$row['last_time'],$row['last_avg'],$row['ratio']);
 			}
 		}
