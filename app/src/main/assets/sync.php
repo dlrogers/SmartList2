@@ -20,7 +20,7 @@ $rslt=db_query("select * from users where email='".$email."' AND list='".$list."
 $row=$rslt->fetch_assoc();
 //logError(String.format("strcmp = %d",strcmp($row["passwd"],$passwd)));
 db_query("use `".$email."`");
-if(strcmp($row["passwd"],$passwd)==0){
+if($row["passwd"]===$passwd){					// Is password correct?
 	if($db->select_db($email)){
 		logError($email." exists");
 //		print("exists");

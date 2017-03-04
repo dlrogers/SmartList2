@@ -281,7 +281,9 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
         // See https://g.co/AppIndexing/AndroidStudio for more information.
         client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
     }
+
         // Setup Sidebar options
+
     static DrawerLayout drawers;
     static ListView lists;
     LinearLayout navList;
@@ -378,16 +380,22 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
     @Override
     public void onFinishAdminDialog(String email,String passwd,Boolean reg) {
         if(reg)
-        new Auth(this,email,passwd,currList).execute();
+        new Auth(this,email,passwd,currList,"new").execute();
     }
-    public void onFinishAuth(String rslt) {
+    public void onFinishAuth(String cmd, String rslt) {
         log(rslt);
-        if(rslt.equals("exists")){
-            FragmentManager fm = getSupportFragmentManager();
-            AdminDialog adminDialog = new AdminDialog();
-            adminDialog.show(fm, "dialog");
-        } else {
-            new SyncList(this,email, passwd, currList).execute();
+        switch(cmd) {
+            case "new" :
+                if(rslt.equals("exists")){
+                    FragmentManager fm = getSupportFragmentManager();
+                    AdminDialog adminDialog = new AdminDialog();
+                    adminDialog.show(fm, "dialog");
+                } else {
+                    new SyncList(this,email, passwd, currList).execute();
+                }
+                break;
+            case "add" :
+                new Auth(this,email,passwd,currList,"add");
         }
     }
     public void onFinishSyncList(String rslt) {

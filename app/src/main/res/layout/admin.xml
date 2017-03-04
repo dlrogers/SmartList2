@@ -20,6 +20,7 @@
             android:layout_height="wrap_content"
             android:layout_alignParentLeft="true"
             android:text="Create Account"
+            android:textColor="#261E14"
             android:background="@layout/title_bk"
             android:textSize="16sp"/>
         <Button
@@ -27,6 +28,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_toRightOf="@id/check_create"
+            android:textColor="#261E14"
             android:text="Sign in"
             android:background="@layout/title_bk"
             android:textSize="16sp"/>

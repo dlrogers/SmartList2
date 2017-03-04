@@ -1,5 +1,6 @@
 package com.symdesign.smartlist;
 
+import android.app.Activity;
 import android.app.Dialog;
 import android.app.DialogFragment;
 import android.app.FragmentTransaction;
@@ -24,7 +25,9 @@ import android.widget.ImageView;
 import static android.support.v4.widget.CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER;
 import static com.symdesign.smartlist.MainActivity.currList;
 import static com.symdesign.smartlist.MainActivity.db;
+import static com.symdesign.smartlist.MainActivity.email;
 import static com.symdesign.smartlist.MainActivity.log;
+import static com.symdesign.smartlist.MainActivity.passwd;
 
 /**
  * Created by dennis on 10/17/16.
@@ -32,13 +35,15 @@ import static com.symdesign.smartlist.MainActivity.log;
 
 public class OptionDialog extends DialogFragment {
     AutoCompleteTextView nameView;
+    static Activity activity;
 
     public OptionDialog() {
         // Empty contstuctor required for DialogFragment
     }
 
-    public static OptionDialog newInstance(int title) {
+    public static OptionDialog newInstance(int title,Activity a) {
         OptionDialog frag = new OptionDialog();
+        activity = a;
         Bundle args = new Bundle();
         args.putInt("title", title);
         frag.setArguments(args);
@@ -70,9 +75,10 @@ public class OptionDialog extends DialogFragment {
                     log(SQL);
                     db.execSQL(SQL);
                     showLists();
+//                    new Auth((MainActivity) getActivity(),email,passwd,currList,"add");
                 }
 //                MainActivity.closeDrawer();
-                MainActivity.printLists();
+//                MainActivity.printLists();
                 getDialog().dismiss();
             }
         });

@@ -1,5 +1,6 @@
 package com.symdesign.smartlist;
 
+import android.app.Activity;
 import android.content.ContentValues;
 import android.os.AsyncTask;
 import android.support.v4.app.FragmentManager;
@@ -25,7 +26,7 @@ import static com.symdesign.smartlist.MainActivity.log;
  */
 
 public class Auth extends AsyncTask<Void,Void,Boolean> {
-    String email, passwd, list, ans;
+    String email, passwd, list, ans, cmd;
     static boolean exists;
     MainActivity activity;
     BufferedOutputStream bos;
@@ -35,11 +36,12 @@ public class Auth extends AsyncTask<Void,Void,Boolean> {
     HttpURLConnection link;
     URL url;
 
-    public Auth(MainActivity a, String em, String pwd, String lst) {
+    public Auth(MainActivity a, String em, String pwd, String lst, String c) {
         this.activity = a;
         email = em;
         passwd = pwd;
         list = lst;
+        cmd = c;
     }
 
     @Override
@@ -48,15 +50,14 @@ public class Auth extends AsyncTask<Void,Void,Boolean> {
         OutputStream os;
 
         try {       // Send post request
-            log("starting auth");
-            url = new URL(MainActivity.serverAddr+"auth.php");
+            url = new URL(MainActivity.serverAddr + "auth.php");
             link = (HttpURLConnection) url.openConnection();
             link.setRequestMethod("POST");
             link.setDoInput(true);
             link.setDoOutput(true);
-
             os=link.getOutputStream();
             bos = new BufferedOutputStream(os);
+            bos.write((cmd + "\n").getBytes("UTF-8"));
             bos.write((email + "\n").getBytes("UTF-8"));
             bos.write((passwd + "\n").getBytes("UTF-8"));
             bos.write((list + "\n").getBytes("UTF-8"));
@@ -68,13 +69,13 @@ public class Auth extends AsyncTask<Void,Void,Boolean> {
             os.close();
         } catch (MalformedURLException e) {
             log("Malformed URL: " + e.toString());
-            activity.onFinishAuth("error");
+            activity.onFinishAuth(cmd,"error");
         } catch (IOException e) {
             log("IOException: " + e.getMessage());
             for(int i=0; i<4; i++) {
                 log(e.getStackTrace()[i].toString());
                 log(String.format("    line no. = %d", e.getStackTrace()[i].getLineNumber()));
-                activity.onFinishAuth("error");
+                activity.onFinishAuth(cmd,"error");
             }
         } finally {
 //            log("Disconnecting");
@@ -84,6 +85,6 @@ public class Auth extends AsyncTask<Void,Void,Boolean> {
     }
     @Override
     protected void onPostExecute(Boolean result){
-            activity.onFinishAuth(ans);
+            activity.onFinishAuth(cmd,ans);
     }
 }
