@@ -1,6 +1,7 @@
 package com.symdesign.smartlist;
 
 import android.content.ContentValues;
+import android.content.Context;
 import android.database.Cursor;
 import android.os.AsyncTask;
 import android.os.SystemClock;
@@ -44,9 +45,11 @@ class SyncList extends AsyncTask<Void,Void,Boolean> {
     static String col;
 //	HttpURLConnection link;
     private URL url,nurl;
+    Context context;
 
     SyncList (MainActivity a, String em, String pwd, String lst) {
         this.activity=a;
+        context = a;
         email = em;
         passwd = pwd;
         list = lst;
