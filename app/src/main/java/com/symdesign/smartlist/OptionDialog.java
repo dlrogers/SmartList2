@@ -31,22 +31,36 @@ import static com.symdesign.smartlist.MainActivity.email;
 import static com.symdesign.smartlist.MainActivity.log;
 import static com.symdesign.smartlist.MainActivity.passwd;
 
+
 /**
  * Created by dennis on 10/17/16.
+ *
+ * Handles short taps on drawere lists
+ *
  */
 
 public class OptionDialog extends DialogFragment {
     AutoCompleteTextView nameView;
-    static Activity activity;
+//    static Activity activity;
     Context context;
 
     public OptionDialog() {
         // Empty contstuctor required for DialogFragment
     }
 
-    public static OptionDialog newInstance(int title,Activity a) {
+    public interface Listener {
+        void showLists();
+    }
+
+    private Listener listener;
+
+    public void setListener(Listener listener) {
+        this.listener = listener;
+    }
+
+    public static OptionDialog newInstance(int title) {
         OptionDialog frag = new OptionDialog();
-        activity = a;
+//        activity = a;
         Bundle args = new Bundle();
         args.putInt("title", title);
         frag.setArguments(args);
@@ -58,7 +72,7 @@ public class OptionDialog extends DialogFragment {
         View optionView = inflater.inflate(R.layout.options, container, false);
         context = MyVars.get().context;
         ImageView checkView = (ImageView) optionView.findViewById(R.id.check);
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(context,
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(context,
                 android.R.layout.simple_dropdown_item_1line, PickList.srchItems);
         getDialog().getWindow().setSoftInputMode(
                 WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE
@@ -78,7 +92,7 @@ public class OptionDialog extends DialogFragment {
                             "last_time INT, last_avg INT, ratio REAL)";
                     log(SQL);
                     db.execSQL(SQL);
-                    showLists(context);
+                    listener.showLists();
 //                    new Auth((MainActivity) getActivity(),email,passwd,currList,"add");
                 }
 //                MainActivity.closeDrawer();
@@ -89,7 +103,6 @@ public class OptionDialog extends DialogFragment {
         getDialog().getWindow().requestFeature(Window.FEATURE_NO_TITLE);
         return optionView;
     }
-
     static public void addToLists(String name) {	// Add name lists Db
         ContentValues values = new ContentValues();
         values.put("name", name);

@@ -17,13 +17,14 @@ import android.widget.ImageView;
 
 import java.util.ArrayList;
 
-import static android.support.v4.widget.CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER;
 import static com.symdesign.smartlist.MainActivity.db;
-import static com.symdesign.smartlist.OptionDialog.hashName;
 //import static com.symdesign.smartlist.MainActivity.listTable;
 
 /**
  * Created by dennis on 10/17/16.
+ *
+ * Code handles a long click on a list, displayed by the drawer
+ *
  */
 
 public class LongClickDialog extends DialogFragment {
@@ -36,11 +37,21 @@ public class LongClickDialog extends DialogFragment {
     public LongClickDialog() {
         // Empty contstuctor required for DialogFragment
     }
+    public interface Listener {
+        void showLists();
+    }
+
+    private OptionDialog.Listener listener;
+
+    public void setListener(OptionDialog.Listener listener) {
+        this.listener = listener;
+    }
+
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         final Context context;
-        context = getActivity();
+//        context = getActivity();
         View optionView = inflater.inflate(R.layout.long_click, container, false);
         nameView = (EditText) optionView.findViewById(R.id.list_name);
         listName = this.getArguments().getString("name");
@@ -59,7 +70,7 @@ public class LongClickDialog extends DialogFragment {
                 listName = nameView.getText().toString();
                 values.put("name",listName);
                 db.update("lists",values,"_id="+listId,null);
-                OptionDialog.showLists(context);
+                listener.showLists();
                 MainActivity.printLists();
                 getDialog().dismiss();
             }
@@ -70,7 +81,7 @@ public class LongClickDialog extends DialogFragment {
                 db.delete("lists","name='"+listName+"'",null);
                 db.execSQL("drop table '"+listName+"'");
                 MainActivity.currList = "'Groceries'";
-                OptionDialog.showLists(context);
+                listener.showLists();
                 MainActivity.printLists();
                 getDialog().dismiss();
             }

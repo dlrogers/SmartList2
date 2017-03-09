@@ -1,6 +1,7 @@
 package com.symdesign.smartlist;
 
 import android.app.Activity;
+import android.app.DialogFragment;
 import android.app.FragmentTransaction;
 import android.content.ContentValues;
 import android.content.Context;
@@ -29,7 +30,12 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -47,6 +53,7 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Locale;
 
 import static android.widget.CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER;
 import static com.symdesign.smartlist.SLAdapter.*;
@@ -54,7 +61,8 @@ import static com.symdesign.smartlist.SLAdapter.itemsList;
 
 // Version of SmartList that uses file to store databae on phone
 
-public class MainActivity extends AppCompatActivity implements AdminDialog.AdminDialogListener {
+public class MainActivity extends AppCompatActivity implements AdminDialog.AdminDialogListener,
+        OptionDialog.Listener, LongClickDialog.Listener {
 
     Context context;
     static ItemDb itemDb;
@@ -93,7 +101,6 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         context = this;
-        Handler slHandler = new SLHandler(context,listView,suggestView);
         mainActivity = this;
         itemDb = new ItemDb(getContext());
         db = itemDb.getWritableDatabase();
@@ -167,10 +174,6 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
         setSupportActionBar(toolbar);
         actionBar = getSupportActionBar();
         actionBar.setTitle(currList);
-
-//        Setup task handler
-        Message repeat = Message.obtain(slHandler, MSG_REPEAT);
-        slHandler.sendMessageDelayed(repeat, repeat_time);
         deleteList.clear();
 
 //        Setup floating "add" button
@@ -200,13 +203,19 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
         // Get view links
         listView = (ListView) findViewById(R.id.list_view);
         suggestView = (ListView) findViewById(R.id.suggest_view);
+        Handler slHandler = new SLHandler(context,listView,suggestView);
+
+//        Setup task handler
+        Message repeat = Message.obtain(slHandler, MSG_REPEAT);
+        slHandler.sendMessageDelayed(repeat, repeat_time);
+
         Display display = getWindowManager().getDefaultDisplay();
         Point size = new Point();
         display.getSize(size);
         scrn_width = size.x;
         scrn_height = size.y;
 
-        log(String.format("Starting MainActivity, time=%d", getTime()));
+        log(String.format(Locale.getDefault(),"Starting MainActivity, time=%d", getTime()));
         updateAdapters(context,listView,suggestView);
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -290,6 +299,10 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
 
         // Setup Sidebar options
 
+    public void showLists(){
+        showLists(context);
+    }
+
     DrawerLayout drawers;
     LinearLayout navList;
     Button newList,closeList;
@@ -346,7 +359,8 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
             }
         });
     }
-    static public void showLists(Context context) {
+
+    public void showLists(Context context) {
         Cursor listsCursor = db.query("lists", new String[] {"_id","name","tableid"}, null, null, null, null, null);
         SimpleCursorAdapter adpt = new SimpleCursorAdapter(
                 context, R.layout.lists_layout,
@@ -354,6 +368,7 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
         lists.setAdapter(adpt);
         listsCursor.close();
     }
+
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
