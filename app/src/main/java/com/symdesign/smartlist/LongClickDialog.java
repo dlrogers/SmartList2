@@ -39,6 +39,8 @@ public class LongClickDialog extends DialogFragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        final Context context;
+        context = getActivity();
         View optionView = inflater.inflate(R.layout.long_click, container, false);
         nameView = (EditText) optionView.findViewById(R.id.list_name);
         listName = this.getArguments().getString("name");
@@ -57,7 +59,7 @@ public class LongClickDialog extends DialogFragment {
                 listName = nameView.getText().toString();
                 values.put("name",listName);
                 db.update("lists",values,"_id="+listId,null);
-                OptionDialog.showLists();
+                OptionDialog.showLists(context);
                 MainActivity.printLists();
                 getDialog().dismiss();
             }
@@ -68,7 +70,7 @@ public class LongClickDialog extends DialogFragment {
                 db.delete("lists","name='"+listName+"'",null);
                 db.execSQL("drop table '"+listName+"'");
                 MainActivity.currList = "'Groceries'";
-                OptionDialog.showLists();
+                OptionDialog.showLists(context);
                 MainActivity.printLists();
                 getDialog().dismiss();
             }

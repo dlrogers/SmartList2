@@ -1,6 +1,7 @@
 package com.symdesign.smartlist;
 
 import android.content.ContentValues;
+import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -29,6 +30,7 @@ import static com.symdesign.smartlist.MainActivity.currList;
 
 /**
  * Created by dennis on 11/20/16.
+ * Dialog to enter auth info for the first time
  */
 
 public class AdminDialog extends DialogFragment {

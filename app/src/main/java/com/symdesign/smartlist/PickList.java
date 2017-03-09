@@ -27,7 +27,6 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 
 import static com.symdesign.smartlist.MainActivity.day;
-import static com.symdesign.smartlist.MainActivity.getContext;
 import static com.symdesign.smartlist.MainActivity.logF;
 import static com.symdesign.smartlist.MainActivity.log;
 import static com.symdesign.smartlist.MainActivity.getTime;
@@ -65,7 +64,7 @@ public class PickList extends Activity implements AdapterView.OnItemSelectedList
         context = this;
         setContentView(R.layout.pick_list);
         Bundle extras = getIntent().getExtras();
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this,
                 R.layout.dropdown_layout,srchItems);
         nameView = (AutoCompleteTextView)
                 findViewById(R.id.name);
@@ -82,7 +81,7 @@ public class PickList extends Activity implements AdapterView.OnItemSelectedList
         checkView = (Button) findViewById(R.id.pick_button);
         freq = -1;
 
-        ArrayAdapter<CharSequence> freq_adapter = ArrayAdapter.createFromResource(getContext(),
+        ArrayAdapter<CharSequence> freq_adapter = ArrayAdapter.createFromResource(context,
                 R.array.frequencies,R.layout.dropdown_layout);
         frequency = (Spinner) findViewById(R.id.freq);
         frequency.setAdapter(freq_adapter);
@@ -296,7 +295,7 @@ public class PickList extends Activity implements AdapterView.OnItemSelectedList
         BufferedReader rdr;
         InputStream input;
         String currCat;
-        catagories = new ArrayList<String>();
+        catagories = new ArrayList<>();
 
         try{
             input = MainActivity.assetManager.open("Master_Grocery_List.txt");
@@ -316,7 +315,7 @@ public class PickList extends Activity implements AdapterView.OnItemSelectedList
                     if((currCat = rdr.readLine())==null) break;
                     currCat = ((char) chr)+currCat;
                     catagories.add(currCat);
-                    currItems = new ArrayList<String>();
+                    currItems = new ArrayList<>();
 //                    logF("Catagory = %s",currCat);
 
                 }

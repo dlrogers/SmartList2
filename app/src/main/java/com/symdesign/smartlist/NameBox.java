@@ -3,13 +3,13 @@ package com.symdesign.smartlist;
 import android.content.Context;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
-import android.view.ViewParent;
-import android.widget.EditText;
+import android.support.v7.widget.AppCompatEditText;
 
 /**
- * Created by dennis on 11/22/15.
+ * Created by dennis on 3/8/17
+ *
  */
-public class NameBox extends EditText {
+public class NameBox extends AppCompatEditText {
 
     public NameBox(Context context,AttributeSet attrs) {
         super(context, attrs);

@@ -10,6 +10,7 @@
         android:layout_alignParentLeft="true"
         android:layout_centerVertical="true"
         android:textSize="18sp"
+        android:textColor="#ffffff"
         android:text="Name : "/>
     <AutoCompleteTextView android:id="@+id/name"
         android:layout_width="wrap_content"

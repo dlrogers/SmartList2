@@ -5,6 +5,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.os.AsyncTask;
 import android.os.SystemClock;
+import android.widget.ListView;
 
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
@@ -35,6 +36,7 @@ import static com.symdesign.smartlist.MainActivity.db;
 
 class SyncList extends AsyncTask<Void,Void,Boolean> {
     private String email,passwd,list,ans;
+    ListView listView,suggestView;
     static long lastTime=System.currentTimeMillis();
     static boolean exists;
     private MainActivity activity;
@@ -47,9 +49,11 @@ class SyncList extends AsyncTask<Void,Void,Boolean> {
     private URL url,nurl;
     Context context;
 
-    SyncList (MainActivity a, String em, String pwd, String lst) {
+    SyncList (MainActivity a, String em, String pwd, String lst, ListView lv,ListView sv) {
         this.activity=a;
         context = a;
+        listView = lv;
+        suggestView = sv;
         email = em;
         passwd = pwd;
         list = lst;
@@ -175,7 +179,7 @@ class SyncList extends AsyncTask<Void,Void,Boolean> {
     }
     @Override
     protected void onPostExecute(Boolean exists) {
-        SLAdapter.updateAdapters();
+        MainActivity.updateAdapters(context,listView,suggestView);
         log("SyncList finished");
     }
 }

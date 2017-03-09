@@ -5,6 +5,7 @@ import android.app.Dialog;
 import android.app.DialogFragment;
 import android.app.FragmentTransaction;
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.database.Cursor;
 import android.os.Bundle;
@@ -21,6 +22,7 @@ import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.ListView;
 
 import static android.support.v4.widget.CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER;
 import static com.symdesign.smartlist.MainActivity.currList;
@@ -36,6 +38,7 @@ import static com.symdesign.smartlist.MainActivity.passwd;
 public class OptionDialog extends DialogFragment {
     AutoCompleteTextView nameView;
     static Activity activity;
+    Context context;
 
     public OptionDialog() {
         // Empty contstuctor required for DialogFragment
@@ -53,8 +56,9 @@ public class OptionDialog extends DialogFragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View optionView = inflater.inflate(R.layout.options, container, false);
+        context = MyVars.get().context;
         ImageView checkView = (ImageView) optionView.findViewById(R.id.check);
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(MainActivity.mainActivity,
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>(context,
                 android.R.layout.simple_dropdown_item_1line, PickList.srchItems);
         getDialog().getWindow().setSoftInputMode(
                 WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE
@@ -74,7 +78,7 @@ public class OptionDialog extends DialogFragment {
                             "last_time INT, last_avg INT, ratio REAL)";
                     log(SQL);
                     db.execSQL(SQL);
-                    showLists();
+                    showLists(context);
 //                    new Auth((MainActivity) getActivity(),email,passwd,currList,"add");
                 }
 //                MainActivity.closeDrawer();
@@ -86,13 +90,6 @@ public class OptionDialog extends DialogFragment {
         return optionView;
     }
 
-    static public void showLists() {
-        Cursor listsCursor = db.query("lists", new String[] {"_id","name","tableid"}, null, null, null, null, null);
-        SimpleCursorAdapter adpt = new SimpleCursorAdapter(
-                MainActivity.getContext(), R.layout.lists_layout,
-                listsCursor,new String[] {"name"},new int[]{R.id.name}, FLAG_REGISTER_CONTENT_OBSERVER);
-        MainActivity.lists.setAdapter(adpt);
-    }
     static public void addToLists(String name) {	// Add name lists Db
         ContentValues values = new ContentValues();
         values.put("name", name);

@@ -17,6 +17,7 @@ import android.os.Message;
 import android.speech.RecognizerIntent;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.FragmentManager;
+import android.support.v4.widget.CursorAdapter;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v4.widget.SimpleCursorAdapter;
 import android.support.v7.app.AppCompatActivity;
@@ -45,9 +46,9 @@ import com.google.android.gms.common.api.GoogleApiClient;
 
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collections;
 
 import static android.widget.CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER;
-import static com.symdesign.smartlist.R.id.navList;
 import static com.symdesign.smartlist.SLAdapter.*;
 import static com.symdesign.smartlist.SLAdapter.itemsList;
 
@@ -55,12 +56,12 @@ import static com.symdesign.smartlist.SLAdapter.itemsList;
 
 public class MainActivity extends AppCompatActivity implements AdminDialog.AdminDialogListener {
 
+    Context context;
     static ItemDb itemDb;
     static String serverAddr="http://192.168.1.209/cgi-bin/";
-    static Context context;
     static ContentValues values = new ContentValues();
     public static SQLiteDatabase db;
-    static ListView listView, suggestView;
+    public ListView listView, suggestView,lists;
     static String adminURL;
 
     public enum ClickLocation {none, del, name, box}
@@ -69,7 +70,6 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
             day = 24 * hour, week = 7 * day, repeat_time = 10 ;
     static int scrn_width, scrn_height, VOICE_RECOGNITION_REQUEST_CODE = 2;
     static final int MSG_REPEAT = 1;
-    static Activity mainActivity;
     static final String SQL_CREATE_GROCERIES =
             "CREATE TABLE Groceries(_id INTEGER PRIMARY KEY, name TEXT, flags INT, last_time INT, last_avg INT, ratio REAL)";
         // name =       name of list item
@@ -79,7 +79,6 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
         // last_avg =   Running averate of times between buys
         // ratio =      (time since last purchase)/last_avg
     static final String SQL_LISTS = "CREATE TABLE lists(_id INTEGER PRIMARY KEY, name TEXT, tableid TEXT)";
-    static Handler slHandler = new SLHandler();
     static AssetManager assetManager;
     static Toast toast;
     static ArrayList<String> deleteList = new ArrayList<>();
@@ -87,11 +86,14 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
     static String currList,currTable,installed,email,passwd;     // Current Shared Prefs
     static android.support.v7.app.ActionBar actionBar;
     static SharedPreferences prefs;
+    MainActivity mainActivity;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        context = this;
+        Handler slHandler = new SLHandler(context,listView,suggestView);
         mainActivity = this;
         itemDb = new ItemDb(getContext());
         db = itemDb.getWritableDatabase();
@@ -138,12 +140,16 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
             db.execSQL(SQL_CREATE_GROCERIES);
         }
         setupOptions();     // Setup up sidebar
-        OptionDialog.showLists();
+        showLists(context);
         printLists();
 
         email = prefs.getString("email","no_email");
         passwd = prefs.getString("passwd","no_passwd");
         currList = prefs.getString("currList","Groceries");
+        currList = "Groceries";                       // code to reset default list to Groceries
+        SharedPreferences.Editor ed = prefs.edit();
+        ed.putString("currList","Groceries");
+        ed.apply();
         currTable = prefs.getString("currTable","Groceries");
 
         assetManager = getAssets();
@@ -176,7 +182,7 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
                 intent.putExtra("id", -1);
                 intent.putExtra("name", "");
                 intent.putExtra("inLists", false);
-                MainActivity.getContext().startActivity(intent);
+                context.startActivity(intent);
             }
         });
 
@@ -194,7 +200,6 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
         // Get view links
         listView = (ListView) findViewById(R.id.list_view);
         suggestView = (ListView) findViewById(R.id.suggest_view);
-
         Display display = getWindowManager().getDefaultDisplay();
         Point size = new Point();
         display.getSize(size);
@@ -202,7 +207,7 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
         scrn_height = size.y;
 
         log(String.format("Starting MainActivity, time=%d", getTime()));
-        updateAdapters();
+        updateAdapters(context,listView,suggestView);
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View item, int position, long id) {
@@ -227,7 +232,7 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
                         values.put("flags",3);
                         values.put("last_time",getTime());
                         db.update("'"+currList+"'",values,"_id="+Long.toString(dBid),null);
-                        updateAdapters();
+                        updateAdapters(context,listView,suggestView);
 //                        setSelected(item,position,false);
                         break;
                 }
@@ -254,12 +259,13 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
                         values.put("last_time",ct+1);
                         db.update(currList, values,
                                 "_id=" + Long.toString(dBid), null);
-                        updateAdapters();
+                        curs.close();
+                        updateAdapters(context,listView,suggestView);
                         break;
                     case name:
                         //                       db.update(currList, values,
                         //                               "_id=" + Long.toString(dBid), null);
-                        //                       updateAdapters();
+                        //                       updateAdapters(context,listView,suggestView);
                         Intent intent = new Intent("com.symdesign.smartlist.intent.action.PickList");
                         intent.putExtra("id", dBid);
                         intent.putExtra("name", itemsSuggest.get(position).name);
@@ -272,7 +278,7 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
                         values.put("flags",2);
                         values.put("last_time",getTime());
                         db.update("'"+currList+"'",values,"_id="+Long.toString(dBid),null);
-                        updateAdapters();
+                        updateAdapters(context,listView,suggestView);
                         break;
                 }
             }
@@ -284,8 +290,7 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
 
         // Setup Sidebar options
 
-    static DrawerLayout drawers;
-    static ListView lists;
+    DrawerLayout drawers;
     LinearLayout navList;
     Button newList,closeList;
 
@@ -304,17 +309,17 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
             }
         });
             // List of lists
-        OptionDialog.showLists();   // Regular tap
+        showLists(context);   // Regular tap
         lists.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View item, int position, long id) {
                 Cursor c = (Cursor) parent.getItemAtPosition(position);
                 currList = c.getString(2);
-                actionBar.setTitle((CharSequence) c.getString(1));
+                actionBar.setTitle(c.getString(1));
                 SharedPreferences.Editor ed = prefs.edit();
                 ed.putString("currList",c.getString(1));
                 ed.apply();
-                updateAdapters();
+                updateAdapters(context,listView,suggestView);
                 closeDrawer();
                 logF("name = %s",c.getString(2));
             }
@@ -340,6 +345,14 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
                 drawers.closeDrawer(navList);
             }
         });
+    }
+    static public void showLists(Context context) {
+        Cursor listsCursor = db.query("lists", new String[] {"_id","name","tableid"}, null, null, null, null, null);
+        SimpleCursorAdapter adpt = new SimpleCursorAdapter(
+                context, R.layout.lists_layout,
+                listsCursor,new String[] {"name"},new int[]{R.id.name}, CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
+        lists.setAdapter(adpt);
+        listsCursor.close();
     }
 
     @Override
@@ -370,7 +383,7 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
                             Toast.LENGTH_LONG);
                     toast.setGravity(Gravity.TOP, 0, 200);
                     toast.show();
-                    new SyncList(this,email,passwd,currList).execute();
+                    new SyncList(this,email,passwd,currList,listView,suggestView).execute();
 //                    new DatabaseSync().execute();
                 }
                 break;
@@ -391,7 +404,7 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
                     AdminDialog adminDialog = new AdminDialog();
                     adminDialog.show(fm, "dialog");
                 } else {
-                    new SyncList(this,email, passwd, currList).execute();
+                    new SyncList(this,email, passwd, currList, listView,suggestView).execute();
                 }
                 break;
             case "add" :
@@ -400,7 +413,7 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
     }
     public void onFinishSyncList(String rslt) {
         if(rslt.equals("ok")){
-            new SyncList(this,"on finish",passwd,currList).execute();
+            new SyncList(this,"on finish",passwd,currList,listView,suggestView).execute();
         }
     }
     //      Show lists table
@@ -409,10 +422,11 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
         for(lsts.moveToFirst(); !lsts.isAfterLast(); lsts.moveToNext()) {
             logF("name = %s, tableid = %s",lsts.getString(0),lsts.getString(1));
         }
+        lsts.close();
     }
-    static public void closeDrawer() {drawers.closeDrawers();}
+    public void closeDrawer() {drawers.closeDrawers();}
 
-    public static Context getContext() {
+    public Context getContext() {
         return mainActivity;
     }
 
@@ -452,13 +466,53 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
         values.put("last_time", ct+1);
         logF("last_time = %d\t current time = %d\t, last_avg = %d\t, elapsed = %d",last,ct,avg,ct-last);
         db.update(currList, values, "_id=" + Long.toString(id), null);
-        updateAdapters();
+        updateAdapters(context,listView,suggestView);
         curs.close();
     }
 
     public long running_avg(long elapsed_time, long last_avg) {
         return (long) (0.75 * elapsed_time + 0.25 * last_avg);
     }
+
+    static private Cursor listCursor, suggestCursor;
+    private static SLAdapter listAdapter,suggestAdapter;
+
+    static void updateAdapters(Context context,ListView listView,ListView suggestView) {
+
+        // get cursor for shopping list
+//                                      long time_millis = System.currentTimeMillis()
+
+        listCursor = db.query("'"+MainActivity.currList+"'", cols, "flags=1", null, "", "", null);
+        itemsList.clear();
+        int n = 0;
+        for (listCursor.moveToFirst(); !listCursor.isAfterLast(); listCursor.moveToNext()) {
+            itemsList.add(new Item(listCursor.getLong(0), listCursor.getString(1),
+                    listCursor.getLong(2), listCursor.getLong(3), listCursor.getLong(4),
+                    ((float) (getTime() - listCursor.getLong(3))) / ((float) (listCursor.getLong(4)))));
+            n++;
+        }
+        Collections.sort(itemsList);
+        listAdapter = new SLAdapter(context, itemsList, R.layout.list_entry);
+        listAdapter.checked = false;
+        listView.setAdapter(listAdapter);
+        // get cursor for suggestion list
+        suggestCursor = db.query("'"+MainActivity.currList+"'", cols, "flags=0", null, "", "",
+                "ratio DESC");
+        itemsSuggest.clear();
+        n = 0;
+        for (suggestCursor.moveToFirst(); !suggestCursor.isAfterLast(); suggestCursor.moveToNext()) {
+            itemsSuggest.add(new Item(suggestCursor.getLong(0), suggestCursor.getString(1),
+                    suggestCursor.getLong(2), suggestCursor.getLong(3), suggestCursor.getLong(4),
+                    ((float) (getTime() - suggestCursor.getLong(3))) /
+                            ((float) (suggestCursor.getLong(4)))));
+            n++;
+        }
+        Collections.sort(itemsSuggest);
+        suggestAdapter = new SLAdapter(context, itemsSuggest, R.layout.suggest_entry);
+        suggestAdapter.checked = true;
+        suggestView.setAdapter(suggestAdapter);
+    }
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -522,7 +576,8 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
     /**
      * Returns time in seconds since 1/1/1970 epoch
      *
-     * @return
+     * @return The time in ms returned
+     *
      */
     public static long getTime() {
         return System.currentTimeMillis() / 1000;
@@ -556,8 +611,8 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
             String name = (String) matches.get(0);
             // A negative value of flags indicates a new item
             db = MainActivity.itemDb.getWritableDatabase();
-            MainActivity.addItem((String) name, 1, getTime(), 7 * day, 0);
-            updateAdapters();
+            MainActivity.addItem(name, 1, getTime(), 7 * day, 0);
+            updateAdapters(context,listView,suggestView);
             db.close();
         }
 
