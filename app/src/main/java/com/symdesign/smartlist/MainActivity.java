@@ -62,7 +62,7 @@ import static com.symdesign.smartlist.SLAdapter.itemsList;
 // Version of SmartList that uses file to store databae on phone
 
 public class MainActivity extends AppCompatActivity implements AdminDialog.AdminDialogListener,
-        OptionDialog.Listener, LongClickDialog.Listener {
+        NewListDialog.Listener, LongClickDialog.Listener {
 
     Context context;
     static ItemDb itemDb;
@@ -142,7 +142,7 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
             ed.putBoolean("syncReg",false);
             ed.apply();
             db.execSQL(SQL_LISTS);                          // Create "lists" table
-            OptionDialog.addToLists("Groceries");
+            NewListDialog.addToLists("Groceries");
             currList = "Groceries";
             db.execSQL(SQL_CREATE_GROCERIES);
         }
@@ -153,10 +153,13 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
         email = prefs.getString("email","no_email");
         passwd = prefs.getString("passwd","no_passwd");
         currList = prefs.getString("currList","Groceries");
-        currList = "Groceries";                       // code to reset default list to Groceries
+
+/*        currList = "Groceries";                       // code to reset default list to Groceries
+        db.execSQL(SQL_CREATE_GROCERIES);
         SharedPreferences.Editor ed = prefs.edit();
         ed.putString("currList","Groceries");
         ed.apply();
+*/
         currTable = prefs.getString("currTable","Groceries");
 
         assetManager = getAssets();
@@ -299,6 +302,10 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
 
         // Setup Sidebar options
 
+    /**
+     * Implements Listener
+     * Show the sidebar
+     */
     public void showLists(){
         showLists(context);
     }
@@ -317,12 +324,14 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
             @Override
             public void onClick(View view) {
                 FragmentTransaction ft = getFragmentManager().beginTransaction();
-                OptionDialog optionDialog = new OptionDialog();
-                optionDialog.show(ft,"dialog");
+                NewListDialog.newInstance();
+                NewListDialog newListDialog = new NewListDialog();
+                newListDialog.show(ft,"dialog");
             }
         });
             // List of lists
-        showLists(context);   // Regular tap
+        showLists(context);
+                            // Regular tap
         lists.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View item, int position, long id) {
@@ -359,14 +368,13 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
             }
         });
     }
-
     public void showLists(Context context) {
         Cursor listsCursor = db.query("lists", new String[] {"_id","name","tableid"}, null, null, null, null, null);
+        logF("listsCursor count = %d",listsCursor.getCount());
         SimpleCursorAdapter adpt = new SimpleCursorAdapter(
                 context, R.layout.lists_layout,
                 listsCursor,new String[] {"name"},new int[]{R.id.name}, CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
         lists.setAdapter(adpt);
-        listsCursor.close();
     }
 
 
@@ -422,14 +430,17 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
                     new SyncList(this,email, passwd, currList, listView,suggestView).execute();
                 }
                 break;
-            case "add" :
-                new Auth(this,email,passwd,currList,"add");
+//            case "add" :
+//                new Auth(this,email,passwd,currList,"add");
         }
     }
     public void onFinishSyncList(String rslt) {
         if(rslt.equals("ok")){
             new SyncList(this,"on finish",passwd,currList,listView,suggestView).execute();
         }
+    }
+    public void onFinishNewList() {
+        new Auth(this,email,passwd,currList,"add").execute();
     }
     //      Show lists table
     static void printLists() {
@@ -497,7 +508,7 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
         // get cursor for shopping list
 //                                      long time_millis = System.currentTimeMillis()
 
-        listCursor = db.query("'"+MainActivity.currList+"'", cols, "flags=1", null, "", "", null);
+        listCursor = db.query(MainActivity.currList, cols, "flags=1", null, "", "", null);
         itemsList.clear();
         int n = 0;
         for (listCursor.moveToFirst(); !listCursor.isAfterLast(); listCursor.moveToNext()) {
@@ -511,7 +522,7 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
         listAdapter.checked = false;
         listView.setAdapter(listAdapter);
         // get cursor for suggestion list
-        suggestCursor = db.query("'"+MainActivity.currList+"'", cols, "flags=0", null, "", "",
+        suggestCursor = db.query(MainActivity.currList, cols, "flags=0", null, "", "",
                 "ratio DESC");
         itemsSuggest.clear();
         n = 0;

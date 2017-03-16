@@ -40,23 +40,29 @@ $db->query("use admin");
 $rslt=$db->query("SELECT * from users where email='".$email."'");
 if($rslt==false) logError("rslt is false");
 $row=$rslt->fetch_assoc();
-if(($cmd==="new") && ($row==null)){		// Create new entry in users
-	db_query("INSERT INTO users VALUES('".$email."','".$list."','".$passwd."')");
-	db_query("CREATE DATABASE `".$email."`");
-	db_query("use `".$email."`");
-	db_query("CREATE TABLE `".$list."`(name varchar(40),flags int,last_time int,last_avg int,ratio real)");
-	print("ok");
-} else print("exists");
-if($cmd==="add"){					// Create new table if it doesn't exist
-	$rslt=$db->query("SELECT * from users where email='".$email."' AND list='".$list."'");
-	$row=$rslt->fetch_assoc();
-	if($row==null) {
-		db_query("INSERT INTO users VALUES('".$email."','".$list."','".$passwd."')");
-		db_query("use '".$email."'");
-		db_query("CREATE TABLE `".$list."`(name varchar(40),flags int,last_time int,last_avg int,ratio real)");
-		print("tableAdd");
-	} else
-		print("ok");
+switch($cmd) {
+	case "new": 	// Create new entry in users
+		if($row==null) {
+			logError("cmd = new");
+			db_query("INSERT INTO users VALUES('".$email."','".$list."','".$passwd."')");
+			db_query("CREATE DATABASE `".$email."`");
+			db_query("use `".$email."`");
+			db_query("CREATE TABLE `".$list."`(name varchar(40),flags int,last_time int,last_avg int,ratio real)");
+		} else 
+			print("exists");
+		break;
+	case "add":		// Create new table if it doesn't exist
+		logError("cmd = add");
+		$rslt=$db->query("SELECT * from users where email='".$email."' AND list='".$list."'");
+		$row=$rslt->fetch_assoc();
+		if($row==null) {
+			db_query("INSERT INTO users VALUES('".$email."','".$list."','".$passwd."')");
+			db_query("use '".$email."'");
+			db_query("CREATE TABLE ".$list."(name varchar(40),flags int,last_time int,last_avg int,ratio real)");
+			logError($db->$error);
+			print("tableAdd");
+		} else
+			print("exists");
 }
 register_shutdown_function('shutdown');
 function shutdown(){

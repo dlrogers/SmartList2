@@ -42,5 +42,6 @@
     <string name="sync_inst">In order to use the sync feature, you must either create a new account
         or sign into an existing account.</string>
     <string name="registration">Registration</string>
+    <string name="closeDrawer">Close \n (swipe left)</string>
 
 </resources>

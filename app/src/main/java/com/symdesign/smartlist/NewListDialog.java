@@ -1,18 +1,9 @@
 package com.symdesign.smartlist;
 
-import android.app.Activity;
-import android.app.Dialog;
 import android.app.DialogFragment;
-import android.app.FragmentTransaction;
 import android.content.ContentValues;
 import android.content.Context;
-import android.content.DialogInterface;
-import android.database.Cursor;
 import android.os.Bundle;
-import android.support.v4.widget.SimpleCursorAdapter;
-import android.support.v7.app.AlertDialog;
-import android.text.Editable;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -20,16 +11,11 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
-import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.ListView;
 
-import static android.support.v4.widget.CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER;
 import static com.symdesign.smartlist.MainActivity.currList;
 import static com.symdesign.smartlist.MainActivity.db;
-import static com.symdesign.smartlist.MainActivity.email;
 import static com.symdesign.smartlist.MainActivity.log;
-import static com.symdesign.smartlist.MainActivity.passwd;
 
 
 /**
@@ -39,17 +25,18 @@ import static com.symdesign.smartlist.MainActivity.passwd;
  *
  */
 
-public class OptionDialog extends DialogFragment {
+public class NewListDialog extends DialogFragment {
     AutoCompleteTextView nameView;
-//    static Activity activity;
+    //    static Activity activity;
     Context context;
 
-    public OptionDialog() {
+    public NewListDialog() {
         // Empty contstuctor required for DialogFragment
     }
-
     public interface Listener {
         void showLists();
+        void onFinishNewList();
+        Context getContext();
     }
 
     private Listener listener;
@@ -58,21 +45,21 @@ public class OptionDialog extends DialogFragment {
         this.listener = listener;
     }
 
-    public static OptionDialog newInstance(int title) {
-        OptionDialog frag = new OptionDialog();
-//        activity = a;
-        Bundle args = new Bundle();
-        args.putInt("title", title);
-        frag.setArguments(args);
+    public static NewListDialog newInstance() {
+        NewListDialog frag = new NewListDialog();
+//        Bundle args = new Bundle();
+//        args.putInt("title", title);
+//        frag.setArguments(args);
         return frag;
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        context = getActivity();
+        setListener((Listener) getActivity());
         View optionView = inflater.inflate(R.layout.options, container, false);
-        context = MyVars.get().context;
         ImageView checkView = (ImageView) optionView.findViewById(R.id.check);
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(context,
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>(context,
                 android.R.layout.simple_dropdown_item_1line, PickList.srchItems);
         getDialog().getWindow().setSoftInputMode(
                 WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE
@@ -87,12 +74,13 @@ public class OptionDialog extends DialogFragment {
                 currList = listName;
                 if(listName.length() > 0) {
                     addToLists(listName);
-                    String SQL = "CREATE TABLE '"+currList+"'(" +
+                    String SQL = "CREATE TABLE IF NOT EXISTS '"+currList+"'(" +
                             "_id INTEGER PRIMARY KEY, name TEXT, flags INT, " +
                             "last_time INT, last_avg INT, ratio REAL)";
                     log(SQL);
                     db.execSQL(SQL);
                     listener.showLists();
+                    listener.onFinishNewList();
 //                    new Auth((MainActivity) getActivity(),email,passwd,currList,"add");
                 }
 //                MainActivity.closeDrawer();
@@ -114,9 +102,9 @@ public class OptionDialog extends DialogFragment {
         ContentValues values = new ContentValues();
         db.delete("lists","name="+name,null);
     }
-	static public String hashName(String name){
-		  return name.replace("@", "_").replace(".", "");
-	}
+    static public String hashName(String name){
+        return name.replace("@", "_").replace(".", "");
+    }
 }
 /*    @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {

@@ -55,12 +55,12 @@
             android:background="@layout/item_bk"
             android:textColor="#ffffff"
             android:textSize="14sp"
-            android:text="Close"/>
-        <ImageView
+            android:text="@string/closeDrawer"/>
+<!--        <ImageView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:src="@drawable/ic_menu_back"/>
-
+-->
     </LinearLayout>
 </android.support.v4.widget.DrawerLayout>
 

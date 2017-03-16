@@ -41,16 +41,17 @@ public class LongClickDialog extends DialogFragment {
         void showLists();
     }
 
-    private OptionDialog.Listener listener;
+    private Listener listener;
 
-    public void setListener(OptionDialog.Listener listener) {
-        this.listener = listener;
+    public void setListener(Listener l) {
+        this.listener = l;
     }
 
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         final Context context;
+        setListener((Listener) getActivity());
 //        context = getActivity();
         View optionView = inflater.inflate(R.layout.long_click, container, false);
         nameView = (EditText) optionView.findViewById(R.id.list_name);
