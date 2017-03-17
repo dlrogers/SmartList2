@@ -7,10 +7,10 @@
 //
 //		command			Function
 //
-//		"new":	Set's up new user by adding email, password, and listname 
-//				to users table in the database admin and creating a new 
+//		"new":	Set's up new user by adding email, password, and listname
+//				to users table in the database admin and creating a new
 //				database named with the email.
-//		"add":	Adds a new list if it doesn't already exist by adding 
+//		"add":	Adds a new list if it doesn't already exist by adding
 //				email,password,and listname to users
 //				and adding new table, named listname, to the database
 //
@@ -21,7 +21,7 @@ ini_set("max_execution_time",5);
 //ini_set("ignore_user_abort",1);
 error_reporting(E_ALL);
 
-logError("starting auth");
+logError("starting addlist");
 
 // Get username and password for mysql and log in
 $config = parse_ini_file("/home/dennis/Mydocs/config.ini");
@@ -36,19 +36,21 @@ $list=sscanf(fgets($std),"%s")[0];
 logError($email.",".$passwd.",".$list);
 // logError("select * from users where email='".$email."'");
 $db->query("use admin");
-$rslt=$db->query("SELECT * from users where email='".$email."'");
-if($rslt==false) logError("rslt is false");
+logError("SELECT * from users where email='".$email."' AND list='".$list."'");
+$rslt=$db->query("SELECT * from users where email='".$email."' AND list='".$list."'");
+if($rslt==false){
+	logError("select error: ".$db->error);
+	exit();
+}
 $row=$rslt->fetch_assoc();
-	if($row==null) {
-		logError("cmd = new");
-		db_query("INSERT INTO users VALUES('".$email."','".$list."','".$passwd."')");
-		db_query("CREATE DATABASE `".$email."`");
-		db_query("use `".$email."`");
-		db_query("CREATE TABLE `".$list."`(name varchar(40),flags int,last_time int,last_avg int,ratio real)");
-	} else 
-		print("exists");
-register_shutdown_function('shutdown');
+if($row!=null) {
+	db_query("DELETE FROM users WHERE list='".$list."'");
+	db_query("use `".$email."`");
+	db_query("DROP TABLE IF EXISTS `".$list."`");
+} else
+	print("nok");
 
+register_shutdown_function('shutdown');
 function shutdown(){
 	exit();
 }

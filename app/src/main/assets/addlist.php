@@ -36,19 +36,23 @@ $list=sscanf(fgets($std),"%s")[0];
 logError($email.",".$passwd.",".$list);
 // logError("select * from users where email='".$email."'");
 $db->query("use admin");
-$rslt=$db->query("SELECT * from users where email='".$email."'");
-if($rslt==false) logError("rslt is false");
+logError("SELECT * from users where email='".$email."' AND list='".$list."'");
+$rslt=$db->query("SELECT * from users where email='".$email."' AND list='".$list."'");
+if($rslt==false){
+	logError("select error: ".$db->error);
+	exit();
+}
 $row=$rslt->fetch_assoc();
-	$rslt=$db->query("SELECT * from users where email='".$email."' AND list='".$list."'");
-	$row=$rslt->fetch_assoc();
-	if($row==null) {
-		db_query("INSERT INTO users VALUES('".$email."','".$list."','".$passwd."')");
-		db_query("use '".$email."'");
-		db_query("CREATE TABLE ".$list."(name varchar(40),flags int,last_time int,last_avg int,ratio real)");
-		logError($db->$error);
-		print("tableAdd");
-	} else
-		print("exists");
+if($row==null) {
+	db_query("INSERT INTO users VALUES('".$email."','".$list."','".$passwd."')");
+	logError("email = ".$email);
+	db_query("use `".$email."`");
+	db_query("CREATE TABLE `".$list."`(name varchar(40),flags int,last_time int,last_avg int,ratio real)");
+	logError("create error: ".$db->error);
+	
+} else
+	print("exists");
+
 register_shutdown_function('shutdown');
 function shutdown(){
 	exit();

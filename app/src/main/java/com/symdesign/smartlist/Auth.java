@@ -26,12 +26,12 @@ import static com.symdesign.smartlist.MainActivity.log;
  */
 
 public class Auth extends AsyncTask<Void,Void,Boolean> {
-    String email, passwd, list, ans, cmd;
+    private String email, passwd, list, ans, cmd;
     static boolean exists;
-    MainActivity activity;
-    BufferedOutputStream bos;
+    private MainActivity activity;
+    private BufferedOutputStream bos;
     InputStream is;
-    BufferedReader reader;
+    private BufferedReader reader;
     static ContentValues values = new ContentValues();
     HttpURLConnection link;
     URL url;
@@ -50,14 +50,16 @@ public class Auth extends AsyncTask<Void,Void,Boolean> {
         OutputStream os;
 
         try {       // Send post request
-            url = new URL(MainActivity.serverAddr + "auth.php");
+            if(cmd.equals("new"))
+                url = new URL(MainActivity.serverAddr + "auth.php");
+            else
+                url = new URL(MainActivity.serverAddr + "addlist.php");
             link = (HttpURLConnection) url.openConnection();
             link.setRequestMethod("POST");
             link.setDoInput(true);
             link.setDoOutput(true);
             os=link.getOutputStream();
             bos = new BufferedOutputStream(os);
-            bos.write((cmd + "\n").getBytes("UTF-8"));
             bos.write((email + "\n").getBytes("UTF-8"));
             bos.write((passwd + "\n").getBytes("UTF-8"));
             bos.write((list + "\n").getBytes("UTF-8"));
@@ -85,6 +87,7 @@ public class Auth extends AsyncTask<Void,Void,Boolean> {
     }
     @Override
     protected void onPostExecute(Boolean result){
+        if(cmd.equals("new"))
             activity.onFinishAuth(cmd,ans);
     }
 }
