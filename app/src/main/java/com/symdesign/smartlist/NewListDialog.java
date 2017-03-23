@@ -33,7 +33,7 @@ public class NewListDialog extends DialogFragment {
     public NewListDialog() {
         // Empty contstuctor required for DialogFragment
     }
-    public interface Listener {
+    interface Listener {
         void showLists();
         void onFinishNewList();
         Context getContext();
@@ -46,11 +46,7 @@ public class NewListDialog extends DialogFragment {
     }
 
     public static NewListDialog newInstance() {
-        NewListDialog frag = new NewListDialog();
-//        Bundle args = new Bundle();
-//        args.putInt("title", title);
-//        frag.setArguments(args);
-        return frag;
+        return new NewListDialog();
     }
 
     @Override
@@ -59,7 +55,7 @@ public class NewListDialog extends DialogFragment {
         setListener((Listener) getActivity());
         View optionView = inflater.inflate(R.layout.options, container, false);
         ImageView checkView = (ImageView) optionView.findViewById(R.id.check);
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(context,
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(context,
                 android.R.layout.simple_dropdown_item_1line, PickList.srchItems);
         getDialog().getWindow().setSoftInputMode(
                 WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE
@@ -94,7 +90,6 @@ public class NewListDialog extends DialogFragment {
     static public void addToLists(String name) {	// Add name lists Db
         ContentValues values = new ContentValues();
         values.put("name", name);
-        values.put("tableId", hashName(name));
         db.insert("lists", null, values);
 
     }
@@ -102,9 +97,9 @@ public class NewListDialog extends DialogFragment {
         ContentValues values = new ContentValues();
         db.delete("lists","name="+name,null);
     }
-    static public String hashName(String name){
-        return name.replace("@", "_").replace(".", "");
-    }
+//    static public String hashName(String name){
+//        return name.replace("@", "_").replace(".", "");
+//    }
 }
 /*    @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {

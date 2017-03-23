@@ -20,8 +20,6 @@ import java.util.Locale;
 
 import static com.symdesign.smartlist.MainActivity.log;
 import static com.symdesign.smartlist.MainActivity.logF;
-import static com.symdesign.smartlist.SLAdapter.itemsList;
-import static com.symdesign.smartlist.SLAdapter.itemsSuggest;
 import static com.symdesign.smartlist.MainActivity.currList;
 import static com.symdesign.smartlist.MainActivity.db;
 
@@ -35,18 +33,14 @@ import static com.symdesign.smartlist.MainActivity.db;
  */
 
 class SyncList extends AsyncTask<Void,Void,Boolean> {
-    private String email,passwd,list,ans;
-    ListView listView,suggestView;
-    static long lastTime=System.currentTimeMillis();
-    static boolean exists;
+    private String email,passwd,list;
+    private ListView listView,suggestView;
     private MainActivity activity;
 //	BufferedOutputStream bos;
-	InputStream is;
-	private BufferedReader reader;
-	static ContentValues values = new ContentValues();
-    static String col;
+	private static ContentValues values = new ContentValues();
+    private static String col;
 //	HttpURLConnection link;
-    private URL url,nurl;
+    private URL url;
     Context context;
 
     SyncList (MainActivity a, String em, String pwd, String lst, ListView lv,ListView sv) {
@@ -66,7 +60,6 @@ class SyncList extends AsyncTask<Void,Void,Boolean> {
 
     @Override
     protected Boolean doInBackground(Void... arg0) {
-		Item item;
         InputStream is;
         OutputStream os;
         Cursor cursor;
@@ -74,7 +67,7 @@ class SyncList extends AsyncTask<Void,Void,Boolean> {
 
         try {       // Send post request
             log("starting SyncList");
-            lastTime=System.currentTimeMillis();
+            long lastTime=System.currentTimeMillis();
             url = new URL(MainActivity.serverAddr+"sync.php");
             HttpURLConnection link = (HttpURLConnection) url.openConnection();
             link.setRequestMethod("POST");
@@ -113,10 +106,11 @@ class SyncList extends AsyncTask<Void,Void,Boolean> {
                 }
                 log(str+"\n");
             }
+            cursor.close();
             bos.flush();
             //          Receive items from server that are not on phone
             is = link.getInputStream();
-            reader = new BufferedReader(new InputStreamReader(is));
+            BufferedReader reader = new BufferedReader(new InputStreamReader(is));
             log("Reading back from phone");
             while(null != (col = reader.readLine())){
                 log(col);
@@ -159,6 +153,7 @@ class SyncList extends AsyncTask<Void,Void,Boolean> {
                 logF("name = %s, flags = %d",rows.getString(0),rows.getInt(1));
             }
             logF("Sync time = %d",System.currentTimeMillis()-lastTime);
+            rows.close();
             os.close();
             bos.close();
             is.close();

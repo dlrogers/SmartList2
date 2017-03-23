@@ -21,7 +21,7 @@ ini_set("max_execution_time",5);
 //ini_set("ignore_user_abort",1);
 error_reporting(E_ALL);
 
-logError("starting addlist");
+logError("starting dellist");
 
 // Get username and password for mysql and log in
 $config = parse_ini_file("/home/dennis/Mydocs/config.ini");

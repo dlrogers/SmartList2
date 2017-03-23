@@ -31,7 +31,7 @@ if($row["passwd"]===$passwd){					// Is password correct?
 			$txt=trim($txt,"\n");				//remove returns
 			$p_cols=explode(',',$txt);			//separate into columns (name,flags,last_time,last_avg,ratio)
 			logError(" \n");
-				$rslt=db_query("SELECT * from ".$list." where name=" . //Search server for item
+			$rslt=db_query("SELECT * from `".$list."` where name=" . //Search server for item
 					sprintf("'%s'",$p_cols[0]));
 //			logError($db->error);
 			$names[$n]=$p_cols[0];					//Save names in $names[]

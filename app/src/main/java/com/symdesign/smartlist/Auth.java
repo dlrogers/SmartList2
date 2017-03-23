@@ -1,9 +1,6 @@
 package com.symdesign.smartlist;
 
-import android.app.Activity;
-import android.content.ContentValues;
 import android.os.AsyncTask;
-import android.support.v4.app.FragmentManager;
 
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
@@ -14,6 +11,7 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Locale;
 
 import static com.symdesign.smartlist.MainActivity.log;
 
@@ -25,18 +23,13 @@ import static com.symdesign.smartlist.MainActivity.log;
  * Created by dennis on 2/2/17.
  */
 
-public class Auth extends AsyncTask<Void,Void,Boolean> {
+class Auth extends AsyncTask<Void,Void,Boolean> {
     private String email, passwd, list, ans, cmd;
-    static boolean exists;
     private MainActivity activity;
-    private BufferedOutputStream bos;
-    InputStream is;
-    private BufferedReader reader;
-    static ContentValues values = new ContentValues();
-    HttpURLConnection link;
-    URL url;
+    private URL url;
+    private HttpURLConnection link;
 
-    public Auth(MainActivity a, String em, String pwd, String lst, String c) {
+    Auth(MainActivity a, String em, String pwd, String lst, String c) {
         this.activity = a;
         email = em;
         passwd = pwd;
@@ -50,22 +43,28 @@ public class Auth extends AsyncTask<Void,Void,Boolean> {
         OutputStream os;
 
         try {       // Send post request
-            if(cmd.equals("new"))
-                url = new URL(MainActivity.serverAddr + "auth.php");
-            else
-                url = new URL(MainActivity.serverAddr + "addlist.php");
+            switch (cmd) {
+                case "new" :
+                    url = new URL(MainActivity.serverAddr + "auth.php");
+                    break;
+                case "add" :
+                    url = new URL(MainActivity.serverAddr + "addlist.php");
+                    break;
+                case "del" :
+                    url = new URL(MainActivity.serverAddr + "dellist.php");
+            }
             link = (HttpURLConnection) url.openConnection();
             link.setRequestMethod("POST");
             link.setDoInput(true);
             link.setDoOutput(true);
             os=link.getOutputStream();
-            bos = new BufferedOutputStream(os);
+            BufferedOutputStream bos = new BufferedOutputStream(os);
             bos.write((email + "\n").getBytes("UTF-8"));
             bos.write((passwd + "\n").getBytes("UTF-8"));
             bos.write((list + "\n").getBytes("UTF-8"));
             bos.flush();
             is = link.getInputStream();
-            reader = new BufferedReader(new InputStreamReader(is));
+            BufferedReader  reader = new BufferedReader(new InputStreamReader(is));
             ans=reader.readLine();
             is.close();
             os.close();
@@ -76,7 +75,7 @@ public class Auth extends AsyncTask<Void,Void,Boolean> {
             log("IOException: " + e.getMessage());
             for(int i=0; i<4; i++) {
                 log(e.getStackTrace()[i].toString());
-                log(String.format("    line no. = %d", e.getStackTrace()[i].getLineNumber()));
+                log(String.format(Locale.US,"    line no. = %d", e.getStackTrace()[i].getLineNumber()));
                 activity.onFinishAuth(cmd,"error");
             }
         } finally {

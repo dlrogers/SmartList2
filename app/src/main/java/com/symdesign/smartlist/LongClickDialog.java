@@ -37,8 +37,9 @@ public class LongClickDialog extends DialogFragment {
     public LongClickDialog() {
         // Empty contstuctor required for DialogFragment
     }
-    public interface Listener {
+    interface Listener {
         void showLists();
+        void onFinishDelList(String listName);
     }
 
     private Listener listener;
@@ -83,6 +84,7 @@ public class LongClickDialog extends DialogFragment {
                 db.execSQL("drop table '"+listName+"'");
                 MainActivity.currList = "'Groceries'";
                 listener.showLists();
+                listener.onFinishDelList(listName);
                 MainActivity.printLists();
                 getDialog().dismiss();
             }
