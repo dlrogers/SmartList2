@@ -1,30 +1,43 @@
 <?php
-// @ Copyright 2017 Dennis Rogers
+/* @ Copyright 2017 Dennis Rogers
+
+	sync.php: Code to sync a list on the phone with counterpart on the server
+
+	inputs(via POST):	email, password, listname (new line delimited Strings)
+
+*/
+// Setup error reporting
 ini_set("log_errors",1) ;
 ini_set("error_log","/tmp/php_error.log");
 error_reporting(E_ALL);
 logError("starting sync");
+
+// Log into database with credentials in config.ini
 $config = parse_ini_file("/home/dennis/Mydocs/config.ini");
-//logError("username=".$config['usernameer'].", passwd =".$config['password']);
 $db = new mysqli('localhost',$config['username'],$config['password']);
 $db->set_charset("UTF-8");
+
+// Read credentials
 $std = fopen("php://input","r");
-// $cmd=sscanf(fgets($std),"%s")[0];
-$email=sscanf(fgets($std),"%s")[0];
+$txt=fgets($std);
+
+logError(str_replace(". ",".",$txt));
+$ems = trim(str_replace(". ",".",$txt));
+$email=sscanf($ems,"%s")[0];
 $passwd=sscanf(fgets($std),"%s")[0];
 $list=sscanf(fgets($std),"%s")[0];
-//logError($email.",".$passwd.",".$list);
-//logError("select * from users where email='".$email."'");
+logError("email = ".$email);
+logError("passwd = ".$passwd);
+
+// Search users for email and list
 db_query("use admin");
 $rslt=db_query("select * from users where email='".$email."' AND list='".$list."'");
 $row=$rslt->fetch_assoc();
-//logError(String.format("strcmp = %d",strcmp($row["passwd"],$passwd)));
 db_query("use `".$email."`");
+logError("  ".$row["passwd"]. ", ".$passwd);
 if($row["passwd"]===$passwd){					// Is password correct?
 	if($db->select_db($email)){
 		logError($email." exists");
-//		print("exists");
-		//			sync($email,$list,$passwd);
 		$names=array();
 		$n=0;
 		while($txt=fgets($std)) {				//Get an item from phone
@@ -33,7 +46,6 @@ if($row["passwd"]===$passwd){					// Is password correct?
 			logError(" \n");
 			$rslt=db_query("SELECT * from `".$list."` where name=" . //Search server for item
 					sprintf("'%s'",$p_cols[0]));
-//			logError($db->error);
 			$names[$n]=$p_cols[0];					//Save names in $names[]
 			if($rslt!=false){
 				logError("From phone: ".$txt);
@@ -54,7 +66,7 @@ if($row["passwd"]===$passwd){					// Is password correct?
 						printf("%s,%s,%s,%s,%s,%s\n",
 								"d",$row['name'],$row['flags'],$row['last_time'],$row['last_avg'],$row['ratio']);
 					} else {
-						logError("changing phone "+"flags = "+$row['flags']);					
+						logError("changing phone "+"flags = "+$row['flags']);
 						printf("%s,%s,%s,%s,%s,%s\n",
 								"u",$row['name'],$row['flags'],$row['last_time'],$row['last_avg'],$row['ratio']);
 					}
@@ -71,9 +83,9 @@ if($row["passwd"]===$passwd){					// Is password correct?
 					$rslt=db_query(sprintf(
 							"UPDATE `".$list."` SET last_time=%s,last_avg=%s,ratio=%s,flags=%s WHERE name='%s'",
 							$plt,$p_cols[3],$p_cols[4],$p_cols[1],$p_cols[0]));
-					if(!$rslt) logError("dB update failed");					
+					if(!$rslt) logError("dB update failed");
 				} else {
-					logError("dates same");					
+					logError("dates same");
 				}
 			}
 			$n+=1;
@@ -86,7 +98,7 @@ if($row["passwd"]===$passwd){					// Is password correct?
 				logError("Adding " . $row['name']);
 				if(($row["flags"]&2)<1)
 					printf("%s,%s,%s,%s,%s,%s\n",
-						"i",$row['name'],$row['flags'],$row['last_time'],$row['last_avg'],$row['ratio']);
+							"i",$row['name'],$row['flags'],$row['last_time'],$row['last_avg'],$row['ratio']);
 			}
 		}
 	}
@@ -94,12 +106,12 @@ if($row["passwd"]===$passwd){					// Is password correct?
 else {
 	/*	logError($email." does not exist");
 	 if(!db_query("INSERT INTO users VALUES('".$email."','".$list."','".$passwd."')"))
-	 	logError("insert error");
-	 	$rc=db_query("CREATE DATABASE `".$email."`");
-	 	$rc=db_query("USE `".$email."`");
-	 	$rc=db_query("CREATE TABLE `".$list."`(name TEXT, flags INT, last_time INT, last_avg INT, ratio REAL)");
-	 	print("created");
-	 	*/
+	 logError("insert error");
+	 $rc=db_query("CREATE DATABASE `".$email."`");
+	 $rc=db_query("USE `".$email."`");
+	 $rc=db_query("CREATE TABLE `".$list."`(name TEXT, flags INT, last_time INT, last_avg INT, ratio REAL)");
+	 print("created");
+	 */
 }
 logError("done");
 

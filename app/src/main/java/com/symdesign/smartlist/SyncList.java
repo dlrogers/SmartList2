@@ -76,9 +76,9 @@ class SyncList extends AsyncTask<Void,Void,Boolean> {
 
             os = link.getOutputStream();
             BufferedOutputStream bos = new BufferedOutputStream(os);
-            bos.write((email + "\n").getBytes("UTF-8"));
-            bos.write((passwd + "\n").getBytes("UTF-8"));
-            bos.write((list + "\n").getBytes("UTF-8"));
+            bos.write((email+"\n").getBytes());
+            bos.write((passwd+"\n").getBytes("UTF-8"));
+            bos.write((list+"\n").getBytes("UTF-8"));
             bos.flush();
             //          Send list items to server
             String str="";

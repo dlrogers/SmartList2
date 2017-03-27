@@ -3,17 +3,17 @@
 //
 //	auth.php: Code to create user authentication info.
 //
-//		inputs(POST):	command, email, password, listname (Strings)
+//	inputs(via POST):	email, password, listname (new line delimited Strings)
 //
-//		command			Function
-//
-//		"new":	Set's up new user by adding email, password, and listname 
-//				to users table in the database admin and creating a new 
-//				database named with the email.
-//		"add":	Adds a new list if it doesn't already exist by adding 
-//				email,password,and listname to users
-//				and adding new table, named listname, to the database
-//
+//	if(no email)	Set's up new user by adding email, password, and listname 
+//					to users table in the database admin and creating a new 
+//					database named with the email containing the new list.
+//	if(email but no list)
+//					Adds a new list by adding 
+//					email,password,and listname to users table
+//					and adding new table, named listname, to the database
+//	else 
+//					returns "exists"
 // Set up php
 ini_set("log_errors",1) ;
 ini_set("error_log","/tmp/php_error.log");
@@ -30,23 +30,30 @@ $db->set_charset("UTF-8");
 
 // Open data stream and read in command, uid, pw, and list
 $std = fopen("php://input","r");
-$email=sscanf(fgets($std),"%s")[0];
-$passwd=sscanf(fgets($std),"%s")[0];
-$list=sscanf(fgets($std),"%s")[0];
+$email = sscanf(fgets($std),"%s")[0];
+$passwd = sscanf(fgets($std),"%s")[0];
+$list = sscanf(fgets($std),"%s")[0];
 logError($email.",".$passwd.",".$list);
 // logError("select * from users where email='".$email."'");
 $db->query("use admin");
-$rslt=$db->query("SELECT * from users where email='".$email."'");
-if($rslt==false) logError("rslt is false");
-$row=$rslt->fetch_assoc();
-	if($row==null) {
-		logError("cmd = new");
+$rslt = $db->query("SELECT * from users where email='".$email."'");
+if($rslt ==  false) logError("rslt is false");
+if( ($rslt->fetch_assoc()) == null) {
+	logError("adding email and list");
+	db_query("INSERT INTO users VALUES('".$email."','".$list."','".$passwd."')");
+	db_query("CREATE DATABASE `".$email."`");
+	db_query("use `".$email."`");
+	db_query("CREATE TABLE `".$list."`(name varchar(40),flags int,last_time int,last_avg int,ratio real)");
+	print("ok");
+} else {
+	logError("adding list");
+	$rslt = db_query("SELECT * from users where email='".$email."' and list='".$list."'");
+	if(($rslt->fetch_assoc()) == null) {
 		db_query("INSERT INTO users VALUES('".$email."','".$list."','".$passwd."')");
-		db_query("CREATE DATABASE `".$email."`");
-		db_query("use `".$email."`");
-		db_query("CREATE TABLE `".$list."`(name varchar(40),flags int,last_time int,last_avg int,ratio real)");
-	} else 
+		print("ok");
+	} else
 		print("exists");
+}
 register_shutdown_function('shutdown');
 
 function shutdown(){

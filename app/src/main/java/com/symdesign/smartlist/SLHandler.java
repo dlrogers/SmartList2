@@ -28,10 +28,11 @@ public class SLHandler extends Handler {
         switch(msg.what) {
             case MSG_REPEAT:
                 Message repeat = Message.obtain(this,MSG_REPEAT);
-                sendMessageDelayed(repeat,1000*MainActivity.repeat_time);
+                sendMessageDelayed(repeat,1000*MainActivity.refresh_time);
 //                MainActivity.log("updateRatios:");
                 db = MainActivity.itemDb.getWritableDatabase();
                 MainActivity.updateAdapters(context,listView,suggestView);
+                MainActivity.log("refresh!");
 //                MainActivity.log("update repeat");
                 break;
         }

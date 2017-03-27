@@ -1,7 +1,5 @@
 package com.symdesign.smartlist;
 
-import android.app.Activity;
-import android.app.DialogFragment;
 import android.app.FragmentTransaction;
 import android.content.ContentValues;
 import android.content.Context;
@@ -26,23 +24,15 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Display;
 import android.view.Gravity;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
-import android.view.Window;
-import android.view.WindowManager;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.ScrollView;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.appindexing.Action;
@@ -50,12 +40,10 @@ import com.google.android.gms.appindexing.AppIndex;
 import com.google.android.gms.appindexing.Thing;
 import com.google.android.gms.common.api.GoogleApiClient;
 
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Locale;
 
-import static android.widget.CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER;
 import static com.symdesign.smartlist.SLAdapter.*;
 import static com.symdesign.smartlist.SLAdapter.itemsList;
 
@@ -75,7 +63,7 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
     enum ClickLocation {none, del, name, box}
     static ClickLocation clickLocation;
     static final long second = 1, minute = 60 * second, hour = 60 * minute,
-            day = 24 * hour, week = 7 * day, repeat_time = 10 ;
+            day = 24 * hour, week = 7 * day, refresh_time = 10 ;
     static int scrn_width, scrn_height, VOICE_RECOGNITION_REQUEST_CODE = 2;
     static final int MSG_REPEAT = 1;
     static final String SQL_CREATE_GROCERIES =
@@ -94,6 +82,7 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
     static String currList,currTable,installed,email,passwd;     // Current Shared Prefs
     static android.support.v7.app.ActionBar actionBar;
     static SharedPreferences prefs;
+    static Cursor listsCursor;
     MainActivity mainActivity;
 
     @Override
@@ -128,9 +117,8 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
 
         installed = prefs.getString("installed","no");
         String syncEnabled = prefs.getString("sync","no");
-//        installed = "no";
 //        db.execSQL("DROP TABLE lists");
-//        db.execSQL(SQL_LISTS);
+//        installed = "no";
         if(installed.equals("no")) {
             db.execSQL("drop table if exists Groceries");   // Remove any exisitng Groceries
             db.execSQL("drop table if exists lists");
@@ -147,7 +135,7 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
             db.execSQL(SQL_CREATE_GROCERIES);
         }
         setupOptions();     // Setup up sidebar
-        showLists(context);
+//        showLists(context);
         printLists();
 
         email = prefs.getString("email","no_email");
@@ -155,13 +143,15 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
         currList = prefs.getString("currList","Groceries");
 
         showLists();
-//        currList = "Groceries";                       // code to reset default list to Groceries
-//        NewListDialog.addToLists("Groceries");
-//        db.execSQL(SQL_CREATE_GROCERIES);
-//        SharedPreferences.Editor ed = prefs.edit();
-//        ed.putString("currList","Groceries");
-//        ed.apply();
 
+/*        db.execSQL("drop table if exists Groceries");   // code to reset default list to Groceries
+        db.execSQL(SQL_CREATE_GROCERIES);
+        NewListDialog.addToLists("Groceries");
+        currList = "Groceries";
+        SharedPreferences.Editor ed = prefs.edit();
+        ed.putString("currList","Groceries");
+        ed.apply();
+*/
         currTable = prefs.getString("currTable","Groceries");
 
         assetManager = getAssets();
@@ -212,7 +202,7 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
 
 //        Setup task handler
         Message repeat = Message.obtain(slHandler, MSG_REPEAT);
-        slHandler.sendMessageDelayed(repeat, repeat_time);
+        slHandler.sendMessageDelayed(repeat, refresh_time);
 
         Display display = getWindowManager().getDefaultDisplay();
         Point size = new Point();
@@ -332,7 +322,7 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
             }
         });
             // List of lists
-        showLists(context);
+        showLists();
                             // Regular tap
         lists.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -371,13 +361,13 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
         });
     }
     public void showLists(Context context) {
-        Cursor listsCursor = db.query("lists", new String[] {"_id","name"}, null, null, null, null, null);
+        listsCursor = db.query("lists", new String[] {"_id","name"}, null, null, null, null, null);
         logF("listsCursor count = %d",listsCursor.getCount());
         SimpleCursorAdapter adpt = new SimpleCursorAdapter(
                 context, R.layout.lists_layout,
                 listsCursor,new String[] {"name"},new int[]{R.id.name}, CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
         lists.setAdapter(adpt);
-        listsCursor.close();
+//        listsCursor.close();
     }
 
 
@@ -426,6 +416,11 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
         switch(cmd) {
             case "new" :
                 if(rslt.equals("exists")){
+                    toast = Toast.makeText(getApplicationContext(),
+                            "\nAlready Exists\n",
+                            Toast.LENGTH_LONG);
+                    toast.setGravity(Gravity.TOP, 0, 200);
+                    toast.show();
                     FragmentManager fm = getSupportFragmentManager();
                     AdminDialog adminDialog = new AdminDialog();
                     adminDialog.show(fm, "dialog");

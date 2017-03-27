@@ -82,7 +82,7 @@ public class LongClickDialog extends DialogFragment {
             public void onClick(View view) {
                 db.delete("lists","name='"+listName+"'",null);
                 db.execSQL("drop table '"+listName+"'");
-                MainActivity.currList = "'Groceries'";
+                MainActivity.currList = "Groceries";
                 listener.showLists();
                 listener.onFinishDelList(listName);
                 MainActivity.printLists();
