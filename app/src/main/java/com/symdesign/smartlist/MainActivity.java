@@ -63,7 +63,7 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
     enum ClickLocation {none, del, name, box}
     static ClickLocation clickLocation;
     static final long second = 1, minute = 60 * second, hour = 60 * minute,
-            day = 24 * hour, week = 7 * day, refresh_time = 10 ;
+            day = 24 * hour, week = 7 * day, refresh_time = 30 ;
     static int scrn_width, scrn_height, VOICE_RECOGNITION_REQUEST_CODE = 2;
     static final int MSG_REPEAT = 1;
     static final String SQL_CREATE_GROCERIES =

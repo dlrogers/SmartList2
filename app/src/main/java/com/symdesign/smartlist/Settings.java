@@ -28,6 +28,7 @@ import static com.symdesign.smartlist.MainActivity.currList;
 
 public class Settings extends DialogFragment {
     EditText emailView,passwdView;
+    TextView resetView;
     ImageView checkView;
 
     public Settings() {
@@ -45,7 +46,8 @@ public class Settings extends DialogFragment {
         emailView.requestFocus();
 		emailView.setText(MainActivity.prefs.getString("email","no_email"));
         passwdView = (EditText) optionView.findViewById(R.id.passwd);
-		passwdView.setText(MainActivity.prefs.getString("passwd","no_passwd"));
+        resetView = (TextView) optionView.findViewById(R.id.reset);
+//		passwdView.setText(MainActivity.prefs.getString("passwd","no_passwd"));
         checkView = (ImageView) optionView.findViewById(R.id.check);
         Dialog dialog = getDialog();
 //        TextView tv = (TextView) dialog.findViewById(android.R.id.title);
@@ -67,6 +69,20 @@ public class Settings extends DialogFragment {
                 ed.putBoolean("syncReg",false);
                 ed.apply();
 				db.execSQL("delete from '"+currList+"'");				
+                getDialog().dismiss();
+            }
+        });
+        resetView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                email = emailView.getText().toString();
+                passwd = passwdView.getText().toString();
+                SharedPreferences.Editor ed = MainActivity.prefs.edit();
+                ed.putString("email",email);
+                ed.putString("passwd",passwd);
+                ed.putBoolean("syncReg",false);
+                ed.apply();
+                db.execSQL("delete from '"+currList+"'");
                 getDialog().dismiss();
             }
         });
