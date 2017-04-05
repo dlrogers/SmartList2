@@ -3,6 +3,7 @@ package com.symdesign.smartlist;
 import android.app.DialogFragment;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.support.v4.widget.SimpleCursorAdapter;
@@ -83,6 +84,9 @@ public class LongClickDialog extends DialogFragment {
                 db.delete("lists","name='"+listName+"'",null);
                 db.execSQL("drop table '"+listName+"'");
                 MainActivity.currList = "Groceries";
+                SharedPreferences.Editor ed = MainActivity.prefs.edit();     // Initialize shared preferences
+                ed.putString("currList","Groceries");
+                ed.apply();
                 listener.showLists();
                 listener.onFinishDelList(listName);
                 MainActivity.printLists();

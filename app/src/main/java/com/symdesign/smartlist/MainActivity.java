@@ -54,7 +54,8 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
 
     Context context;
     static ItemDb itemDb;
-    static String serverAddr="http://192.168.1.209/cgi-bin/";
+    static String serverAddr="http://symdesign.us/php/";
+//    static String serverAddr="http://sym-designs.com/cgi-bin/";
     static ContentValues values = new ContentValues();
     public static SQLiteDatabase db;
     public ListView listView, suggestView,lists;
@@ -144,10 +145,10 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
 
         showLists();
 
-/*        db.execSQL("drop table if exists Groceries");   // code to reset default list to Groceries
-        db.execSQL(SQL_CREATE_GROCERIES);
-        NewListDialog.addToLists("Groceries");
-        currList = "Groceries";
+//        db.execSQL("drop table if exists Groceries");   // code to reset default list to Groceries
+//        db.execSQL(SQL_CREATE_GROCERIES);
+//        NewListDialog.addToLists("Groceries");
+/*        currList = "Groceries";
         SharedPreferences.Editor ed = prefs.edit();
         ed.putString("currList","Groceries");
         ed.apply();

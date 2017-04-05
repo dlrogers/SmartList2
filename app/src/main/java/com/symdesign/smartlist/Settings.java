@@ -3,7 +3,9 @@ package com.symdesign.smartlist;
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
 import android.text.Html;
@@ -75,15 +77,35 @@ public class Settings extends DialogFragment {
         resetView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                email = emailView.getText().toString();
-                passwd = passwdView.getText().toString();
-                SharedPreferences.Editor ed = MainActivity.prefs.edit();
-                ed.putString("email",email);
-                ed.putString("passwd",passwd);
-                ed.putBoolean("syncReg",false);
-                ed.apply();
-                db.execSQL("delete from '"+currList+"'");
-                getDialog().dismiss();
+                //imitate code in index.php
+                // email = emailView.getText().toString();
+                StringBuilder email_body = new StringBuilder(1000);
+                email_body = email_body.append("Dear SmartList User,\n\n");
+                email_body = email_body.append("You have requested a password reset using the PASSWORD RESET button on the SmartList app.\n\n");
+                email_body = email_body.append("Click this link to reset your password for the ");
+                email_body = email_body.append(resetView.getText().toString());
+                email_body = email_body.append(" shopping list.\n\n");
+                email_body = email_body.append(MainActivity.serverAddr);
+                email_body = email_body.append("reset_password.php?email=");
+                email_body = email_body.append(emailView.getText().toString());
+                email_body = email_body.append("&list=");
+                email_body = email_body.append("&id=");
+                // http://localhost/~BenParker/phpsamples/php-forgot-password-recover-code/reset_password.php?name=Ben Parker
+                email_body = email_body.append("\n\nRegards,\nAdmin\n");
+                Intent intent = new Intent(Intent.ACTION_SENDTO); // it's not ACTION_SEND
+                intent.setType("text/plain");
+                // intent.setType("message/rfc822");
+                intent.putExtra(Intent.EXTRA_SUBJECT, "Forgot Password Recovery");
+                intent.putExtra(Intent.EXTRA_TEXT, email_body.toString());
+                // Uri.fromParts("mailto",emailView.getText().toString(), null));
+                // intent.setData(Uri.parse("mailto:" + "default@recipient.com")); // or just "mailto:" for blank
+                intent.setData(Uri.parse("mailto:" + emailView.getText().toString())); // or just "mailto:" for blank
+                // intent.setData(Uri.fromParts("mailto",emailView.getText().toString(), null)); // or just "mailto:" for blank
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK); // this will make such that when user returns to your app, your app is displayed, instead of the email app.
+                if (intent.resolveActivity(getActivity().getPackageManager()) != null) {
+                    startActivity(intent);
+                   // getActivity().startService(intent);
+                }
             }
         });
         return optionView;
