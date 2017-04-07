@@ -16,7 +16,7 @@
 //
 // Set up php
 ini_set("log_errors",1) ;
-ini_set("error_log","/tmp/php_error.log");
+ini_set("error_log","php_error.log");
 ini_set("max_execution_time",5);
 //ini_set("ignore_user_abort",1);
 error_reporting(E_ALL);
@@ -24,18 +24,26 @@ error_reporting(E_ALL);
 logError("starting addlist");
 
 // Get username and password for mysql and log in
-$config = parse_ini_file("/home/dennis/Mydocs/config.ini");
+$config = parse_ini_file("../../config/config.ini");
 $db = new mysqli('localhost',$config['username'],$config['password']);
 $db->set_charset("UTF-8");
 
 // Open data stream and read in command, uid, pw, and list
 $std = fopen("php://input","r");
-$email=sscanf(fgets($std),"%s")[0];
-$passwd=sscanf(fgets($std),"%s")[0];
-$list=sscanf(fgets($std),"%s")[0];
+
+$reply = sscanf(fgets($std),"%s");
+$email = $reply[0];
+
+$reply = sscanf(fgets($std),"%s");
+$passwd = $reply[0];
+
+$reply = sscanf(fgets($std),"%s");
+$list = $reply[0];
+
 logError($email.",".$passwd.",".$list);
+
 // logError("select * from users where email='".$email."'");
-$db->query("use admin");
+$db->query("use symdesig_smartlist");
 logError("SELECT * from users where email='".$email."' AND list='".$list."'");
 $rslt=$db->query("SELECT * from users where email='".$email."' AND list='".$list."'");
 if($rslt==false){
@@ -44,12 +52,11 @@ if($rslt==false){
 }
 $row=$rslt->fetch_assoc();
 if($row==null) {
-	db_query("INSERT INTO users VALUES('".$email."','".$list."','".$passwd."')");
-	logError("email = ".$email);
-	db_query("use `".$email."`");
-	db_query("CREATE TABLE `".$list."`(name varchar(40),flags int,last_time int,last_avg int,ratio real)");
-	logError("create error: ".$db->error);
-	
+	db_query("INSERT INTO users SET email='".$email."',passwd='".$passwd."',list='".$list."'");	
+	$rslt = db_query("SELECT * from users where email='".$email."' and list='".$list."'");
+	$row = $rslt->fetch_assoc();
+	$id = $row['id'];
+	db_query("CREATE TABLE T".sprintf("%d",$id)."(name VARCHAR(128), flags INT, last_time INT, last_avg INT, ratio REAL)");
 } else
 	print("exists");
 

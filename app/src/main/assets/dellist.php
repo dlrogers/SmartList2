@@ -16,7 +16,7 @@
 //
 // Set up php
 ini_set("log_errors",1) ;
-ini_set("error_log","/tmp/php_error.log");
+ini_set("error_log","php_error.log");
 ini_set("max_execution_time",5);
 //ini_set("ignore_user_abort",1);
 error_reporting(E_ALL);
@@ -24,7 +24,7 @@ error_reporting(E_ALL);
 logError("starting dellist");
 
 // Get username and password for mysql and log in
-$config = parse_ini_file("/home/dennis/Mydocs/config.ini");
+$config = parse_ini_file("../../config/config.ini");
 $db = new mysqli('localhost',$config['username'],$config['password']);
 $db->set_charset("UTF-8");
 
