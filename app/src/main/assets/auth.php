@@ -30,15 +30,16 @@ $db->set_charset("UTF-8");
 
 // Open data stream and read in command, uid, pw, and list
 $std = fopen("php://input","r");
-
-$reply = sscanf(fgets($std),"%s");
+$txt = trim(fgets($std),"\n");
+$reply = sscanf(str_replace(" ","",$txt),"%s");
 $email = $reply[0];
 
 $reply = sscanf(fgets($std),"%s");
 $passwd = $reply[0];
 
-$reply = sscanf(fgets($std),"%s");
-$list = $reply[0];
+//$reply = sscanf(fgets($std),"%s");
+//$list = $reply[0];
+$list = trim(fgets($std),"\n");
 
 logError($email.",".$passwd.",".$list);
 
@@ -48,7 +49,7 @@ $rslt = $db->query("SELECT * from users where email='".$email."'");
 if($rslt ==  false) logError("rslt is false");
 if( ($rslt->fetch_assoc()) == null) {
 	logError("adding email and list");
-	db_query("INSERT INTO users SET email='".$email."',passwd='".$passwd."',list='".$list."'");	
+	db_query("INSERT INTO users SET email='".$email."',passwd='".$passwd."',list='".$list."',rem=0");	
 	$rslt = db_query("SELECT * from users where email='".$email."' and list='".$list."'");
 	$row = $rslt->fetch_assoc();
 	$id = $row['id'];
@@ -60,7 +61,7 @@ if( ($rslt->fetch_assoc()) == null) {
 	$rslt = db_query("SELECT * from users where email='".$email."' and list='".$list."'");
 	$row = $rslt->fetch_assoc();
 	if($row == null) {
-		db_query("INSERT INTO users SET email='".$email."',passwd='".$passwd."',list='".$list."'");
+		db_query("INSERT INTO users SET email='".$email."',passwd='".$passwd."',list='".$list."',rem=0");
 		$rslt = db_query("SELECT * from users where email='".$email."' and list='".$list."'");		
 		$row = $rslt->fetch_assoc();
 		$id = $row['id'];
@@ -72,6 +73,9 @@ if( ($rslt->fetch_assoc()) == null) {
 
 register_shutdown_function('shutdown');
 
+function read_data(){
+	
+	}
 function shutdown(){
 	exit();
 }

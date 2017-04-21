@@ -172,7 +172,8 @@ public class PickList extends Activity implements AdapterView.OnItemSelectedList
         checkView.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 Item item;
-                String nm = (nameView.getText().toString()).replaceAll(" ","");
+//                String nm = (nameView.getText().toString()).replaceAll(" ","");
+                String nm = (nameView.getText().toString()).trim();
                 logF("freq = %d",freq);
                 if(inLists) {      // Edit (item selected from list) ?
                     item = getDbItem(name.toString());   // update db entry

@@ -8,6 +8,7 @@ import android.content.SharedPreferences;
 import android.content.res.AssetManager;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.graphics.Color;
 import android.graphics.Point;
 import android.net.Uri;
 import android.os.Bundle;
@@ -33,6 +34,7 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.ScrollView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.appindexing.Action;
@@ -64,7 +66,7 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
     enum ClickLocation {none, del, name, box}
     static ClickLocation clickLocation;
     static final long second = 1, minute = 60 * second, hour = 60 * minute,
-            day = 24 * hour, week = 7 * day, refresh_time = 30 ;
+            day = 24 * hour, week = 7 * day, refresh_time = 10 ;
     static int scrn_width, scrn_height, VOICE_RECOGNITION_REQUEST_CODE = 2;
     static final int MSG_REPEAT = 1;
     static final String SQL_CREATE_GROCERIES =
@@ -84,6 +86,7 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
     static android.support.v7.app.ActionBar actionBar;
     static SharedPreferences prefs;
     static Cursor listsCursor;
+    static Boolean syncReg;
     MainActivity mainActivity;
 
     @Override
@@ -136,13 +139,19 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
             db.execSQL(SQL_CREATE_GROCERIES);
         }
         setupOptions();     // Setup up sidebar
-//        showLists(context);
+        showLists(context);
         printLists();
 
         email = prefs.getString("email","no_email");
         passwd = prefs.getString("passwd","no_passwd");
+        syncReg = prefs.getBoolean("syncReg",false);
         currList = prefs.getString("currList","Groceries");
-
+//        currList = "Groceries";
+/*        SharedPreferences.Editor ed = prefs.edit();     // Initialize shared preferences
+        ed.putBoolean("syncReg",true);
+        ed.apply();
+        syncReg = true;
+*/
         showLists();
 
 //        db.execSQL("drop table if exists Groceries");   // code to reset default list to Groceries
@@ -161,12 +170,6 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         ScrollView scrollView = (ScrollView) findViewById(R.id.scroll_view);
 
-
-/*		db.execSQL("DROP TABLE itemDb");
-        db.execSQL(SQL_CREATE_GROCERIES);
-		initDB(db);
-        db.execSQL(SQL_LISTS);
-*/
         setSupportActionBar(toolbar);
         actionBar = getSupportActionBar();
         actionBar.setTitle(currList);
@@ -196,6 +199,7 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
              }
         });
         clickLocation = ClickLocation.none;
+
         // Get view links
         listView = (ListView) findViewById(R.id.list_view);
         suggestView = (ListView) findViewById(R.id.suggest_view);
@@ -222,7 +226,7 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
                 switch (clickLocation) {
                     case box:
                         clickLocation = ClickLocation.none;
-                        updateAvgs(dBid, 0);
+                        updateAvg(dBid, 0);
                         break;
                     case name:
                         Intent intent = new Intent("com.symdesign.smartlist.intent.action.PickList");
@@ -302,6 +306,8 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
     public void showLists(){
         showLists(context);
     }
+
+    //      Setup slide in menu for List management
 
     DrawerLayout drawers;
     LinearLayout navList;
@@ -472,7 +478,7 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
      * @param id     ID of currently selected item
      * @param flags New state of flags entry
      */
-    public void updateAvgs(long id, int flags) {
+    public void updateAvg(long id, int flags) {
 
         final String[] avgCols = {"last_time", "last_avg", "flags"};
 
@@ -503,8 +509,8 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
     private static SLAdapter listAdapter,suggestAdapter;
 
     static void updateAdapters(Context context,ListView listView,ListView suggestView) {
-
 //                                      long time_millis = System.currentTimeMillis()
+        updateRatios();
         listCursor = db.query("'"+MainActivity.currList+"'", cols, "flags=1", null, "", "", null);
         itemsList.clear();
         int n = 0;
@@ -536,7 +542,18 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
         suggestView.setAdapter(suggestAdapter);
     }
 
-
+    static void updateRatios() {
+        String[] cols = new String[] 
+				{"_id","last_time","last_avg","ratio"};
+		Cursor curs = db.query("'"+MainActivity.currList+"'", cols, null, null, "", "", null);
+        for(curs.moveToFirst();!curs.isAfterLast();curs.moveToNext()){
+            float ratio = Math.abs(((float) (getTime()-curs.getLong(1)))/((float) curs.getLong(2)));
+//            log(String.format("ratio = %.6f",ratio));
+        	values.clear();
+        	values.put("ratio",ratio);
+        	db.update("'"+MainActivity.currList+"'", values, String.format("_id=%d",curs.getLong(0)),null);
+		}
+    }
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.

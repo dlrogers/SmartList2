@@ -1,36 +1,31 @@
 <?php
-/* Routine to send lost password email
-
-    Input: Cust Email address
-
+/* @ Copyright 2017 Dennis Rogers
+	Symbiotic Designs Confidential
+	
+	email.php: Code to send lost password email
 */
+
 ini_set("log_errors",1) ;
-ini_set("error_log","/tmp/php_error.log");
+ini_set("error_log","php_error.log");
 ini_set("max_execution_time",5);
-
-// Open data stream and read in customer's email address
+//ini_set("ignore_user_abort",1);
+error_reporting(E_ALL);
+// Open data stream and read in email
 $std = fopen("php://input","r");
-$email=sscanf(fgets($std),"%s")[0];
+$txt = fgets($std);
+logError(sprintf("txt = %s",$txt));
+$reply = sscanf(str_replace(" ","",$txt),"%s");
+$email = trim($reply[0],"\n");
+logError(sprintf("email = %s",$email));
 
-$message = '
-<html>
-<head>
-In order to reset your password click on the following link.
-<a href="http://192.168.1.209"> Reset Link. </a>
-
-
-';
-// To send HTML mail, the Content-type header must be set
-$h = 'MIME-Version: 1.0\r\n';
-$h = $h.'Content-type: text/html; charset=iso-8859-1\r\n';
-
-// Additional headers
-$h = $h.'To: SmartList User\r\n';
-$h = $h.'From: Support Team';
-logError($message);
-logError($h);
-$email="dlrog@yahoo.com";
-mail($email,"Lost Password Reset",$message,$h);
+logError("starting email");
+$hdr[] = 'MIME-Version: 1.0';
+$hdr[] = 'Content-type: text/html; charset=iso-8859-1';
+$link = "http://www.yahoo.com";
+$title="reset link";
+$msg = "Click on this link: <a href='".$link."'>" .$title. "</a>";
+ 
+mail("dlrog@yahoo.com","a test",$msg,implode("\r\n",$hdr));
 
 function logError($str){
 	error_log($str,0);

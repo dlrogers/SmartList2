@@ -85,7 +85,7 @@ class SyncList extends AsyncTask<Void,Void,Boolean> {
             cursor = db.query("'"+MainActivity.currList+"'", SLAdapter.cols, "flags=1 OR flags=3", null, "", "", null);
             for (cursor.moveToFirst(); !cursor.isAfterLast(); cursor.moveToNext()) {
                 int flgs = cursor.getInt(2);
-                str = String.format(Locale.getDefault(),"%s,%d,%d,%d,%f\n",
+                str = String.format(Locale.getDefault(),"%s,%d,%d,%d,%.6e\n",
                     cursor.getString(1),cursor.getInt(2),cursor.getInt(3),cursor.getInt(4),cursor.getFloat(5));
                 bos.write(str.getBytes("UTF-8"));
                 if((flgs & 2)>0){
@@ -97,7 +97,7 @@ class SyncList extends AsyncTask<Void,Void,Boolean> {
             for (cursor.moveToFirst(); !cursor.isAfterLast(); cursor.moveToNext()) {
                 int flgs = cursor.getInt(2);
                 if(flgs==0||flgs==2) {
-                    str = String.format(Locale.getDefault(),"%s,%d,%d,%d,%f\n",
+                    str = String.format(Locale.getDefault(),"%s,%d,%d,%d,%.6e\n",
                             cursor.getString(1),cursor.getInt(2),cursor.getInt(3),cursor.getInt(4),cursor.getFloat(5));
                     bos.write(str.getBytes("UTF-8"));
                 }
@@ -112,8 +112,11 @@ class SyncList extends AsyncTask<Void,Void,Boolean> {
             is = link.getInputStream();
             BufferedReader reader = new BufferedReader(new InputStreamReader(is));
             log("Reading back from phone");
+            String ans = reader.readLine();
+            if(!(ans.equals("ok")))
+                log("Sync failed!");
             while(null != (col = reader.readLine())){
-                log(col);
+//                log(col);
                 col=col.replaceAll("\n","");
                 String[] cols = col.split(",");
                 switch(cols[0]) {
@@ -130,7 +133,7 @@ class SyncList extends AsyncTask<Void,Void,Boolean> {
                             values.put("last_time", cols[3]);
                             values.put("last_avg", cols[4]);
                             values.put("ratio", cols[5]);
-                            log("name='"+cols[1]+"'");
+//                            log("name='"+cols[1]+"'");
                             db.update("'"+currList+"'",values,"name='"+cols[1]+"'",null);
 //                        } else {//                           db.delete("'"+currList+"'",null,null);
 //                        }
@@ -150,7 +153,7 @@ class SyncList extends AsyncTask<Void,Void,Boolean> {
             }
             Cursor rows = db.query("'"+currList+"'",new String[] {"name","flags"},"flags=1",null,null,null,null);
             for(rows.moveToFirst(); !rows.isAfterLast(); rows.moveToNext()) {
-                logF("name = %s, flags = %d",rows.getString(0),rows.getInt(1));
+//                logF("name = %s, flags = %d",rows.getString(0),rows.getInt(1));
             }
             logF("Sync time = %d",System.currentTimeMillis()-lastTime);
             rows.close();
@@ -178,22 +181,3 @@ class SyncList extends AsyncTask<Void,Void,Boolean> {
         log("SyncList finished");
     }
 }
-
-
-    /*            if(ans.equals("exists")) {
-//				bos.flush();
-//				bos.close();
-				link.disconnect();
-				log("Receiving data from server");
-				url = new URL(MainActivity.serverAddr+"admin.php");
-				link = (HttpURLConnection) url.openConnection();
-				link.setRequestMethod("POST");
-				link.setDoInput(true);
-//				link.setDoOutput(true);
-				InputStream is = link.getInputStream();
-				BufferedReader reader = new BufferedReader(new InputStreamReader(is));
-            } else {
-                
-            }
-*/
-//            is.close();

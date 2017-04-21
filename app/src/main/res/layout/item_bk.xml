@@ -5,7 +5,7 @@
     android:layout_width="wrap_content">
     <solid android:color="#2F3C22"/>
     <corners android:radius="13dp" />
-    <stroke android:width="3dp" android:color="#ffff8080"/>
+    <stroke android:width="3dp" android:color="#000000"/>
     <padding android:left="10dp" android:top="5dp"
         android:right="10dp" android:bottom="5dp" />
 </shape>

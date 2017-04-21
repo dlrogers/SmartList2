@@ -15,6 +15,7 @@
 //				and adding new table, named listname, to the database
 //
 // Set up php
+header("charset=utf-8");
 ini_set("log_errors",1) ;
 ini_set("error_log","php_error.log");
 ini_set("max_execution_time",5);
@@ -30,23 +31,29 @@ $db->set_charset("UTF-8");
 
 // Open data stream and read in command, uid, pw, and list
 $std = fopen("php://input","r");
-$email=sscanf(fgets($std),"%s")[0];
-$passwd=sscanf(fgets($std),"%s")[0];
-$list=sscanf(fgets($std),"%s")[0];
+$reply = sscanf(str_replace(" ","",fgets($std)),"%s");
+$email = trim($reply[0],"\n");
+
+$reply = sscanf(fgets($std),"%s");
+$passwd = $reply[0];
+
+$list = trim(fgets($std),"\n");
+
 logError($email.",".$passwd.",".$list);
 // logError("select * from users where email='".$email."'");
-$db->query("use admin");
-logError("SELECT * from users where email='".$email."' AND list='".$list."'");
-$rslt=$db->query("SELECT * from users where email='".$email."' AND list='".$list."'");
+db_query("use symdesig_smartlist");
+$rslt=db_query("SELECT * from users where email='".$email."' AND list='".$list."'");
 if($rslt==false){
 	logError("select error: ".$db->error);
 	exit();
 }
 $row=$rslt->fetch_assoc();
 if($row!=null) {
-	db_query("DELETE FROM users WHERE list='".$list."'");
-	db_query("use `".$email."`");
-	db_query("DROP TABLE IF EXISTS `".$list."`");
+//	$rslt = db_query("SELECT * from users where email='".$email."' and list='".$list."'");
+//	$row = $rslt->fetch_assoc();
+	$id = $row['id'];
+	db_query("UPDATE users SET rem=1 WHERE list='".$list."'");
+	db_query("DROP TABLE IF EXISTS T".$id);
 } else
 	print("nok");
 

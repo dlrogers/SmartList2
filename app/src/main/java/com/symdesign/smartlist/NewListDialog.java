@@ -3,7 +3,9 @@ package com.symdesign.smartlist;
 import android.app.DialogFragment;
 import android.content.ContentValues;
 import android.content.Context;
+import android.graphics.Color;
 import android.os.Bundle;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,6 +14,7 @@ import android.view.WindowManager;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 import static com.symdesign.smartlist.MainActivity.currList;
 import static com.symdesign.smartlist.MainActivity.db;
@@ -67,8 +70,8 @@ public class NewListDialog extends DialogFragment {
             @Override
             public void onClick(View view) {
                 String listName = nameView.getText().toString();
-                currList = listName;
                 if(listName.length() > 0) {
+                    currList = listName;
                     addToLists(listName);
                     String SQL = "CREATE TABLE IF NOT EXISTS '"+currList+"'(" +
                             "_id INTEGER PRIMARY KEY, name TEXT, flags INT, " +
@@ -76,7 +79,7 @@ public class NewListDialog extends DialogFragment {
                     log(SQL);
                     db.execSQL(SQL);
                     listener.showLists();
-                    listener.onFinishNewList();
+//                    listener.onFinishNewList();
 //                    new Auth((MainActivity) getActivity(),email,passwd,currList,"add");
                 }
 //                MainActivity.closeDrawer();

@@ -1,5 +1,6 @@
 package com.symdesign.smartlist;
 
+import android.content.SharedPreferences;
 import android.os.AsyncTask;
 
 import java.io.BufferedOutputStream;
@@ -14,6 +15,8 @@ import java.net.URL;
 import java.util.Locale;
 
 import static com.symdesign.smartlist.MainActivity.log;
+import static com.symdesign.smartlist.MainActivity.prefs;
+import static com.symdesign.smartlist.MainActivity.syncReg;
 
 /**
  * An AdyncTask that sends an email, password and list
@@ -66,6 +69,12 @@ class Auth extends AsyncTask<Void,Void,Boolean> {
             is = link.getInputStream();
             BufferedReader  reader = new BufferedReader(new InputStreamReader(is));
             ans=reader.readLine();
+            if(ans.equals("ok")) {
+                syncReg = true;
+                SharedPreferences.Editor ed = prefs.edit();     // Initialize shared preferences
+                ed.putBoolean("syncReg",true);
+                ed.apply();
+            }
             is.close();
             os.close();
         } catch (MalformedURLException e) {

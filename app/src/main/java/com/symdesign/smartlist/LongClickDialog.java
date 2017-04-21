@@ -86,9 +86,11 @@ public class LongClickDialog extends DialogFragment {
                 MainActivity.currList = "Groceries";
                 SharedPreferences.Editor ed = MainActivity.prefs.edit();     // Initialize shared preferences
                 ed.putString("currList","Groceries");
+                MainActivity.actionBar.setTitle(MainActivity.currList);
                 ed.apply();
                 listener.showLists();
-                listener.onFinishDelList(listName);
+                if(MainActivity.syncReg)
+                    listener.onFinishDelList(listName);
                 MainActivity.printLists();
                 getDialog().dismiss();
             }

@@ -62,7 +62,6 @@ public class AdminDialog extends DialogFragment {
                 SharedPreferences.Editor ed = MainActivity.prefs.edit();
                 ed.putString("email",email);
                 ed.putString("passwd",passwd);
-                ed.putBoolean("syncReg",false);
                 ed.apply();
                 AdminDialogListener activity = (AdminDialogListener) getActivity();
                 activity.onFinishAdminDialog(email,passwd,true);
@@ -77,7 +76,7 @@ public class AdminDialog extends DialogFragment {
                 SharedPreferences.Editor ed = MainActivity.prefs.edit();
                 ed.putString("email",email);
                 ed.putString("passwd",passwd);
-                ed.putBoolean("syncReg",false);
+                ed.putBoolean("syncReg",true);
                 ed.apply();
                 AdminDialogListener activity = (AdminDialogListener) getActivity();
                 activity.onFinishAdminDialog(email,passwd,false);

@@ -24,6 +24,7 @@ import static com.symdesign.smartlist.MainActivity.email;
 import static com.symdesign.smartlist.MainActivity.passwd;
 import static com.symdesign.smartlist.MainActivity.db;
 import static com.symdesign.smartlist.MainActivity.currList;
+import static com.symdesign.smartlist.MainActivity.syncReg;
 /*
  * Created by dennis on 2/12/17.
  */
@@ -65,6 +66,7 @@ public class Settings extends DialogFragment {
             public void onClick(View view) {
                 email = emailView.getText().toString();
                 passwd = passwdView.getText().toString();
+                syncReg = true;
                 SharedPreferences.Editor ed = MainActivity.prefs.edit();
                 ed.putString("email",email);
                 ed.putString("passwd",passwd);
@@ -77,9 +79,19 @@ public class Settings extends DialogFragment {
         resetView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                //imitate code in index.php
-                // email = emailView.getText().toString();
-                StringBuilder email_body = new StringBuilder(1000);
+                new Lostpw(email).execute();
+                getDialog().dismiss();
+            }
+        });
+        return optionView;
+    }
+}
+//        protected void onPostExecute(String result) {
+//            log("post execute admin");
+//        }
+//imitate code in index.php
+// email = emailView.getText().toString();
+/*                StringBuilder email_body = new StringBuilder(1000);
                 email_body = email_body.append("Dear SmartList User,\n\n");
                 email_body = email_body.append("You have requested a password reset using the PASSWORD RESET button on the SmartList app.\n\n");
                 email_body = email_body.append("Click this link to reset your password for the ");
@@ -105,12 +117,4 @@ public class Settings extends DialogFragment {
                 if (intent.resolveActivity(getActivity().getPackageManager()) != null) {
                     startActivity(intent);
                    // getActivity().startService(intent);
-                }
-            }
-        });
-        return optionView;
-    }
-//        protected void onPostExecute(String result) {
-//            log("post execute admin");
-//        }
-}
+*/
