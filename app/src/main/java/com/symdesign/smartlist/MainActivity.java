@@ -60,7 +60,7 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
 //    static String serverAddr="http://sym-designs.com/cgi-bin/";
     static ContentValues values = new ContentValues();
     public static SQLiteDatabase db;
-    public ListView listView, suggestView,lists;
+    public static ListView listView, suggestView,lists;
     static String adminURL;
 
     enum ClickLocation {none, del, name, box}
@@ -674,6 +674,7 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
         super.onResume();
         log("Resuming MainActivity");
         db = itemDb.getWritableDatabase();
+        updateAdapters(context,listView,suggestView);
     }
     @Override
     public void onStart() {

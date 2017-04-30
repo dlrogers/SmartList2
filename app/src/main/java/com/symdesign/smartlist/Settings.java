@@ -19,6 +19,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import static com.symdesign.smartlist.MainActivity.email;
 import static com.symdesign.smartlist.MainActivity.passwd;
@@ -33,6 +34,7 @@ public class Settings extends DialogFragment {
     EditText emailView,passwdView;
     TextView resetView;
     ImageView checkView;
+    Toast toast;
 
     public Settings() {
         // Empty contstuctor required for DialogFragment
@@ -79,6 +81,11 @@ public class Settings extends DialogFragment {
         resetView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                toast = Toast.makeText(getContext(),
+                        "\nAn Email is being sent to "+email+" containing instructions to reset your password\n",
+                        Toast.LENGTH_LONG);
+                toast.setGravity(Gravity.TOP, 0, 200);
+                toast.show();
                 new Lostpw(email).execute();
                 getDialog().dismiss();
             }

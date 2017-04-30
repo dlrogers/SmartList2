@@ -9,6 +9,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.view.Gravity;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
@@ -30,6 +31,8 @@ import static com.symdesign.smartlist.MainActivity.day;
 import static com.symdesign.smartlist.MainActivity.logF;
 import static com.symdesign.smartlist.MainActivity.log;
 import static com.symdesign.smartlist.MainActivity.getTime;
+import static com.symdesign.smartlist.MainActivity.listView;
+import static com.symdesign.smartlist.MainActivity.suggestView;
 
 
 /**
@@ -125,9 +128,10 @@ public class PickList extends Activity implements AdapterView.OnItemSelectedList
             @Override
             public boolean onGroupClick(ExpandableListView parent, View v,
                                         int groupPosition, long id) {
-                Toast.makeText(getApplicationContext(),
+/*                Toast.makeText(getApplicationContext(),
                 "Group Clicked " + catagories.get(groupPosition),
                 Toast.LENGTH_SHORT).show();
+*/
                 return false;   // continue click processing
             }
         });
@@ -137,10 +141,10 @@ public class PickList extends Activity implements AdapterView.OnItemSelectedList
 
             @Override
             public void onGroupExpand(int groupPosition) {
-                Toast.makeText(getApplicationContext(),
+/*                Toast.makeText(getApplicationContext(),
                         catagories.get(groupPosition) + " Expanded",
                         Toast.LENGTH_SHORT).show();
-            }
+*/            }
         });
 
         // Listview Group collasped listener
@@ -163,7 +167,14 @@ public class PickList extends Activity implements AdapterView.OnItemSelectedList
                                         int groupPosition, int childPosition, long id) {
                 groupPos = groupPosition;
                 childPos = childPosition;
-                nameView.setText(pickItems.get(groupPosition).get(childPosition).substring(1));
+                String name = pickItems.get(groupPosition).get(childPosition).substring(1);
+                addItem(name,1,MainActivity.getTime(),(long) 3.5*day,0.0);
+                Toast toast = Toast.makeText(getApplicationContext(),
+                        "\n"+name+" Added\n",Toast.LENGTH_LONG);
+                toast.setGravity(Gravity.TOP, 0, 200);
+                toast.show();
+//                MainActivity.updateAdapters(context,listView,suggestView);
+//                nameView.setText(pickItems.get(groupPosition).get(childPosition).substring(1));
                 return false;
             }
         });
@@ -341,5 +352,4 @@ public class PickList extends Activity implements AdapterView.OnItemSelectedList
         log("Resuming PickList");
         db = MainActivity.itemDb.getWritableDatabase();
     }
-
 }

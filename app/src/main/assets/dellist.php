@@ -15,7 +15,6 @@
 //				and adding new table, named listname, to the database
 //
 // Set up php
-header("charset=utf-8");
 ini_set("log_errors",1) ;
 ini_set("error_log","php_error.log");
 ini_set("max_execution_time",5);
@@ -27,6 +26,7 @@ logError("starting dellist");
 // Get username and password for mysql and log in
 $config = parse_ini_file("../../config/config.ini");
 $db = new mysqli('localhost',$config['username'],$config['password']);
+//$db = new mysqli('localhost','symdesig_dennis','f0rspark$');
 $db->set_charset("UTF-8");
 
 // Open data stream and read in command, uid, pw, and list
@@ -52,9 +52,10 @@ if($row!=null) {
 //	$rslt = db_query("SELECT * from users where email='".$email."' and list='".$list."'");
 //	$row = $rslt->fetch_assoc();
 	$id = $row['id'];
-	db_query("UPDATE users SET rem=1 WHERE list='".$list."'");
+	db_query("UPDATE users SET rem=1 WHERE email='".$email."' AND list='".$list."'");
 	db_query("DROP TABLE IF EXISTS T".$id);
-} else
+	print("ok");
+} else 
 	print("nok");
 
 register_shutdown_function('shutdown');

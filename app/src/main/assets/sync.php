@@ -54,6 +54,10 @@ if($row == null) {
 if($row["passwd"]===$passwd){					// Is password correct?
 	$id = $row['id'];
 	$tblname = "T".sprintf("%d",$id);
+	if($row['rem']==1){	// Was previously deleted: must recreate table
+		db_query("CREATE TABLE T".sprintf("%d",$id)."(name VARCHAR(128), flags INT, last_time INT, last_avg INT, ratio REAL)");		
+		db_query("UPDATE users SET rem=0 WHERE ".sprintf("id=%d",$id));
+	}
 	$names=array();
 	$n=0;
 	$ok_sent = false;
@@ -68,7 +72,7 @@ if($row["passwd"]===$passwd){					// Is password correct?
 			$row = $rslt->fetch_assoc();
 			if($row==null) {		//if(does not exist on server add it)
 				logError("adding row");
-				db_query(sprintf("INSERT INTO `".$tblname."` VALUES ('%s',%s,%s,%s,%s)",
+				db_query(sprintf("INSERT INTO ".$tblname." VALUES('%s',%s,%s,%s,%s)",
 						$p_cols[0],$p_cols[1],$p_cols[2],$p_cols[3],$p_cols[4]));
 			} else {
 				$scan = sscanf($p_cols[2],"%d");
@@ -135,7 +139,7 @@ if($row["passwd"]===$passwd){					// Is password correct?
 	 logError("insert error");
 	 $rc=db_query("CREATE DATABASE `".$email."`");
 	 $rc=db_query("USE `".$email."`");
-	 $rc=db_query("CREATE TABLE `".$list."`(name TEXT, flags INT, last_time INT, last_avg INT, ratio REAL)");
+	 $rc=db_query("CREATE TABLE `".$list."`(name TEXT, flags INT, last_time INT, last_avg INT, ratio REAL, rem INT)");
 	 print("created");
 }
 */
@@ -150,6 +154,7 @@ function inPhone($name,$n){
 	}
 	return false;
 }
+
 function db_query($cmd) {
 	global $db;
 	logError($cmd);
