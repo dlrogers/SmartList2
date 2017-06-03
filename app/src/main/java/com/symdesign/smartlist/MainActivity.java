@@ -515,7 +515,7 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
         return (long) (0.75 * elapsed_time + 0.25 * last_avg);
     }
 
-    static private Cursor listCursor, suggestCursor;
+    static private Cursor listCursor, suggestCursor ;
     private static SLAdapter listAdapter,suggestAdapter;
 
     static void updateAdapters(Context context,ListView listView,ListView suggestView) {
