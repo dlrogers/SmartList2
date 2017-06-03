@@ -65,6 +65,8 @@
             android:id="@+id/reset"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:paddingTop="10dp"
+            android:paddingBottom="10dp"
             android:layout_gravity="center_horizontal"
             android:text="Forgot Password ?"/>
 

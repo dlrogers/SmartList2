@@ -16,12 +16,22 @@ import android.os.Handler;
 import android.os.Message;
 import android.speech.RecognizerIntent;
 import android.support.design.widget.FloatingActionButton;
+
+//import android.app.FragmentManager;
+//import android.widget.CursorAdapter;
+//import android.widget.SimpleCursorAdapter;
+//import android.app.Activity;
+//import android.widget.Toolbar;
+//import android.app.ActionBar;
+
 import android.support.v4.app.FragmentManager;
 import android.support.v4.widget.CursorAdapter;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v4.widget.SimpleCursorAdapter;
+import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+
 import android.util.Log;
 import android.view.Display;
 import android.view.Gravity;
@@ -66,7 +76,7 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
     enum ClickLocation {none, del, name, box}
     static ClickLocation clickLocation;
     static final long second = 1, minute = 60 * second, hour = 60 * minute,
-            day = 24 * hour, week = 7 * day, refresh_time = 10 ;
+            day = 24 * hour, week = 7 * day, refresh_time = 60 ;
     static int scrn_width, scrn_height, VOICE_RECOGNITION_REQUEST_CODE = 2;
     static final int MSG_REPEAT = 1;
     static final String SQL_CREATE_GROCERIES =
@@ -509,7 +519,7 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
     private static SLAdapter listAdapter,suggestAdapter;
 
     static void updateAdapters(Context context,ListView listView,ListView suggestView) {
-//                                      long time_millis = System.currentTimeMillis()
+        long time_millis = System.currentTimeMillis();
         updateRatios();
         listCursor = db.query("'"+MainActivity.currList+"'", cols, "flags=1", null, "", "", null);
         itemsList.clear();
@@ -540,6 +550,7 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
         suggestAdapter = new SLAdapter(context, itemsSuggest, R.layout.suggest_entry);
         suggestAdapter.checked = true;
         suggestView.setAdapter(suggestAdapter);
+        logF("updateAdapters elapsed time = %d",System.currentTimeMillis()-time_millis);
     }
 
     static void updateRatios() {
