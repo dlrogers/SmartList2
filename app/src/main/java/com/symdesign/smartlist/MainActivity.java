@@ -41,6 +41,7 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.ScrollView;
@@ -56,6 +57,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Locale;
 
+import static com.symdesign.smartlist.PickList.dBid;
 import static com.symdesign.smartlist.SLAdapter.*;
 import static com.symdesign.smartlist.SLAdapter.itemsList;
 
@@ -186,18 +188,21 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
         deleteList.clear();
 
 //        Setup floating "add" button
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+/*        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent intent = new Intent("com.symdesign.smartlist.intent.action.PickList");
-                intent.putExtra("id", -1);
-                intent.putExtra("name", "");
-                intent.putExtra("inLists", false);
-                context.startActivity(intent);
-            }
+                FragmentTransaction ft = getFragmentManager().beginTransaction();
+                PickList pickList = new PickList();
+                Bundle bundle = new Bundle();
+                bundle.putString("name","");
+                bundle.putLong("_id",dBid);
+                bundle.putBoolean("inLists",false);
+                pickList.setArguments(bundle);
+                pickList.show(ft,"dialog");
+           }
         });
-
+*/
 //        Setup left drawer
         drawers = (DrawerLayout) findViewById(R.id.drawer_layout);
 //        toolbar.setNavigationIcon(R.drawable.ic_menu_moreoverflow_normal_holo_dark);
@@ -227,6 +232,8 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
 
         log(String.format(Locale.getDefault(),"Starting MainActivity, time=%d", getTime()));
         updateAdapters(context,listView,suggestView);
+
+        // Handle Shopping List item tap.
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View item, int position, long id) {
@@ -239,11 +246,14 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
                         updateAvg(dBid, 0);
                         break;
                     case name:
-                        Intent intent = new Intent("com.symdesign.smartlist.intent.action.PickList");
-                        intent.putExtra("id", dBid);
-                        intent.putExtra("name", itemsList.get(position).name);
-                        intent.putExtra("inLists", true);
-                        startActivity(intent);
+                        FragmentTransaction ft = getFragmentManager().beginTransaction();
+                        PickList pickList = new PickList();
+                        Bundle bundle = new Bundle();
+                        bundle.putString("name",itemsSuggest.get(position).name);
+                        bundle.putLong("_id",dBid);
+                        bundle.putBoolean("inLists",true);
+                        pickList.setArguments(bundle);
+                        pickList.show(ft,"dialog");
                         break;
                     case del:
                         values.clear();
@@ -257,6 +267,8 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
                 }
             }
         });
+
+        // Handle Suggest List item tap.
         suggestView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View item,
@@ -282,14 +294,14 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
                         updateAdapters(context,listView,suggestView);
                         break;
                     case name:
-                        //                       db.update("'"+currList+"'", values,
-                        //                               "_id=" + Long.toString(dBid), null);
-                        //                       updateAdapters(context,listView,suggestView);
-                        Intent intent = new Intent("com.symdesign.smartlist.intent.action.PickList");
-                        intent.putExtra("id", dBid);
-                        intent.putExtra("name", itemsSuggest.get(position).name);
-                        intent.putExtra("inLists", true);
-                        startActivity(intent);
+                        FragmentTransaction ft = getFragmentManager().beginTransaction();
+                        PickList pickList = new PickList();
+                        Bundle bundle = new Bundle();
+                        bundle.putString("name",itemsSuggest.get(position).name);
+                        bundle.putLong("_id",dBid);
+                        bundle.putBoolean("inLists",true);
+                        pickList.setArguments(bundle);
+                        pickList.show(ft,"dialog");
                         break;
                     case del:
                         values.clear();
@@ -305,6 +317,18 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
         // ATTENTION: This was auto-generated to implement the App Indexing API.
         // See https://g.co/AppIndexing/AndroidStudio for more information.
         client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
+    }
+//    ImageButton ib = (ImageButton) findViewById(R.id.add_button);
+//    ib.setImageResource(R.drawable.add_icon);
+    public void addItem(View view){
+        FragmentTransaction ft = getFragmentManager().beginTransaction();
+        PickList pickList = new PickList();
+        Bundle bundle = new Bundle();
+        bundle.putString("name","");
+        bundle.putLong("_id",dBid);
+        bundle.putBoolean("inLists",false);
+        pickList.setArguments(bundle);
+        pickList.show(ft,"dialog");
     }
 
         // Setup Sidebar options
@@ -483,7 +507,7 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
     }
 
     /**
-     * Update Frequency averages in database for item id
+     * Update Frequency averages in database for item with given id.
      *
      * @param id     ID of currently selected item
      * @param flags New state of flags entry
@@ -511,10 +535,25 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
         curs.close();
     }
 
+    /**
+     * running_avg(elapsed_time,last_avg:
+     *      Calculates new average buy time from last buy time and the last average
+     *
+     * @param elapsed_time
+     * @param last_avg
+     * @return
+     */
     public long running_avg(long elapsed_time, long last_avg) {
         return (long) (0.75 * elapsed_time + 0.25 * last_avg);
     }
 
+    /**
+     * update Adapters:
+     *      1.  Scans Shopping and Suggestions list updating
+     *          the list arrays itemsList and itemsSuggest.
+     *      2.  Sets the adapters listAdapter and suggestAdapter from
+     *          these list arrays.
+     */
     static private Cursor listCursor, suggestCursor ;
     private static SLAdapter listAdapter,suggestAdapter;
 
@@ -553,13 +592,15 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
         logF("updateAdapters elapsed time = %d",System.currentTimeMillis()-time_millis);
     }
 
+    /**
+     * updateRatios: Updates ratios for all items in the in the database.
+      */
     static void updateRatios() {
         String[] cols = new String[] 
 				{"_id","last_time","last_avg","ratio"};
 		Cursor curs = db.query("'"+MainActivity.currList+"'", cols, null, null, "", "", null);
         for(curs.moveToFirst();!curs.isAfterLast();curs.moveToNext()){
             float ratio = Math.abs(((float) (getTime()-curs.getLong(1)))/((float) curs.getLong(2)));
-//            log(String.format("ratio = %.6f",ratio));
         	values.clear();
         	values.put("ratio",ratio);
         	db.update("'"+MainActivity.currList+"'", values, String.format("_id=%d",curs.getLong(0)),null);
