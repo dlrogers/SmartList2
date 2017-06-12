@@ -187,22 +187,6 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
         actionBar.setTitle(currList);
         deleteList.clear();
 
-//        Setup floating "add" button
-/*        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                FragmentTransaction ft = getFragmentManager().beginTransaction();
-                PickList pickList = new PickList();
-                Bundle bundle = new Bundle();
-                bundle.putString("name","");
-                bundle.putLong("_id",dBid);
-                bundle.putBoolean("inLists",false);
-                pickList.setArguments(bundle);
-                pickList.show(ft,"dialog");
-           }
-        });
-*/
 //        Setup left drawer
         drawers = (DrawerLayout) findViewById(R.id.drawer_layout);
 //        toolbar.setNavigationIcon(R.drawable.ic_menu_moreoverflow_normal_holo_dark);

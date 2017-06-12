@@ -1,6 +1,7 @@
 package com.symdesign.smartlist;
 
 import android.app.Activity;
+import android.app.DialogFragment;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.content.Context;
@@ -11,6 +12,7 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.Gravity;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -20,6 +22,7 @@ import android.widget.EditText;
 import android.widget.ExpandableListView;
 import android.widget.Spinner;
 import android.widget.Toast;
+import android.view.LayoutInflater;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -27,6 +30,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 
+import static android.content.Context.INPUT_METHOD_SERVICE;
 import static com.symdesign.smartlist.MainActivity.day;
 import static com.symdesign.smartlist.MainActivity.logF;
 import static com.symdesign.smartlist.MainActivity.log;
@@ -39,8 +43,7 @@ import static com.symdesign.smartlist.MainActivity.suggestView;
  * PickList is Adapter for picking from list of items
  * Created by dennis on 7/1/16.
  */
-public class PickList extends Activity implements AdapterView.OnItemSelectedListener {
-    Activity thisActivity;
+public class PickList extends DialogFragment implements AdapterView.OnItemSelectedListener {
     Context context;
     ExpandableListAdapter expListAdapter;
     ExpandableListView expListView;
@@ -49,6 +52,7 @@ public class PickList extends Activity implements AdapterView.OnItemSelectedList
     int groupPos,childPos=-1;
     Spinner frequency;
     static long freq;
+    ContentValues values = new ContentValues();
 
     static ArrayList<String> catagories;         // Food catagories
     static ArrayList<ArrayList<String>> pickItems = new ArrayList<>(); // Mapping from catagories to lists of food items
@@ -60,33 +64,33 @@ public class PickList extends Activity implements AdapterView.OnItemSelectedList
     static boolean inLists;
     final String[] cols = {"_id","name","flags","last_time","last_avg","ratio"};
 
+    public PickList() {
+        // Empty contstuctor required for DialogFragment
+    }
+
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        thisActivity=this;
-        context = this;
-        setContentView(R.layout.pick_list);
-        Bundle extras = getIntent().getExtras();
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(this,
+        context = getActivity();
+        View pickView = inflater.inflate(R.layout.pick_list, container, false);
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>(context,
                 R.layout.dropdown_layout,srchItems);
         nameView = (AutoCompleteTextView)
-                findViewById(R.id.name);
+                pickView.findViewById(R.id.name);
         nameView.setAdapter(adapter);
         InputMethodManager imm = (InputMethodManager) context.getSystemService(INPUT_METHOD_SERVICE);
         nameView.requestFocus();
         imm.showSoftInput(nameView, InputMethodManager.SHOW_IMPLICIT);
-        if(extras != null) {
-            name = extras.getString("name");
-            inLists = extras.getBoolean("inLists");
-            nameView.setText(name);
-            dBid=extras.getInt("id");
-        }
-        checkView = (Button) findViewById(R.id.pick_button);
+        name = getArguments().getString("name");
+        nameView.setText(name);
+        inLists = getArguments().getBoolean("inLists");
+        dBid = (int) getArguments().getLong("_id");
+        checkView = (Button) pickView.findViewById(R.id.pick_button);
         freq = -1;
 
         ArrayAdapter<CharSequence> freq_adapter = ArrayAdapter.createFromResource(context,
                 R.array.frequencies,R.layout.dropdown_layout);
-        frequency = (Spinner) findViewById(R.id.freq);
+        frequency = (Spinner) pickView.findViewById(R.id.freq);
         frequency.setAdapter(freq_adapter);
 //        frequency.setPopupBackgroundResource(R.drawable.dialog_bk);
         frequency.setOnItemSelectedListener(this);
@@ -104,8 +108,8 @@ public class PickList extends Activity implements AdapterView.OnItemSelectedList
             else if(item.last_avg == 36500*day)
                 frequency.setSelection(4);
         }
-        expListView = (ExpandableListView) findViewById(R.id.lvExp);
-        expListAdapter = new ExpandableListAdapter(this, catagories, pickItems);
+        expListView = (ExpandableListView) pickView.findViewById(R.id.lvExp);
+        expListAdapter = new ExpandableListAdapter(context, catagories, pickItems);
         // setting list adapter
         expListView.setAdapter(expListAdapter);
         nameView.addTextChangedListener(new TextWatcher(){      // Set up text listener
@@ -116,7 +120,7 @@ public class PickList extends Activity implements AdapterView.OnItemSelectedList
 //                        s.subSequence(start, start + count).toString(),start,before,count);
                 if(count!=0 && s.charAt(start)=='\n'){
                     newItem(nameView.getText().toString());
-                    backToMain();
+                    getDialog().dismiss();
                 }
             }
             public void afterTextChanged(Editable s) {
@@ -152,7 +156,7 @@ public class PickList extends Activity implements AdapterView.OnItemSelectedList
 
             @Override
             public void onGroupCollapse(int groupPosition) {
-                Toast.makeText(getApplicationContext(),
+                Toast.makeText(context,
                         catagories.get(groupPosition) + " Collapsed",
                         Toast.LENGTH_SHORT).show();
 
@@ -169,7 +173,7 @@ public class PickList extends Activity implements AdapterView.OnItemSelectedList
                 childPos = childPosition;
                 String name = pickItems.get(groupPosition).get(childPosition).substring(1);
                 addItem(name,1,MainActivity.getTime(),(long) 3.5*day,0.0);
-                Toast toast = Toast.makeText(getApplicationContext(),
+                Toast toast = Toast.makeText(context,
                         "\n"+name+" Added\n",Toast.LENGTH_LONG);
                 toast.setGravity(Gravity.TOP, 0, 200);
                 toast.show();
@@ -198,34 +202,45 @@ public class PickList extends Activity implements AdapterView.OnItemSelectedList
                         changeItem(item);
                     }
                 } else {                // new name edited or entered directly
-                    item = Item.newItem(nm);
-                    item.last_time = getTime();
-                    item.last_avg = freq;
                     if(inDb(nm)) {      // if already in dB
-                        return;
+                        if(inDb_flags>1){
+                            values.clear();
+                            values.put("flags",inDb_flags&1);
+                            db.update("'"+MainActivity.currList+"'",values,"_id="+Long.toString(inDb_id),null);
+                            getDialog().dismiss();
+                        }
                     } else {
+                        item = Item.newItem(nm);
+                        item.last_time = getTime();
+                        item.last_avg = freq;
                         if(freq>0)
                             addItem(item);
                         else
                             addItem(item);
+                        getDialog().dismiss();
                     }
                 }
-                backToMain();
+//                backToMain();
 //                return;
             }
         });
+        return pickView;
     }
-/*    public void showToast(String text){
-        Toast.makeText(getApplicationContext(),
-                text,Toast.LENGTH_SHORT).show();
-
-    }
-*/  public boolean inDb(String name) {
+    static long inDb_id;
+    static int inDb_flags;
+    public boolean inDb(String name) {
         Cursor curs = db.query("'"+MainActivity.currList+"'",cols,
                 "name='"+name+"\'",null,"","","name ASC");
-        boolean hasCount = curs.getCount()!=0;
-        curs.close();
-        return hasCount;
+        int cnt = curs.getCount();
+        boolean found = cnt!=0;
+        if(curs.moveToFirst()) {
+            inDb_id = curs.getLong(0);
+            inDb_flags = curs.getInt(2);
+            logF("id = %d, flags = %d",inDb_id,inDb_flags);
+            curs.close();
+        } else
+            log("Not found");
+        return found;
     }
     public void onItemSelected(AdapterView<?> parent, View view,
                                int pos, long id) {
@@ -250,11 +265,6 @@ public class PickList extends Activity implements AdapterView.OnItemSelectedList
         // Another interface callback
     }
 
-    public void backToMain() {
-        Intent intent = new Intent(context,MainActivity.class);
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP );
-        startActivity(intent);
-    }
     public Item getDbItem(String name) {
         Cursor curs =db.query("'"+MainActivity.currList+"'",cols,
                 "name=\'"+name+"\'",null,"","","name ASC");
