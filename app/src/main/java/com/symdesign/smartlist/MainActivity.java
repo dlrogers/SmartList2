@@ -227,7 +227,7 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
                 switch (clickLocation) {
                     case box:
                         clickLocation = ClickLocation.none;
-                        updateAvg(dBid, 0);
+                        updateAvg(dBid,0);
                         break;
                     case name:
                         FragmentTransaction ft = getFragmentManager().beginTransaction();

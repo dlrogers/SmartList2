@@ -41,12 +41,12 @@
                     android:text="Shopping List"/>
                 <ImageButton
                     android:id="@+id/add_button"
-                    android:layout_width="25dp"
-                    android:layout_height="25dp"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
                     android:layout_marginRight="10dp"
                     android:layout_alignParentRight="true"
                     android:onClick="addItem"
-                    android:gravity="center_vertical"
+                    android:layout_gravity="center_vertical"
                     android:background="@null"
                     android:src="@drawable/add_icon" />
             </RelativeLayout>
