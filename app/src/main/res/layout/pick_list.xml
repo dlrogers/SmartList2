@@ -23,7 +23,8 @@
                 android:layout_width="200sp"
                 android:layout_height="wrap_content"
                 android:textColor="#1A0B0B"
-                android:textSize="20sp"/>
+                android:textSize="20sp"
+                android:popupBackground="#ffffff"/>
 			<Button
 				android:id="@+id/pick_button"
 				android:layout_width="40dp"
@@ -44,7 +45,7 @@
                 android:layout_alignParentLeft="true"
                 android:layout_centerVertical="true"
                 android:layout_gravity="center_vertical"
-                android:text="Buying Frequency:"
+                android:text="Buy\nFrequency:"
                 android:textSize="20sp"
                 android:textColor="#1A0B0B"/>
             <LinearLayout
@@ -59,6 +60,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:background="@drawable/dialog_bk"
+                    android:popupBackground="@drawable/dialog_bk"
                     android:textSize="20sp"
                     android:textColor="#1A0B0B"/>
             </LinearLayout>

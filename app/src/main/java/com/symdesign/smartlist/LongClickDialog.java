@@ -38,6 +38,21 @@ public class LongClickDialog extends DialogFragment {
     public LongClickDialog() {
         // Empty contstuctor required for DialogFragment
     }
+    /**
+     * Create a new instance of PickList, providing "num"
+     * as an argument.
+     */
+    static LongClickDialog newInstance(String name,long id) {
+
+        LongClickDialog f = new LongClickDialog();
+
+        // Supply num input as an argument.
+        Bundle args = new Bundle();
+        args.putString("name",name);
+        args.putLong("dBid",id);
+        f.setArguments(args);
+        return f;
+    }
     interface Listener {
         void showLists();
         void onFinishDelList(String listName);

@@ -67,11 +67,37 @@ public class PickList extends DialogFragment implements AdapterView.OnItemSelect
     public PickList() {
         // Empty contstuctor required for DialogFragment
     }
+    public interface Listener {
+        void pickDone();
+    }
+    private Listener listener;
+
+    public void setListener(Listener l) {
+        listener = l;
+    }
+
+    /**
+     * Create a new instance of PickList, providing "num"
+     * as an argument.
+     */
+    static PickList newInstance(String name,long id,Boolean il) {
+
+        PickList f = new PickList();
+
+        // Supply num input as an argument.
+        Bundle args = new Bundle();
+        args.putString("name",name);
+        args.putLong("dBid",id);
+        args.putBoolean("inList",il);
+        f.setArguments(args);
+        return f;
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         context = getActivity();
+        setListener((Listener) getActivity());
         View pickView = inflater.inflate(R.layout.pick_list, container, false);
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(context,
                 R.layout.dropdown_layout,srchItems);
@@ -156,10 +182,10 @@ public class PickList extends DialogFragment implements AdapterView.OnItemSelect
 
             @Override
             public void onGroupCollapse(int groupPosition) {
-                Toast.makeText(context,
+/*                Toast.makeText(context,
                         catagories.get(groupPosition) + " Collapsed",
                         Toast.LENGTH_SHORT).show();
-
+*/
             }
         });
 
@@ -172,11 +198,13 @@ public class PickList extends DialogFragment implements AdapterView.OnItemSelect
                 groupPos = groupPosition;
                 childPos = childPosition;
                 String name = pickItems.get(groupPosition).get(childPosition).substring(1);
-                addItem(name,1,MainActivity.getTime(),(long) 3.5*day,0.0);
-                Toast toast = Toast.makeText(context,
-                        "\n"+name+" Added\n",Toast.LENGTH_LONG);
-                toast.setGravity(Gravity.TOP, 0, 200);
-                toast.show();
+                if(inDb(name)) {      // if already in dB
+                    showToast("Item already in lists");
+                } else {
+                    addItem(name, 1, MainActivity.getTime(), (long) 3.5 * day, 0.0);
+                    showToast(" Added");
+                    listener.pickDone();
+                }
 //                MainActivity.updateAdapters(context,listView,suggestView);
 //                nameView.setText(pickItems.get(groupPosition).get(childPosition).substring(1));
                 return false;
@@ -189,39 +217,42 @@ public class PickList extends DialogFragment implements AdapterView.OnItemSelect
                 Item item;
 //                String nm = (nameView.getText().toString()).replaceAll(" ","");
                 String nm = (nameView.getText().toString()).trim();
-                logF("freq = %d",freq);
-                if(inLists) {      // Edit (item selected from list) ?
-                    item = getDbItem(name.toString());   // update db entry
-                    if(!(nm.equals(name))) {      // if name has been changed ?
-                        item.name = nm;
-                        if (freq > 0)
+                if (nm.length() != 0) {
+                    logF("freq = %d", freq);
+                    if (inLists) {      // Edit (item selected from list) ?
+                        item = getDbItem(name.toString());   // update db entry
+                        if (!(nm.equals(name))) {      // if name has been changed ?
+                            item.name = nm;
+                            if (freq > 0)
+                                item.last_avg = freq;
+                            changeItem(item);
+                        } else if (freq > 0) {
                             item.last_avg = freq;
-                        changeItem(item);
-                    } else if(freq>0) {
-                        item.last_avg = freq;
-                        changeItem(item);
-                    }
-                } else {                // new name edited or entered directly
-                    if(inDb(nm)) {      // if already in dB
-                        if(inDb_flags>1){
-                            values.clear();
-                            values.put("flags",inDb_flags&1);
-                            db.update("'"+MainActivity.currList+"'",values,"_id="+Long.toString(inDb_id),null);
-                            getDialog().dismiss();
+                            changeItem(item);
                         }
-                    } else {
-                        item = Item.newItem(nm);
-                        item.last_time = getTime();
-                        item.last_avg = freq;
-                        if(freq>0)
+                    } else {                // new name edited or entered directly
+                        if (inDb(nm)) {      // if already in dB
+                            if (inDb_flags > 1) {
+                                values.clear();
+                                values.put("flags", inDb_flags & 1);
+                                db.update("'" + MainActivity.currList + "'", values, "_id=" + Long.toString(inDb_id), null);
+    //                            getDialog().dismiss();
+                            } else {
+                                showToast("Item already in lists!");
+                            }
+                        } else {
+                            item = Item.newItem(nm);
+                            item.last_time = getTime();
+                            item.last_avg = freq;
                             addItem(item);
-                        else
-                            addItem(item);
-                        getDialog().dismiss();
+                            showToast("item added!");
+                        }
                     }
+                } else {
+                    showToast("No item entered!");
                 }
-//                backToMain();
-//                return;
+                getDialog().dismiss();
+                listener.pickDone();
             }
         });
         return pickView;
@@ -277,7 +308,12 @@ public class PickList extends DialogFragment implements AdapterView.OnItemSelect
         else
             return null;
     }
-
+    public void showToast(String text){
+        Toast toast = Toast.makeText(context,
+                "\n"+text+"\n",Toast.LENGTH_LONG);
+        toast.setGravity(Gravity.TOP, 0, 200);
+        toast.show();
+    }
     public void addItem(Item item) {
         addItem(item.name,(int) item.flags,item.last_time,item.last_avg,item.ratio);
     }

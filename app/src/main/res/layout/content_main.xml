@@ -25,9 +25,11 @@
                 android:id="@+id/list_layout"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:padding="5dp"
-                android:background="@layout/title_bk"
-                android:orientation="horizontal">
+                android:background="@layout/title_bk">
+                <ImageView
+                    android:layout_width="38dp"
+                    android:layout_height="38dp"
+                    android:src="@mipmap/icon_nobun" />
                 <TextView
                     android:id="@+id/list_heading"
                     android:layout_width="wrap_content"
@@ -35,15 +37,15 @@
                     android:layout_weight=".85"
                     android:layout_centerInParent="true"
                     android:layout_gravity="center_horizontal"
-                    android:textSize="20sp"
+                    android:textSize="28sp"
                     android:textColor="#2F3C22"
                     android:textStyle="bold"
                     android:text="Shopping List"/>
                 <ImageButton
                     android:id="@+id/add_button"
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:layout_marginRight="10dp"
+                    android:layout_width="38dp"
+                    android:layout_height="38dp"
+                    android:layout_marginRight="5dp"
                     android:layout_alignParentRight="true"
                     android:onClick="addItem"
                     android:layout_gravity="center_vertical"
@@ -55,25 +57,28 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_below="@id/list_layout"/>
-            <LinearLayout
+            <RelativeLayout
                 android:id="@+id/suggest_layout"
                 android:layout_below="@id/list_view"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:padding="5dp"
+                android:background="@layout/title_bk"
                 android:orientation="horizontal">
-                <TextView
+<!--                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:src="@mipmap/icon_nobun" />
+-->                <TextView
                     android:id="@+id/suggest_heading"
-                    android:layout_width="match_parent"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_below="@id/list_view"
-                    android:background="@layout/title_bk"
-                    android:gravity="center"
-                    android:textSize="20sp"
+                    android:layout_centerInParent="true"
+                    android:layout_gravity="center_horizontal"
+                    android:textSize="28sp"
                     android:textColor="#2F3C22"
                     android:textStyle="bold"
                     android:text="@string/items_heading" />
-            </LinearLayout>
+            </RelativeLayout>
             <com.symdesign.smartlist.NonScrollListView
                 android:id="@+id/suggest_view"
                 android:layout_below="@id/suggest_layout"

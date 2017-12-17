@@ -5,7 +5,9 @@ import android.content.Context;
 import android.database.Cursor;
 import android.os.AsyncTask;
 import android.os.SystemClock;
+import android.view.Gravity;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
@@ -82,23 +84,25 @@ class SyncList extends AsyncTask<Void,Void,Boolean> {
             bos.flush();
             //          Send list items to server
             String str="";
+            db = MainActivity.itemDb.getWritableDatabase();
             cursor = db.query("'"+MainActivity.currList+"'", SLAdapter.cols, "flags=1 OR flags=3", null, "", "", null);
             for (cursor.moveToFirst(); !cursor.isAfterLast(); cursor.moveToNext()) {
                 int flgs = cursor.getInt(2);
                 str = String.format(Locale.getDefault(),"%s,%d,%d,%d,%.6e\n",
-                    cursor.getString(1),cursor.getInt(2),cursor.getInt(3),cursor.getInt(4),cursor.getFloat(5));
+                    cursor.getString(1),flgs,cursor.getInt(3),cursor.getInt(4),cursor.getFloat(5));
                 bos.write(str.getBytes("UTF-8"));
                 if((flgs & 2)>0){
                     db.delete("'"+currList+"'","name='"+cursor.getString(1)+"'",null);
                 }
                 log(str+"\n");
+// ;
             }
             cursor = db.query("'"+MainActivity.currList+"'", SLAdapter.cols, "flags=0 OR flags=2", null, "", "", null);
             for (cursor.moveToFirst(); !cursor.isAfterLast(); cursor.moveToNext()) {
                 int flgs = cursor.getInt(2);
                 if(flgs==0||flgs==2) {
                     str = String.format(Locale.getDefault(),"%s,%d,%d,%d,%.6e\n",
-                            cursor.getString(1),cursor.getInt(2),cursor.getInt(3),cursor.getInt(4),cursor.getFloat(5));
+                            cursor.getString(1),flgs,cursor.getInt(3),cursor.getInt(4),cursor.getFloat(5));
                     bos.write(str.getBytes("UTF-8"));
                 }
                 if((flgs & 2)>0){
@@ -121,7 +125,7 @@ class SyncList extends AsyncTask<Void,Void,Boolean> {
                 String[] cols = col.split(",");
                 switch(cols[0]) {
                     case "d":
-                        log("deleteing");
+                        log("deleting");
                         db.delete("'"+currList+"'","name='"+cols[1]+"'",null);
                         break;
                     case "u":   //Time changed on server, update item
@@ -151,6 +155,7 @@ class SyncList extends AsyncTask<Void,Void,Boolean> {
 //                String[] st = text.split(",");
                 }
             }
+            db = MainActivity.itemDb.getWritableDatabase();
             Cursor rows = db.query("'"+currList+"'",new String[] {"name","flags"},"flags=1",null,null,null,null);
             for(rows.moveToFirst(); !rows.isAfterLast(); rows.moveToNext()) {
 //                logF("name = %s, flags = %d",rows.getString(0),rows.getInt(1));
@@ -170,7 +175,7 @@ class SyncList extends AsyncTask<Void,Void,Boolean> {
                 log(String.format(Locale.getDefault(),"    line no. = %d", e.getStackTrace()[i].getLineNumber()));
             }
         } finally {
-            log("Disconnecting");
+            log("Disconnecting Sync");
         }
         SystemClock.sleep(2000)  ;
         return true;
@@ -178,6 +183,9 @@ class SyncList extends AsyncTask<Void,Void,Boolean> {
     @Override
     protected void onPostExecute(Boolean exists) {
         MainActivity.updateAdapters(context,listView,suggestView);
+        Toast t = Toast.makeText(context,"\nSync Done\n",Toast.LENGTH_LONG);
+        t.setGravity(Gravity.TOP, 0, 200);
+        t.show();
         log("SyncList finished");
     }
 }

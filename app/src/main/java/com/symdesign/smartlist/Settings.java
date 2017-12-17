@@ -20,6 +20,9 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.CheckBox;
+
+import static com.symdesign.smartlist.MainActivity.autoSync;
 
 import static com.symdesign.smartlist.MainActivity.email;
 import static com.symdesign.smartlist.MainActivity.passwd;
@@ -30,11 +33,11 @@ import static com.symdesign.smartlist.MainActivity.syncReg;
  * Created by dennis on 2/12/17.
  */
 
-public class Settings extends DialogFragment {
-    EditText emailView,passwdView;
-    TextView resetView;
-    ImageView checkView;
+public class Settings extends Activity {
+    CheckBox autoSyncBox;
+    TextView syncSettings;
     Toast toast;
+    static final int Settings_Request = 1;
 
     public Settings() {
         // Empty contstuctor required for DialogFragment
@@ -44,84 +47,33 @@ public class Settings extends DialogFragment {
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        super.onCreateView(inflater,container,savedInstanceState);
-        View optionView = inflater.inflate(R.layout.settings, container, false);
-        emailView = (EditText) optionView.findViewById(R.id.email);
-        emailView.requestFocus();
-		emailView.setText(MainActivity.prefs.getString("email","no_email"));
-        passwdView = (EditText) optionView.findViewById(R.id.passwd);
-        resetView = (TextView) optionView.findViewById(R.id.reset);
-//		passwdView.setText(MainActivity.prefs.getString("passwd","no_passwd"));
-        checkView = (ImageView) optionView.findViewById(R.id.check);
-        Dialog dialog = getDialog();
-//        TextView tv = (TextView) dialog.findViewById(android.R.id.title);
-//        tv.setText("Setting");
-//        tv.setGravity(Gravity.CENTER_HORIZONTAL);
-//        dialog.setTitle(R.string.settings_title);
-        dialog.getWindow().setSoftInputMode(
-                WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
-        dialog.getWindow().requestFeature(Window.FEATURE_NO_TITLE);
-        emailView.requestFocus();
-        checkView.setOnClickListener(new View.OnClickListener() {
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.settings);
+        autoSyncBox = (CheckBox) findViewById(R.id.auto_sync);
+        syncSettings = (TextView) findViewById(R.id.sync_settings);
+        if(autoSync){
+            autoSyncBox.setChecked(true);
+        } else {
+            autoSyncBox.setChecked(false);
+        }
+        autoSyncBox.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view) {
-                email = emailView.getText().toString();
-                passwd = passwdView.getText().toString();
-                syncReg = true;
-                SharedPreferences.Editor ed = MainActivity.prefs.edit();
-                ed.putString("email",email);
-                ed.putString("passwd",passwd);
-                ed.putBoolean("syncReg",false);
-                ed.apply();
-				db.execSQL("delete from '"+currList+"'");				
-                getDialog().dismiss();
-            }
-        });
-        resetView.setOnClickListener(new View.OnClickListener() {
+                autoSync = !autoSync;
+        }});
+        syncSettings.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view) {
-                toast = Toast.makeText(getContext(),
-                        "\nAn Email is being sent to "+email+" containing instructions to reset your password\n",
-                        Toast.LENGTH_LONG);
-                toast.setGravity(Gravity.TOP, 0, 200);
-                toast.show();
-                new Lostpw(email).execute();
-                getDialog().dismiss();
-            }
-        });
-        return optionView;
+                Intent intent = new Intent("com.symdesign.smartlist.intent.action.LoginSettings");
+                startActivityForResult(intent,Settings_Request);
+            }});
+    }
+    @Override
+    protected void onActivityResult(int reqCode, int rsltCode, Intent data){
+        if(reqCode==Settings_Request){
+            if(rsltCode==Activity.RESULT_OK)
+                finish();
+        }
     }
 }
-//        protected void onPostExecute(String result) {
-//            log("post execute admin");
-//        }
-//imitate code in index.php
-// email = emailView.getText().toString();
-/*                StringBuilder email_body = new StringBuilder(1000);
-                email_body = email_body.append("Dear SmartList User,\n\n");
-                email_body = email_body.append("You have requested a password reset using the PASSWORD RESET button on the SmartList app.\n\n");
-                email_body = email_body.append("Click this link to reset your password for the ");
-                email_body = email_body.append(resetView.getText().toString());
-                email_body = email_body.append(" shopping list.\n\n");
-                email_body = email_body.append(MainActivity.serverAddr);
-                email_body = email_body.append("reset_password.php?email=");
-                email_body = email_body.append(emailView.getText().toString());
-                email_body = email_body.append("&list=");
-                email_body = email_body.append("&id=");
-                // http://localhost/~BenParker/phpsamples/php-forgot-password-recover-code/reset_password.php?name=Ben Parker
-                email_body = email_body.append("\n\nRegards,\nAdmin\n");
-                Intent intent = new Intent(Intent.ACTION_SENDTO); // it's not ACTION_SEND
-                intent.setType("text/plain");
-                // intent.setType("message/rfc822");
-                intent.putExtra(Intent.EXTRA_SUBJECT, "Forgot Password Recovery");
-                intent.putExtra(Intent.EXTRA_TEXT, email_body.toString());
-                // Uri.fromParts("mailto",emailView.getText().toString(), null));
-                // intent.setData(Uri.parse("mailto:" + "default@recipient.com")); // or just "mailto:" for blank
-                intent.setData(Uri.parse("mailto:" + emailView.getText().toString())); // or just "mailto:" for blank
-                // intent.setData(Uri.fromParts("mailto",emailView.getText().toString(), null)); // or just "mailto:" for blank
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK); // this will make such that when user returns to your app, your app is displayed, instead of the email app.
-                if (intent.resolveActivity(getActivity().getPackageManager()) != null) {
-                    startActivity(intent);
-                   // getActivity().startService(intent);
-*/

@@ -6,6 +6,9 @@ import android.os.Message;
 import android.os.Handler;
 import android.widget.ListView;
 
+import static com.symdesign.smartlist.MainActivity.currList;
+import static com.symdesign.smartlist.MainActivity.passwd;
+import static com.symdesign.smartlist.MainActivity.email;
 import static com.symdesign.smartlist.MainActivity.db;
 
 
@@ -16,7 +19,7 @@ public class SLHandler extends Handler {
     Context context;
     ListView listView,suggestView;
 
-    static final int MSG_REPEAT=1;
+    static final int MSG_REPEAT=1,MSG_SYNC=2;
 
     public SLHandler(Context c,ListView lv, ListView sv) {
         context = c;
@@ -35,6 +38,9 @@ public class SLHandler extends Handler {
                 MainActivity.log("refresh!");
 //                MainActivity.log("update repeat");
                 break;
+//            case MSG_SYNC:
+//                new SyncList(MainActivity.mainActivity,email,passwd,currList,listView,suggestView).execute();
+
         }
     }
 }

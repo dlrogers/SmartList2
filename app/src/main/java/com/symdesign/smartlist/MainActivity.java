@@ -3,6 +3,7 @@ package com.symdesign.smartlist;
 import android.app.FragmentTransaction;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.AssetManager;
@@ -10,6 +11,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
 import android.graphics.Point;
+import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -24,6 +26,7 @@ import android.support.design.widget.FloatingActionButton;
 //import android.widget.Toolbar;
 //import android.app.ActionBar;
 
+import android.support.v4.app.DialogFragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.widget.CursorAdapter;
 import android.support.v4.widget.DrawerLayout;
@@ -32,19 +35,28 @@ import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.Display;
 import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ExpandableListView;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.ScrollView;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -53,6 +65,10 @@ import com.google.android.gms.appindexing.AppIndex;
 import com.google.android.gms.appindexing.Thing;
 import com.google.android.gms.common.api.GoogleApiClient;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Locale;
@@ -60,13 +76,16 @@ import java.util.Locale;
 import static com.symdesign.smartlist.PickList.dBid;
 import static com.symdesign.smartlist.SLAdapter.*;
 import static com.symdesign.smartlist.SLAdapter.itemsList;
+import static com.symdesign.smartlist.SLHandler.MSG_SYNC;
+import static com.symdesign.smartlist.SLHandler.MSG_REPEAT;
 
 // Version of SmartList that uses file to store databae on phone
 
 public class MainActivity extends AppCompatActivity implements AdminDialog.AdminDialogListener,
-        NewListDialog.Listener, LongClickDialog.Listener {
+        NewListDialog.Listener, LongClickDialog.Listener, PickList.Listener {
 
-    Context context;
+    private PickList.Listener pickListener;
+    static Context context;
     static ItemDb itemDb;
     static String serverAddr="http://symdesign.us/php/";
 //    static String serverAddr="http://sym-designs.com/cgi-bin/";
@@ -78,9 +97,9 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
     enum ClickLocation {none, del, name, box}
     static ClickLocation clickLocation;
     static final long second = 1, minute = 60 * second, hour = 60 * minute,
-            day = 24 * hour, week = 7 * day, refresh_time = 60 ;
+            day = 24 * hour, week = 7 * day, refresh_time = 60, sync_time = 10*minute,
+            autosync_time = 20*minute;
     static int scrn_width, scrn_height, VOICE_RECOGNITION_REQUEST_CODE = 2;
-    static final int MSG_REPEAT = 1;
     static final String SQL_CREATE_GROCERIES =
             "CREATE TABLE Groceries(_id INTEGER PRIMARY KEY, name TEXT, flags INT, last_time INT, last_avg INT, ratio REAL)";
         // name =       name of list item
@@ -98,8 +117,15 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
     static android.support.v7.app.ActionBar actionBar;
     static SharedPreferences prefs;
     static Cursor listsCursor;
-    static Boolean syncReg;
-    MainActivity mainActivity;
+    static Boolean syncReg,autoSync;
+    static Typeface headFont;
+    static ScrollView scrollView;
+    static PickList pickList;
+    static MainActivity mainActivity;
+    static Handler slHandler;
+    static String[] cols = new String[]
+            {"_id","name","flags","last_time","last_avg","ratio"};
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -107,6 +133,7 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
         setContentView(R.layout.activity_main);
         context = this;
         mainActivity = this;
+
         itemDb = new ItemDb(getContext());
         db = itemDb.getWritableDatabase();
         prefs = getPreferences(MODE_PRIVATE);
@@ -144,12 +171,14 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
             ed.putString("email","no_email");
             ed.putString("passwd","no_passwd");
             ed.putBoolean("syncReg",false);
+            ed.putBoolean("autoSync",true);
             ed.apply();
             db.execSQL(SQL_LISTS);                          // Create "lists" table
             NewListDialog.addToLists("Groceries");
             currList = "Groceries";
             db.execSQL(SQL_CREATE_GROCERIES);
         }
+//        db.execSQL(SQL_LISTS);                          // Create "lists" table
         setupOptions();     // Setup up sidebar
         showLists(context);
         printLists();
@@ -158,6 +187,7 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
         passwd = prefs.getString("passwd","no_passwd");
         syncReg = prefs.getBoolean("syncReg",false);
         currList = prefs.getString("currList","Groceries");
+        autoSync = prefs.getBoolean("autoSync",true);
 //        currList = "Groceries";
 /*        SharedPreferences.Editor ed = prefs.edit();     // Initialize shared preferences
         ed.putBoolean("syncReg",true);
@@ -180,7 +210,7 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
         PickList.prepareListData();
                     // Get view links
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        ScrollView scrollView = (ScrollView) findViewById(R.id.scroll_view);
+        scrollView = (ScrollView) findViewById(R.id.scroll_view);
 
         setSupportActionBar(toolbar);
         actionBar = getSupportActionBar();
@@ -202,11 +232,17 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
         // Get view links
         listView = (ListView) findViewById(R.id.list_view);
         suggestView = (ListView) findViewById(R.id.suggest_view);
-        Handler slHandler = new SLHandler(context,listView,suggestView);
+        headFont = Typeface.createFromAsset(getAssets(),"fonts/Kalam-Regular.ttf");
+        TextView listHeading = (TextView) findViewById(R.id.list_heading);
+        listHeading.setTypeface(headFont,1);
+        TextView suggestHeading = (TextView) findViewById(R.id.suggest_heading);
+        suggestHeading.setTypeface(headFont);
+
+        slHandler = new SLHandler(context,listView,suggestView);
 
 //        Setup task handler
         Message repeat = Message.obtain(slHandler, MSG_REPEAT);
-        slHandler.sendMessageDelayed(repeat, refresh_time);
+        slHandler.sendMessageDelayed(repeat, 1000*sync_time);
 
         Display display = getWindowManager().getDefaultDisplay();
         Point size = new Point();
@@ -224,16 +260,24 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
                 EditText nameView = (EditText) item.findViewById(R.id.name);
                 values.clear();
                 long dBid = itemsList.get(position).id;
+                if(db == null) db = MainActivity.itemDb.getWritableDatabase();
+                String name = itemsList.get(position).name;
                 switch (clickLocation) {
                     case box:
                         clickLocation = ClickLocation.none;
                         updateAvg(dBid,0);
+                        if(autoSync) {
+                            slHandler.removeMessages(MSG_SYNC);
+                            Message syncmsg = Message.obtain(slHandler, MSG_SYNC);
+                            slHandler.sendMessageDelayed(syncmsg, 1000*autosync_time);
+                            log("Sent autosync message");
+                        }
                         break;
                     case name:
+                        pickList = PickList.newInstance(name,dBid,true);
                         FragmentTransaction ft = getFragmentManager().beginTransaction();
-                        PickList pickList = new PickList();
                         Bundle bundle = new Bundle();
-                        bundle.putString("name",itemsSuggest.get(position).name);
+                        bundle.putString("name",name);
                         bundle.putLong("_id",dBid);
                         bundle.putBoolean("inLists",true);
                         pickList.setArguments(bundle);
@@ -247,7 +291,6 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
                         db.update("'"+currList+"'",values,"_id="+Long.toString(dBid),null);
                         updateAdapters(context,listView,suggestView);
 //                        setSelected(item,position,false);
-                        break;
                 }
             }
         });
@@ -261,6 +304,7 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
 //                nameView.setWidth((int) .8*item.getWidth());
                 values.clear();
                 long dBid = itemsSuggest.get(position).id;
+                String name = itemsSuggest.get(position).name;
                 switch (clickLocation) {
                     case box:
                         clickLocation = ClickLocation.none;
@@ -276,15 +320,15 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
                                 "_id=" + Long.toString(dBid), null);
                         curs.close();
                         updateAdapters(context,listView,suggestView);
+                        if(autoSync) {
+                            slHandler.removeMessages(MSG_SYNC);
+                            Message syncmsg = Message.obtain(slHandler, MSG_SYNC);
+                            slHandler.sendMessageDelayed(syncmsg, 1000*autosync_time);
+                        }
                         break;
                     case name:
+                        pickList = PickList.newInstance(name,dBid,true);
                         FragmentTransaction ft = getFragmentManager().beginTransaction();
-                        PickList pickList = new PickList();
-                        Bundle bundle = new Bundle();
-                        bundle.putString("name",itemsSuggest.get(position).name);
-                        bundle.putLong("_id",dBid);
-                        bundle.putBoolean("inLists",true);
-                        pickList.setArguments(bundle);
                         pickList.show(ft,"dialog");
                         break;
                     case del:
@@ -302,22 +346,27 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
         // See https://g.co/AppIndexing/AndroidStudio for more information.
         client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
     }
-//    ImageButton ib = (ImageButton) findViewById(R.id.add_button);
-//    ib.setImageResource(R.drawable.add_icon);
-    public void addItem(View view){
-        FragmentTransaction ft = getFragmentManager().beginTransaction();
-        PickList pickList = new PickList();
-        Bundle bundle = new Bundle();
-        bundle.putString("name","");
-        bundle.putLong("_id",dBid);
-        bundle.putBoolean("inLists",false);
-        pickList.setArguments(bundle);
-        pickList.show(ft,"dialog");
-    }
-
-        // Setup Sidebar options
 
     /**
+     * addItem(View): called from add_button ("+")
+     * @param view
+     */
+    public void addItem(View view){
+        FragmentTransaction ft = getFragmentManager().beginTransaction();
+        pickList = PickList.newInstance("",0,false);
+        pickList.show(ft,"dialog");
+        db = itemDb.getWritableDatabase();
+        updateAdapters(context,listView,suggestView);
+    }
+        @Override
+    public void pickDone(){
+        itemDb = new ItemDb(getContext());
+        db = itemDb.getWritableDatabase();
+        updateAdapters(context,listView,suggestView);
+    }
+        // Setup Sidebar options
+
+            /**
      * Implements Listener
      * Show the sidebar
      */
@@ -366,14 +415,9 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
         lists.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
             public boolean onItemLongClick(AdapterView<?> parent, View item, int position, long id) {
-                Cursor c = (Cursor) parent.getItemAtPosition(position);
+                LongClickDialog lcd = LongClickDialog.newInstance(itemsList.get(position).name,dBid);
                 FragmentTransaction ft = getFragmentManager().beginTransaction();
-                LongClickDialog longClickDialog = new LongClickDialog();
-                Bundle bundle = new Bundle();
-                bundle.putString("name",c.getString(1));
-                bundle.putInt("_id",c.getInt(0));
-                longClickDialog.setArguments(bundle);
-                longClickDialog.show(ft,"dialog");
+                lcd.show(ft,"dialog");
                 return true;
             }
         });
@@ -395,7 +439,6 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
 //        listsCursor.close();
     }
 
-
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle action bar item clicks here. The action bar will
@@ -406,8 +449,8 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
         switch (item.getItemId()) {
             case R.id.settings:
                 log("settings");
-                Settings settings = new Settings();
-                settings.show(fm,"settings");
+                Intent intent = new Intent("com.symdesign.smartlist.intent.action.Settings");
+                startActivity(intent);
                 break;
             case R.id.mic:
                 log("Microphone clicked");
@@ -419,17 +462,18 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
                     AdminDialog adminDialog = new AdminDialog();
                     adminDialog.show(fm,"dialog");
                 } else {
-                    toast = Toast.makeText(getApplicationContext(),
-                            "\nSyncing\n",
-                            Toast.LENGTH_LONG);
-                    toast.setGravity(Gravity.TOP, 0, 200);
-                    toast.show();
+                    showToast(getApplicationContext(),"\nStarting Sync\n",Toast.LENGTH_SHORT);
                     new SyncList(this,email,passwd,currList,listView,suggestView).execute();
 //                    new DatabaseSync().execute();
                 }
                 break;
         }
         return super.onOptionsItemSelected(item);
+    }
+    static void showToast(Context ctx,String msg,int len){
+        Toast t = Toast.makeText(ctx,msg,len);
+        t.setGravity(Gravity.TOP, 0, 200);
+        t.show();
     }
     @Override
     public void onFinishAdminDialog(String email,String passwd,Boolean reg) {
@@ -509,12 +553,13 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
         //            values.put("last_avg",(long) (0.33333*(ct-last)+0.66667*avg));
         if (avg > 36499 * day) { // Check for "one time item"
             db.delete("'"+currList+"'", "_id=" + Long.toString(id), null); // and delete
-        } else
+        } else {
             values.put("last_avg", running_avg(ct - last, avg));
-        values.put("flags", Math.abs(flags));   // set flags, and dbChg true
-        values.put("last_time", ct+1);
-        logF("last_time = %d\t current time = %d\t, last_avg = %d\t, elapsed = %d",last,ct,avg,ct-last);
-        db.update("'"+currList+"'", values, "_id=" + Long.toString(id), null);
+            values.put("flags", Math.abs(flags));   // set flags, and dbChg true
+            values.put("last_time", ct + 1);
+//          logF("last_time = %d\t current time = %d\t, last_avg = %d\t, elapsed = %d",last,ct,avg,ct-last);
+            db.update("'" + currList + "'", values, "_id=" + Long.toString(id), null);
+        }
         updateAdapters(context,listView,suggestView);
         curs.close();
     }
@@ -540,17 +585,25 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
      */
     static private Cursor listCursor, suggestCursor ;
     private static SLAdapter listAdapter,suggestAdapter;
-
+    static void remoteUpdate(Context context,ListView listView,ListView suggestView) {
+        db = itemDb.getWritableDatabase();
+        updateAdapters(context,listView,suggestView);
+    }
+    static void updateAdapters() {
+        updateAdapters(MainActivity.context,listView,suggestView);
+    }
     static void updateAdapters(Context context,ListView listView,ListView suggestView) {
         long time_millis = System.currentTimeMillis();
         updateRatios();
+        logF("time = %d",getTime());
         listCursor = db.query("'"+MainActivity.currList+"'", cols, "flags=1", null, "", "", null);
         itemsList.clear();
         int n = 0;
         for (listCursor.moveToFirst(); !listCursor.isAfterLast(); listCursor.moveToNext()) {
+            float ratio = Math.abs(((float) (getTime()-listCursor.getLong(3)))/((float) listCursor.getLong(4)));
             itemsList.add(new Item(listCursor.getLong(0), listCursor.getString(1),
                     listCursor.getLong(2), listCursor.getLong(3), listCursor.getLong(4),
-                    ((float) (getTime() - listCursor.getLong(3))) / ((float) (listCursor.getLong(4)))));
+                    ratio));
             n++;
         }
         Collections.sort(itemsList);
@@ -563,28 +616,27 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
         itemsSuggest.clear();
         n = 0;
         for (suggestCursor.moveToFirst(); !suggestCursor.isAfterLast(); suggestCursor.moveToNext()) {
+            float ratio = Math.abs(((float) (getTime()-suggestCursor.getLong(3)))/((float) suggestCursor.getLong(4)));
             itemsSuggest.add(new Item(suggestCursor.getLong(0), suggestCursor.getString(1),
                     suggestCursor.getLong(2), suggestCursor.getLong(3), suggestCursor.getLong(4),
-                    ((float) (getTime() - suggestCursor.getLong(3))) /
-                            ((float) (suggestCursor.getLong(4)))));
+                    ratio));
             n++;
         }
         Collections.sort(itemsSuggest);
         suggestAdapter = new SLAdapter(context, itemsSuggest, R.layout.suggest_entry);
         suggestAdapter.checked = true;
         suggestView.setAdapter(suggestAdapter);
-        logF("updateAdapters elapsed time = %d",System.currentTimeMillis()-time_millis);
+        scrollView.scrollTo(0,0);
+//        logF("updateAdapters elapsed time = %d",System.currentTimeMillis()-time_millis);
     }
 
     /**
-     * updateRatios: Updates ratios for all items in the in the database.
+     * updateRatios: Updates ratios for all items in the database.
       */
     static void updateRatios() {
-        String[] cols = new String[] 
-				{"_id","last_time","last_avg","ratio"};
 		Cursor curs = db.query("'"+MainActivity.currList+"'", cols, null, null, "", "", null);
         for(curs.moveToFirst();!curs.isAfterLast();curs.moveToNext()){
-            float ratio = Math.abs(((float) (getTime()-curs.getLong(1)))/((float) curs.getLong(2)));
+            float ratio = Math.abs(((float) (getTime()-curs.getLong(3)))/((float) curs.getLong(4)));
         	values.clear();
         	values.put("ratio",ratio);
         	db.update("'"+MainActivity.currList+"'", values, String.format("_id=%d",curs.getLong(0)),null);
@@ -746,31 +798,3 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
 
 }
 
-/*        actionBar.setHomeAsUpIndicator(R.drawable.ic_menu_moreoverflow_normal_holo_dark);
-        actionBar.setDisplayHomeAsUpEnabled(true);
-        if(actionBar!=null) {
-            actionBar.setDisplayShowTitleEnabled(false);
-        }
-        toolbar.setSubtitleTextAppearance(this,android.R.style.TextAppearance_Medium);
-        toolbar.setSubtitle("Groceries");
-*/
-/*        scrollView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                log("ScrollView clicked");
-            }
-        });
-*/
-/*        addButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent("com.symdesign.smartlist.intent.action.PickList");
-                intent.putExtra("id",-1);
-                intent.putExtra("name","");
-                intent.putExtra("inLists",false);
-                MainActivity.getContext().startActivity(intent);
-            }
-        });
-*/
-/*
-*/
