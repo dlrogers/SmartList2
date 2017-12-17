@@ -31,9 +31,9 @@ import static com.symdesign.smartlist.MainActivity.db;
 public class LongClickDialog extends DialogFragment {
     EditText nameView;
     Button deleteView;
-    String listName;
+    static String listName;
     ContentValues values = new ContentValues();
-    int listId;
+    static long listId;
 
     public LongClickDialog() {
         // Empty contstuctor required for DialogFragment
@@ -47,10 +47,12 @@ public class LongClickDialog extends DialogFragment {
         LongClickDialog f = new LongClickDialog();
 
         // Supply num input as an argument.
-        Bundle args = new Bundle();
-        args.putString("name",name);
-        args.putLong("dBid",id);
-        f.setArguments(args);
+        listId = id;
+        listName = name;
+//        Bundle args = new Bundle();
+//        args.putString("name",name);
+//        args.putLong("dBid",id);
+//        f.setArguments(args);
         return f;
     }
     interface Listener {
@@ -62,6 +64,7 @@ public class LongClickDialog extends DialogFragment {
 
     public void setListener(Listener l) {
         this.listener = l;
+//        this.listener = l;
     }
 
 
@@ -72,8 +75,8 @@ public class LongClickDialog extends DialogFragment {
 //        context = getActivity();
         View optionView = inflater.inflate(R.layout.long_click, container, false);
         nameView = (EditText) optionView.findViewById(R.id.list_name);
-        listName = this.getArguments().getString("name");
-        listId = this.getArguments().getInt("_id");
+//        listName = getArguments().getString("name");
+//        listId = getArguments().getInt("dBid");
         nameView.setText(listName);
         deleteView = (Button) optionView.findViewById(R.id.delete_button);
         ImageView checkView = (ImageView) optionView.findViewById(R.id.check);
@@ -88,6 +91,10 @@ public class LongClickDialog extends DialogFragment {
                 listName = nameView.getText().toString();
                 values.put("name",listName);
                 db.update("lists",values,"_id="+listId,null);
+                SharedPreferences.Editor ed = MainActivity.prefs.edit();     // Initialize shared preferences
+                ed.putString("currList",listName);
+                MainActivity.actionBar.setTitle(MainActivity.currList);
+                ed.apply();
                 listener.showLists();
                 MainActivity.printLists();
                 getDialog().dismiss();

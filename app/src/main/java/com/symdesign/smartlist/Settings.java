@@ -23,6 +23,7 @@ import android.widget.Toast;
 import android.widget.CheckBox;
 
 import static com.symdesign.smartlist.MainActivity.autoSync;
+import static com.symdesign.smartlist.MainActivity.vibrate;
 
 import static com.symdesign.smartlist.MainActivity.email;
 import static com.symdesign.smartlist.MainActivity.passwd;
@@ -34,7 +35,7 @@ import static com.symdesign.smartlist.MainActivity.syncReg;
  */
 
 public class Settings extends Activity {
-    CheckBox autoSyncBox;
+    static CheckBox autoSyncBox,vibrateBox;
     TextView syncSettings;
     Toast toast;
     static final int Settings_Request = 1;
@@ -42,9 +43,9 @@ public class Settings extends Activity {
     public Settings() {
         // Empty contstuctor required for DialogFragment
     }
-    public interface SettingsListener {
-        void onFinishSettings(String email,String passwd);
-    }
+//    public interface SettingsListener {
+//        void onFinishSettings(String email,String passwd);
+//    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -52,16 +53,38 @@ public class Settings extends Activity {
         setContentView(R.layout.settings);
         autoSyncBox = (CheckBox) findViewById(R.id.auto_sync);
         syncSettings = (TextView) findViewById(R.id.sync_settings);
+        vibrateBox = (CheckBox) findViewById(R.id.vibrate);
         if(autoSync){
             autoSyncBox.setChecked(true);
         } else {
             autoSyncBox.setChecked(false);
         }
+        if(vibrate)
+            vibrateBox.setChecked(true);
+        else
+            vibrateBox.setChecked(false);
         autoSyncBox.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view) {
                 autoSync = !autoSync;
+                SharedPreferences.Editor ed = MainActivity.prefs.edit();     // Initialize shared preferences
+                if(autoSync)
+                    ed.putBoolean("autoSync", true);
+                else
+                    ed.putBoolean("autoSync",false);
+                ed.apply();
         }});
+        vibrateBox.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View view) {
+                vibrate = !vibrate;
+                SharedPreferences.Editor ed = MainActivity.prefs.edit();     // Initialize shared preferences
+                if(vibrate)
+                    ed.putBoolean("vibrate",true);
+                else
+                    ed.putBoolean("vibrate",false);
+                ed.apply();
+            }});
         syncSettings.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view) {

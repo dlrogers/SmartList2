@@ -20,7 +20,9 @@ import static com.symdesign.smartlist.MainActivity.syncReg;
 
 /**
  * An AdyncTask that sends an email, password and list
- * to the server auth.php in order to set up a new list/account
+ * to the server in order to set up a new list/account
+ * or delete an existing one. On input command can be
+ * "new" "add" or "delete".
  * returns: "exists" if it already exists
  *          "ok" if a new account/list was created
  * Created by dennis on 2/2/17.
@@ -32,12 +34,12 @@ class Auth extends AsyncTask<Void,Void,Boolean> {
     private URL url;
     private HttpURLConnection link;
 
-    Auth(MainActivity a, String em, String pwd, String lst, String c) {
+    Auth(MainActivity a, String em, String pwd, String lst, String command) {
         this.activity = a;
         email = em;
         passwd = pwd;
         list = lst;
-        cmd = c;
+        cmd = command;
     }
 
     @Override

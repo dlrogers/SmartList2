@@ -1,7 +1,6 @@
-/**
- * Created by dennis on 10/27/15.
+/* Created by dennis on 10/27/15.
  * Main adapter for each item
- */
+*/
 package com.symdesign.smartlist;
 
 import android.content.Context;
@@ -23,7 +22,7 @@ import static com.symdesign.smartlist.MainActivity.getTime;
  * Adapter class for main display.
  */
 
-class SLAdapter extends ArrayAdapter<Item> {
+class SLAdapter extends ArrayAdapter<Item>  {
     static ArrayList<Item> itemsList = new ArrayList<>();
     static ArrayList<Item> itemsSuggest = new ArrayList<>();
     boolean checked = false;

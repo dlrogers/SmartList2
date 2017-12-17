@@ -4,10 +4,19 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.database.Cursor;
+import android.graphics.Color;
+import android.graphics.Typeface;
 import android.os.AsyncTask;
 import android.os.SystemClock;
+import android.support.v4.widget.CursorAdapter;
+import android.support.v4.widget.SimpleCursorAdapter;
+import android.text.Spannable;
+import android.text.SpannableString;
+import android.text.style.TypefaceSpan;
 import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.BufferedOutputStream;
@@ -21,12 +30,15 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Locale;
 
+import static android.R.attr.font;
 import static com.symdesign.smartlist.MainActivity.email;
 import static com.symdesign.smartlist.MainActivity.log;
 import static com.symdesign.smartlist.MainActivity.logF;
 import static com.symdesign.smartlist.MainActivity.currList;
 import static com.symdesign.smartlist.MainActivity.db;
+import static com.symdesign.smartlist.MainActivity.mainActivity;
 import static com.symdesign.smartlist.MainActivity.passwd;
+import static com.symdesign.smartlist.MainActivity.showToast;
 
 
 /**
@@ -39,7 +51,6 @@ import static com.symdesign.smartlist.MainActivity.passwd;
  */
 
 class GetLists extends AsyncTask<Void,Void,Boolean> {
-    private String email,passwd,list;
     private ListView listView,suggestView;
     private MainActivity activity;
     //	BufferedOutputStream bos;
@@ -47,16 +58,30 @@ class GetLists extends AsyncTask<Void,Void,Boolean> {
     private static String col;
     //	HttpURLConnection link;
     private URL url;
-    Context context;
+    static Context context;
     String nemail,npasswd;
+    Boolean sync;
+    static boolean started = false, ok=true;
+    static String errmsg = null;
 
     final String table_row = "(_id INTEGER PRIMARY KEY, name TEXT, flags INT, last_time INT, last_avg INT, ratio REAL)";
 
-    GetLists (MainActivity a, String em, String pwd) {
+    GetLists (MainActivity a, String em, String pwd, Boolean syc) {
         this.activity=a;
         context = a;
         nemail = em;
         npasswd = pwd;
+        sync = syc;
+    }
+    public interface LoginListener {
+        public void fin();
+    }
+
+    LoginListener loginListener;
+
+    public void setListener(LoginListener listener)
+    {
+        this.loginListener = listener;
     }
 
     @Override
@@ -71,9 +96,14 @@ class GetLists extends AsyncTask<Void,Void,Boolean> {
         String[] rows;
         String line;
 
+        if(sync)
+            SyncList.sync(activity,MainActivity.email,MainActivity.passwd,MainActivity.currList,
+                MainActivity.listView,MainActivity.suggestView);
+
         try {       // Send post request
             log("starting GetLists");
-//            long lastTime = System.currentTimeMillis();
+//            long lastTime = System.currentTimeMillis();\
+            started = false;
             url = new URL(MainActivity.serverAddr+"export.php");
             HttpURLConnection link = (HttpURLConnection) url.openConnection();
             link.setRequestMethod("POST");
@@ -93,9 +123,13 @@ class GetLists extends AsyncTask<Void,Void,Boolean> {
             db = itemDb.getWritableDatabase();
             String ans = reader.readLine();
             // Error message if email not ok or password wrong
-            if ((!ans.equals("ok")))
-                showToast(context,"\nAccount not found!\n",Toast.LENGTH_LONG);
+            if ((!ans.equals("ok"))){
+                ok = false;
+                logF("not ok");
+            }
             else {
+                started = true;
+                ok = true;
                 email=nemail;
                 passwd=npasswd;
                 // update Shared Preferences
@@ -106,6 +140,7 @@ class GetLists extends AsyncTask<Void,Void,Boolean> {
                 ed.putBoolean("syncReg",false);
                 ed.apply();
                 // Remove existing lists except Groceries
+                log("Removing existing lists");
                 Cursor listsCursor = db.query("lists", new String[] {"_id","name"}, null, null, null, null, null);
                 for (listsCursor.moveToFirst(); !listsCursor.isAfterLast(); listsCursor.moveToNext()) {
                     String listName = listsCursor.getString(1);
@@ -160,20 +195,47 @@ class GetLists extends AsyncTask<Void,Void,Boolean> {
                 log(e.getStackTrace()[i].toString());
                 log(String.format(Locale.getDefault(),"    line no. = %d", e.getStackTrace()[i].getLineNumber()));
             }
+            if(mainActivity.popupWindow!=null) {
+                mainActivity.popupWindow.dismiss();
+                mainActivity.popupWindow = null;
+            }
+            errmsg="Connection failed";
         } finally {
-            log("Disconnecting GeLists");
+            log("Disconnecting GetLists");
         }
         SystemClock.sleep(2000)  ;
         return true;
     }
     @Override
     protected void onPostExecute(Boolean exists) {
+        if(!ok)
+            showToast(context,"\nAccount not found!\n",Toast.LENGTH_LONG);
+        if(errmsg!=null){
+            Toast toast = Toast.makeText(context,errmsg,Toast.LENGTH_LONG);
+            toast.setGravity(Gravity.TOP, toast.getXOffset() / 2, toast.getYOffset() / 2);
+            TextView textView = new TextView(context);
+            textView.setBackgroundColor(Color.MAGENTA);
+            textView.setTextColor(Color.WHITE);
+            textView.setTextSize(20);
+            Typeface typeface = Typeface.create("serif",Typeface.BOLD);
+            textView.setTypeface(typeface);
+            textView.setPadding(4, 4, 4, 4);
+            textView.setText(errmsg);
+
+            toast.setView(textView);
+            toast.show();
+        }
         MainActivity.updateAdapters();
-        showToast(context,"\nSync Done\n",Toast.LENGTH_LONG);
+        showLists(MainActivity.context);
+        loginListener.fin();
     }
-    static void showToast(Context ctx,String msg,int len){
-        Toast t = Toast.makeText(ctx,msg,len);
-        t.setGravity(Gravity.TOP, 0, 200);
-        t.show();
+    public void showLists(Context context) {
+        Cursor listsCursor = db.query("lists", new String[] {"_id","name"}, null, null, null, null, null);
+        logF("listsCursor count = %d",listsCursor.getCount());
+        SimpleCursorAdapter adpt = new SimpleCursorAdapter(
+                context, R.layout.lists_layout,
+                listsCursor,new String[] {"name"},new int[]{R.id.name}, CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
+        MainActivity.lists.setAdapter(adpt);
+//        listsCursor.close();
     }
 }

@@ -1,11 +1,13 @@
 package com.symdesign.smartlist;
 
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
+import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.LayoutInflater ;
 import android.view.View;
@@ -16,6 +18,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.io.BufferedOutputStream;
 import java.io.IOException;
@@ -57,30 +60,21 @@ public class AdminDialog extends DialogFragment {
         checkViewCreate.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                email = emailView.getText().toString();
-                passwd = passwdView.getText().toString();
-                SharedPreferences.Editor ed = MainActivity.prefs.edit();
-                ed.putString("email",email);
-                ed.putString("passwd",passwd);
-                ed.apply();
-                AdminDialogListener activity = (AdminDialogListener) getActivity();
-                activity.onFinishAdminDialog(email,passwd,true);
-                getDialog().dismiss();
+            String nemail = emailView.getText().toString();
+            String npasswd = passwdView.getText().toString();
+            AdminDialogListener activity = (AdminDialogListener) getActivity();
+            activity.onFinishAdminDialog(nemail,npasswd,true);
+            getDialog().dismiss();
             }
         });
         checkViewSign.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                email = emailView.getText().toString();
-                passwd = passwdView.getText().toString();
-                SharedPreferences.Editor ed = MainActivity.prefs.edit();
-                ed.putString("email",email);
-                ed.putString("passwd",passwd);
-                ed.putBoolean("syncReg",true);
-                ed.apply();
-                AdminDialogListener activity = (AdminDialogListener) getActivity();
-                activity.onFinishAdminDialog(email,passwd,false);
-                getDialog().dismiss();
+            String nemail = emailView.getText().toString();
+            String npasswd = passwdView.getText().toString();
+            AdminDialogListener activity = (AdminDialogListener) getActivity();
+            activity.onFinishAdminDialog(nemail,npasswd,false);
+            getDialog().dismiss();
             }
         });
         return optionView;

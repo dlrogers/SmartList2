@@ -16,15 +16,11 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.os.Vibrator;
+import android.os.VibrationEffect;
+import android.os.AsyncTask;
 import android.speech.RecognizerIntent;
 import android.support.design.widget.FloatingActionButton;
-
-//import android.app.FragmentManager;
-//import android.widget.CursorAdapter;
-//import android.widget.SimpleCursorAdapter;
-//import android.app.Activity;
-//import android.widget.Toolbar;
-//import android.app.ActionBar;
 
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.FragmentManager;
@@ -51,10 +47,9 @@ import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ExpandableListView;
-import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.PopupWindow;
 import android.widget.ScrollView;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -73,6 +68,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Locale;
 
+import static android.os.VibrationEffect.DEFAULT_AMPLITUDE;
+import static com.symdesign.smartlist.MainActivity.email;
+import static com.symdesign.smartlist.MainActivity.passwd;
 import static com.symdesign.smartlist.PickList.dBid;
 import static com.symdesign.smartlist.SLAdapter.*;
 import static com.symdesign.smartlist.SLAdapter.itemsList;
@@ -82,12 +80,12 @@ import static com.symdesign.smartlist.SLHandler.MSG_REPEAT;
 // Version of SmartList that uses file to store databae on phone
 
 public class MainActivity extends AppCompatActivity implements AdminDialog.AdminDialogListener,
-        NewListDialog.Listener, LongClickDialog.Listener, PickList.Listener {
+        NewListDialog.Listener, LongClickDialog.Listener, PickList.Listener, GetLists.LoginListener{
 
     private PickList.Listener pickListener;
     static Context context;
     static ItemDb itemDb;
-    static String serverAddr="http://symdesign.us/php/";
+    static String serverAddr="http://www.symdesign.us/php/";
 //    static String serverAddr="http://sym-designs.com/cgi-bin/";
     static ContentValues values = new ContentValues();
     public static SQLiteDatabase db;
@@ -97,8 +95,9 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
     enum ClickLocation {none, del, name, box}
     static ClickLocation clickLocation;
     static final long second = 1, minute = 60 * second, hour = 60 * minute,
-            day = 24 * hour, week = 7 * day, refresh_time = 60, sync_time = 10*minute,
-            autosync_time = 20*minute;
+            day = 24 * hour, week = 7 * day, refresh_time = 10*minute, sync_time = 10*minute,
+            autosync_time = 5*minute,
+            max_time = 60*day;
     static int scrn_width, scrn_height, VOICE_RECOGNITION_REQUEST_CODE = 2;
     static final String SQL_CREATE_GROCERIES =
             "CREATE TABLE Groceries(_id INTEGER PRIMARY KEY, name TEXT, flags INT, last_time INT, last_avg INT, ratio REAL)";
@@ -117,7 +116,7 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
     static android.support.v7.app.ActionBar actionBar;
     static SharedPreferences prefs;
     static Cursor listsCursor;
-    static Boolean syncReg,autoSync;
+    static Boolean syncReg,autoSync,vibrate;
     static Typeface headFont;
     static ScrollView scrollView;
     static PickList pickList;
@@ -125,6 +124,11 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
     static Handler slHandler;
     static String[] cols = new String[]
             {"_id","name","flags","last_time","last_avg","ratio"};
+    static TextView listHeading;
+    static PopupWindow popupWindow;
+    static AsyncTask syncList,auth;
+    static GetLists getLists;
+    static long time_millis;
 
 
     @Override
@@ -133,7 +137,6 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
         setContentView(R.layout.activity_main);
         context = this;
         mainActivity = this;
-
         itemDb = new ItemDb(getContext());
         db = itemDb.getWritableDatabase();
         prefs = getPreferences(MODE_PRIVATE);
@@ -172,6 +175,7 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
             ed.putString("passwd","no_passwd");
             ed.putBoolean("syncReg",false);
             ed.putBoolean("autoSync",true);
+            ed.putBoolean("vibrate",true);
             ed.apply();
             db.execSQL(SQL_LISTS);                          // Create "lists" table
             NewListDialog.addToLists("Groceries");
@@ -188,6 +192,7 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
         syncReg = prefs.getBoolean("syncReg",false);
         currList = prefs.getString("currList","Groceries");
         autoSync = prefs.getBoolean("autoSync",true);
+        vibrate = prefs.getBoolean("vibrate",true);
 //        currList = "Groceries";
 /*        SharedPreferences.Editor ed = prefs.edit();     // Initialize shared preferences
         ed.putBoolean("syncReg",true);
@@ -230,10 +235,11 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
         clickLocation = ClickLocation.none;
 
         // Get view links
+
         listView = (ListView) findViewById(R.id.list_view);
         suggestView = (ListView) findViewById(R.id.suggest_view);
         headFont = Typeface.createFromAsset(getAssets(),"fonts/Kalam-Regular.ttf");
-        TextView listHeading = (TextView) findViewById(R.id.list_heading);
+        listHeading = (TextView) findViewById(R.id.list_heading);
         listHeading.setTypeface(headFont,1);
         TextView suggestHeading = (TextView) findViewById(R.id.suggest_heading);
         suggestHeading.setTypeface(headFont);
@@ -241,6 +247,7 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
         slHandler = new SLHandler(context,listView,suggestView);
 
 //        Setup task handler
+
         Message repeat = Message.obtain(slHandler, MSG_REPEAT);
         slHandler.sendMessageDelayed(repeat, 1000*sync_time);
 
@@ -250,6 +257,17 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
         scrn_width = size.x;
         scrn_height = size.y;
 
+        // Add FloatingActionButton for "add" function
+
+        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                FragmentTransaction ft = getFragmentManager().beginTransaction();
+                pickList = PickList.newInstance("",0,false);
+                pickList.show(ft,"dialog");
+            }
+        });
         log(String.format(Locale.getDefault(),"Starting MainActivity, time=%d", getTime()));
         updateAdapters(context,listView,suggestView);
 
@@ -262,9 +280,13 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
                 long dBid = itemsList.get(position).id;
                 if(db == null) db = MainActivity.itemDb.getWritableDatabase();
                 String name = itemsList.get(position).name;
+                Vibrator vb = (Vibrator)   getSystemService(Context.VIBRATOR_SERVICE);
                 switch (clickLocation) {
                     case box:
                         clickLocation = ClickLocation.none;
+                        time_millis = System.currentTimeMillis();
+                        if(vibrate)
+                            vb.vibrate(25);
                         updateAvg(dBid,0);
                         if(autoSync) {
                             slHandler.removeMessages(MSG_SYNC);
@@ -273,24 +295,27 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
                             log("Sent autosync message");
                         }
                         break;
-                    case name:
+/*                    case name:
+                        if(vibrate)
+                            vb.vibrate(25);
                         pickList = PickList.newInstance(name,dBid,true);
                         FragmentTransaction ft = getFragmentManager().beginTransaction();
                         Bundle bundle = new Bundle();
                         bundle.putString("name",name);
                         bundle.putLong("_id",dBid);
-                        bundle.putBoolean("inLists",true);
+                        bundle.putBoolean("inLists",true);  // Item is in the lists
                         pickList.setArguments(bundle);
                         pickList.show(ft,"dialog");
                         break;
-                    case del:
+*/                    case del:
                         values.clear();
-//                        values.put("flags",(itemsList.get(position).flags)|2);
                         values.put("flags",3);
                         values.put("last_time",getTime());
                         db.update("'"+currList+"'",values,"_id="+Long.toString(dBid),null);
+                        vb = (Vibrator)   getSystemService(Context.VIBRATOR_SERVICE);
+                        if(vibrate)
+                            vb.vibrate(25);
                         updateAdapters(context,listView,suggestView);
-//                        setSelected(item,position,false);
                 }
             }
         });
@@ -305,9 +330,13 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
                 values.clear();
                 long dBid = itemsSuggest.get(position).id;
                 String name = itemsSuggest.get(position).name;
+                Vibrator vb = (Vibrator)   getSystemService(Context.VIBRATOR_SERVICE);
                 switch (clickLocation) {
                     case box:
                         clickLocation = ClickLocation.none;
+                        time_millis = System.currentTimeMillis();
+                        if(vibrate)
+                            vb.vibrate(25);
                         final String[] avgCols = {"last_time", "last_avg", "flags"};
                         Cursor curs = db.query("'"+currList+"'", avgCols, "_id=" + Long.toString(dBid), null, "", "", "name ASC");
                         curs.moveToFirst();
@@ -315,7 +344,7 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
                         long avg = curs.getLong(1);
                         long ct = getTime();
                         values.put("flags", 1);     // set il=1
-                        values.put("last_time",ct+1);
+                        values.put("last_time",last+1);
                         db.update("'"+currList+"'", values,
                                 "_id=" + Long.toString(dBid), null);
                         curs.close();
@@ -326,12 +355,21 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
                             slHandler.sendMessageDelayed(syncmsg, 1000*autosync_time);
                         }
                         break;
-                    case name:
+/*                    case name:
+                        if(vibrate)
+                            vb.vibrate(25);
                         pickList = PickList.newInstance(name,dBid,true);
                         FragmentTransaction ft = getFragmentManager().beginTransaction();
+                        Bundle bundle = new Bundle();
+                        bundle.putString("name",name);
+                        bundle.putLong("_id",dBid);
+                        bundle.putBoolean("inLists",true);  // Item is in the lists
+                        pickList.setArguments(bundle);
                         pickList.show(ft,"dialog");
                         break;
-                    case del:
+*/                    case del:
+                        if(vibrate)
+                            vb.vibrate(25);
                         values.clear();
 //                        values.put("flags",(itemsSuggest.get(position).flags)|2);
                         values.put("flags",2);
@@ -347,18 +385,19 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
         client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
     }
 
-    /**
+/*    /**
      * addItem(View): called from add_button ("+")
-     * @param view
+     * @param View
      */
-    public void addItem(View view){
+/*    public void addItem(View view){
         FragmentTransaction ft = getFragmentManager().beginTransaction();
         pickList = PickList.newInstance("",0,false);
         pickList.show(ft,"dialog");
         db = itemDb.getWritableDatabase();
         updateAdapters(context,listView,suggestView);
     }
-        @Override
+*/
+    @Override
     public void pickDone(){
         itemDb = new ItemDb(getContext());
         db = itemDb.getWritableDatabase();
@@ -376,7 +415,7 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
 
     //      Setup slide in menu for List management
 
-    DrawerLayout drawers;
+    static DrawerLayout drawers;
     LinearLayout navList;
     Button newList,closeList;
 
@@ -384,7 +423,7 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
         navList = (LinearLayout) findViewById(R.id.navList);
         newList = (Button) findViewById(R.id.newList);
         lists = (ListView) findViewById(R.id.lists);
-        closeList = (Button) findViewById(R.id.closeList);
+//        closeList = (Button) findViewById(R.id.closeList);
             // Create list
         newList.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -415,20 +454,21 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
         lists.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
             public boolean onItemLongClick(AdapterView<?> parent, View item, int position, long id) {
-                LongClickDialog lcd = LongClickDialog.newInstance(itemsList.get(position).name,dBid);
+                Cursor c = (Cursor) parent.getItemAtPosition(position);
+                LongClickDialog lcd = LongClickDialog.newInstance(c.getString(1),c.getLong(0));
                 FragmentTransaction ft = getFragmentManager().beginTransaction();
                 lcd.show(ft,"dialog");
                 return true;
             }
         });
             // Close Button
-        closeList.setOnClickListener(new View.OnClickListener() {
+/*        closeList.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 drawers.closeDrawer(navList);
             }
         });
-    }
+*/    }
     public void showLists(Context context) {
         listsCursor = db.query("lists", new String[] {"_id","name"}, null, null, null, null, null);
         logF("listsCursor count = %d",listsCursor.getCount());
@@ -462,26 +502,89 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
                     AdminDialog adminDialog = new AdminDialog();
                     adminDialog.show(fm,"dialog");
                 } else {
-                    showToast(getApplicationContext(),"\nStarting Sync\n",Toast.LENGTH_SHORT);
-                    new SyncList(this,email,passwd,currList,listView,suggestView).execute();
-//                    new DatabaseSync().execute();
+                    LayoutInflater layoutInflater = (LayoutInflater) getBaseContext().getSystemService(LAYOUT_INFLATER_SERVICE);
+                    View popupView = layoutInflater.inflate(R.layout.popup_window,null);
+                    // Create popup window
+                    popupWindow = new PopupWindow(popupView, ViewGroup.LayoutParams.WRAP_CONTENT,
+                            ViewGroup.LayoutParams.WRAP_CONTENT);
+                    TextView textView = (TextView) popupView.findViewById(R.id.text);
+                    Button abortButton = (Button) popupView.findViewById(R.id.abort_button);
+                    abortButton.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            popupWindow.dismiss();
+                            syncList.cancel(true);
+                        }
+                    });
+                    drawers.requestLayout();
+                    textView.setText("Syncing List");
+                    popupWindow.setContentView(popupView);
+                    popupWindow.showAtLocation(scrollView,Gravity.TOP,0,200);
+//                    popupWindow.showAsDropDown(scrollView,Gravity.TOP,0,-150);
+                    // Run SyncList
+                    syncList = new SyncList(this,email,passwd,currList,listView,suggestView).execute();
                 }
                 break;
         }
         return super.onOptionsItemSelected(item);
     }
-    static void showToast(Context ctx,String msg,int len){
-        Toast t = Toast.makeText(ctx,msg,len);
-        t.setGravity(Gravity.TOP, 0, 200);
-        t.show();
+    @Override
+    public void onFinishAdminDialog(String nemail,String npasswd,Boolean reg) {
+
+        if(!android.util.Patterns.EMAIL_ADDRESS.matcher(nemail).matches()) {
+            showToast(getContext(), "Invalid email address!", Toast.LENGTH_LONG);
+        } else {
+            LayoutInflater layoutInflater = (LayoutInflater) getBaseContext().getSystemService(LAYOUT_INFLATER_SERVICE);
+            View popupView = layoutInflater.inflate(R.layout.popup_window, null);
+            // Create popup window
+            popupWindow = new PopupWindow(popupView, ViewGroup.LayoutParams.WRAP_CONTENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT);
+            TextView textView = (TextView) popupView.findViewById(R.id.text);
+            Button abortButton = (Button) popupView.findViewById(R.id.abort_button);
+            if (reg) {
+                email = nemail;
+                passwd = npasswd;
+                SharedPreferences.Editor ed = MainActivity.prefs.edit();
+                ed.putString("email",email);
+                ed.putString("passwd",passwd);
+                ed.apply();
+                abortButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        popupWindow.dismiss();
+                        auth.cancel(true);
+                    }
+                });
+                drawers.requestLayout();
+                textView.setText("creating account");
+                popupWindow.setContentView(popupView);
+                popupWindow.showAtLocation(scrollView, Gravity.TOP, 0, 200);
+                auth = new Auth(this, email, passwd, currList, "new").execute();
+            } else {
+                abortButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        popupWindow.dismiss();
+                        getLists.cancel(true);
+                    }
+                });
+                drawers.requestLayout();
+                textView.setText("Accessing Account");
+                popupWindow.setContentView(popupView);
+                popupWindow.showAtLocation(scrollView, Gravity.TOP, 0, 200);
+                getLists = new GetLists(mainActivity, nemail, npasswd, false);
+                getLists.setListener((GetLists.LoginListener) MainActivity.context);
+                getLists.execute();
+            }
+        }
     }
     @Override
-    public void onFinishAdminDialog(String email,String passwd,Boolean reg) {
-        if(reg)
-        new Auth(this,email,passwd,currList,"new").execute();
+    public void fin(){
+        popupWindow.dismiss();
     }
     public void onFinishAuth(String cmd, String rslt) {
         log(rslt);
+        auth.cancel(true);
         switch(cmd) {
             case "new" :
                 if(rslt.equals("exists")){
@@ -540,10 +643,14 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
      * @param id     ID of currently selected item
      * @param flags New state of flags entry
      */
+
+    final String[] avgCols = {"last_time", "last_avg", "_id"};
+
     public void updateAvg(long id, int flags) {
 
-        final String[] avgCols = {"last_time", "last_avg", "flags"};
-
+        logF("start updateAvg = %d ms",System.currentTimeMillis()-time_millis);
+        if(db==null)
+            db = itemDb.getWritableDatabase();
         Cursor curs = db.query("'"+currList+"'", avgCols, "_id=" + Long.toString(id), null, "", "", "name ASC");
         curs.moveToFirst();
         long last = curs.getLong(0);
@@ -553,14 +660,14 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
         //            values.put("last_avg",(long) (0.33333*(ct-last)+0.66667*avg));
         if (avg > 36499 * day) { // Check for "one time item"
             db.delete("'"+currList+"'", "_id=" + Long.toString(id), null); // and delete
-        } else {
+        } else
             values.put("last_avg", running_avg(ct - last, avg));
-            values.put("flags", Math.abs(flags));   // set flags, and dbChg true
-            values.put("last_time", ct + 1);
-//          logF("last_time = %d\t current time = %d\t, last_avg = %d\t, elapsed = %d",last,ct,avg,ct-last);
-            db.update("'" + currList + "'", values, "_id=" + Long.toString(id), null);
-        }
+        values.put("flags", Math.abs(flags));   // set flags, and dbChg true
+        values.put("last_time", ct+1);
+        logF("last_time = %d\t current time = %d\t, last_avg = %d\t, elapsed = %d",last,ct,avg,ct-last);
+        db.update("'"+currList+"'", values, "_id=" + Long.toString(id), null);
         updateAdapters(context,listView,suggestView);
+        logF("after updateAvg end = %d ms",System.currentTimeMillis()-time_millis);
         curs.close();
     }
 
@@ -585,26 +692,34 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
      */
     static private Cursor listCursor, suggestCursor ;
     private static SLAdapter listAdapter,suggestAdapter;
-    static void remoteUpdate(Context context,ListView listView,ListView suggestView) {
+
+/*    static void remoteUpdate(Context context,ListView listView,ListView suggestView) {
         db = itemDb.getWritableDatabase();
         updateAdapters(context,listView,suggestView);
     }
+*/
     static void updateAdapters() {
         updateAdapters(MainActivity.context,listView,suggestView);
     }
+
     static void updateAdapters(Context context,ListView listView,ListView suggestView) {
-        long time_millis = System.currentTimeMillis();
-        updateRatios();
-        logF("time = %d",getTime());
+        db = itemDb.getWritableDatabase();
         listCursor = db.query("'"+MainActivity.currList+"'", cols, "flags=1", null, "", "", null);
         itemsList.clear();
         int n = 0;
+        long time_secs = System.currentTimeMillis()/1000;
         for (listCursor.moveToFirst(); !listCursor.isAfterLast(); listCursor.moveToNext()) {
             float ratio = Math.abs(((float) (getTime()-listCursor.getLong(3)))/((float) listCursor.getLong(4)));
-            itemsList.add(new Item(listCursor.getLong(0), listCursor.getString(1),
-                    listCursor.getLong(2), listCursor.getLong(3), listCursor.getLong(4),
-                    ratio));
-            n++;
+            if((time_secs-listCursor.getLong(3))>max_time){
+                values.clear();
+                values.put("flags",2|listCursor.getInt(2));
+                db.update("'"+currList+"'", values, "_id=" + listCursor.getInt(0), null);
+            } else {
+                itemsList.add(new Item(listCursor.getLong(0), listCursor.getString(1),
+                        listCursor.getLong(2), listCursor.getLong(3), listCursor.getLong(4),
+                        ratio));
+                n++;
+            }
         }
         Collections.sort(itemsList);
         listAdapter = new SLAdapter(context, itemsList, R.layout.list_entry);
@@ -617,32 +732,57 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
         n = 0;
         for (suggestCursor.moveToFirst(); !suggestCursor.isAfterLast(); suggestCursor.moveToNext()) {
             float ratio = Math.abs(((float) (getTime()-suggestCursor.getLong(3)))/((float) suggestCursor.getLong(4)));
-            itemsSuggest.add(new Item(suggestCursor.getLong(0), suggestCursor.getString(1),
-                    suggestCursor.getLong(2), suggestCursor.getLong(3), suggestCursor.getLong(4),
-                    ratio));
-            n++;
+            if((time_secs-suggestCursor.getLong(3))>max_time){
+                values.clear();
+                values.put("flags",2|suggestCursor.getInt(2));
+                db.update("'"+currList+"'", values, "_id=" + suggestCursor.getInt(0), null);
+            } else {
+                itemsSuggest.add(new Item(suggestCursor.getLong(0), suggestCursor.getString(1),
+                        suggestCursor.getLong(2), suggestCursor.getLong(3), suggestCursor.getLong(4),
+                        ratio));
+                n++;
+            }
         }
         Collections.sort(itemsSuggest);
         suggestAdapter = new SLAdapter(context, itemsSuggest, R.layout.suggest_entry);
         suggestAdapter.checked = true;
         suggestView.setAdapter(suggestAdapter);
-        scrollView.scrollTo(0,0);
-//        logF("updateAdapters elapsed time = %d",System.currentTimeMillis()-time_millis);
+        logF("updateAdapters end = %d",System.currentTimeMillis()-time_millis);
     }
+/*    static void calcRatios(ArrayList<Item> list){
 
-    /**
-     * updateRatios: Updates ratios for all items in the database.
-      */
-    static void updateRatios() {
-		Cursor curs = db.query("'"+MainActivity.currList+"'", cols, null, null, "", "", null);
-        for(curs.moveToFirst();!curs.isAfterLast();curs.moveToNext()){
-            float ratio = Math.abs(((float) (getTime()-curs.getLong(3)))/((float) curs.getLong(4)));
-        	values.clear();
-        	values.put("ratio",ratio);
-        	db.update("'"+MainActivity.currList+"'", values, String.format("_id=%d",curs.getLong(0)),null);
-		}
+        for(int k=0; k<list.size(); k++){
+            Item item= list.get(k);
+            long time_since_last = getTime() - item.last_time;
+            item.ratio = Math.abs(((float) (time_since_last))/((float) item.last_avg));
+            list.set(k,item);
+        }
     }
-    @Override
+*/
+    /**
+     * updateRatios: Updates ratios averages for the displayed suggestions.
+     *               Also updates last_avg if ratio>2 to (ct-last_time)/2
+      */
+/*    static void updateRatios() {
+
+        logF("updateRatios start = %d ms",System.currentTimeMillis()-time_millis);
+        Cursor curs = db.query("'"+currList+"'", cols, "flags=0 or flags=1", null, "", "", "name ASC");
+        for(curs.moveToFirst();!curs.isAfterLast();curs.moveToNext()){
+            long time_since_last = getTime() - curs.getLong(3);
+            int flags = curs.getInt(2);
+            float ratio = Math.abs(((float) (time_since_last))/((float) curs.getLong(4)));
+            values.clear();
+            if(time_since_last > max_time) {    // If item hasn't been purchace for max_time
+                values.put("flags",flags | 2);      // set delete flag
+                logF("deleting %s",curs.getString(1));
+            }
+            values.put("ratio", ratio);
+            db.update("'" + MainActivity.currList + "'", values, String.format("_id=%d", curs.getLong(0)), null);
+//           logF("name %s, last_time %d,last_avg %d,ratio %f",curs.getString(1),ct-curs.getLong(3),curs.getLong(4),ratio);
+		}
+        logF("updateRatios end = %d ms",System.currentTimeMillis()-time_millis);
+    }
+*/    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         super.onCreateOptionsMenu(menu);
@@ -718,7 +858,11 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
     public static void logF(String fmt, Object... arg) {
         Log.v("smartlist", String.format(fmt, arg));
     }
-
+    static void showToast(Context ctx,String msg,int len){
+        Toast t = Toast.makeText(ctx,msg,len);
+        t.setGravity(Gravity.TOP, 0, 200);
+        t.show();
+    }
     // Activity Results handler
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -794,7 +938,5 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
                 .setActionStatus(Action.STATUS_TYPE_COMPLETED)
                 .build();
     }
-
-
 }
 

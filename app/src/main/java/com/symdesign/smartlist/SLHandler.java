@@ -7,6 +7,7 @@ import android.os.Handler;
 import android.widget.ListView;
 
 import static com.symdesign.smartlist.MainActivity.currList;
+import static com.symdesign.smartlist.MainActivity.log;
 import static com.symdesign.smartlist.MainActivity.passwd;
 import static com.symdesign.smartlist.MainActivity.email;
 import static com.symdesign.smartlist.MainActivity.db;
@@ -19,7 +20,7 @@ public class SLHandler extends Handler {
     Context context;
     ListView listView,suggestView;
 
-    static final int MSG_REPEAT=1,MSG_SYNC=2;
+    static final int MSG_REPEAT=1,MSG_SYNC=2,MSG_RATIO=3;
 
     public SLHandler(Context c,ListView lv, ListView sv) {
         context = c;
@@ -32,15 +33,17 @@ public class SLHandler extends Handler {
             case MSG_REPEAT:
                 Message repeat = Message.obtain(this,MSG_REPEAT);
                 sendMessageDelayed(repeat,1000*MainActivity.refresh_time);
-//                MainActivity.log("updateRatios:");
                 db = MainActivity.itemDb.getWritableDatabase();
                 MainActivity.updateAdapters(context,listView,suggestView);
-                MainActivity.log("refresh!");
-//                MainActivity.log("update repeat");
+                log("refresh!");
                 break;
-//            case MSG_SYNC:
-//                new SyncList(MainActivity.mainActivity,email,passwd,currList,listView,suggestView).execute();
-
-        }
+            case MSG_SYNC:
+                log("Starting autosync timer");
+                new SyncList(MainActivity.mainActivity,email,passwd,currList,listView,suggestView).execute();
+                break;
+/*            case MSG_RATIO:
+                MainActivity.updateRatios();
+                log("Updating Ratios");
+*/        }
     }
 }

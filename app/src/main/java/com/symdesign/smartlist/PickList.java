@@ -21,6 +21,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ExpandableListView;
 import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 import android.view.LayoutInflater;
 
@@ -37,6 +38,7 @@ import static com.symdesign.smartlist.MainActivity.log;
 import static com.symdesign.smartlist.MainActivity.getTime;
 import static com.symdesign.smartlist.MainActivity.listView;
 import static com.symdesign.smartlist.MainActivity.suggestView;
+import static com.symdesign.smartlist.MainActivity.week;
 
 
 /**
@@ -63,6 +65,8 @@ public class PickList extends DialogFragment implements AdapterView.OnItemSelect
     static int dBid;
     static boolean inLists;
     final String[] cols = {"_id","name","flags","last_time","last_avg","ratio"};
+    static Item item = null;
+    Boolean newFreq = false;
 
     public PickList() {
         // Empty contstuctor required for DialogFragment
@@ -77,44 +81,45 @@ public class PickList extends DialogFragment implements AdapterView.OnItemSelect
     }
 
     /**
-     * Create a new instance of PickList, providing "num"
-     * as an argument.
+     * Create a new instance of PickList, providing "name", "Dbid", and "inLists"
+     * as an arguments.
      */
     static PickList newInstance(String name,long id,Boolean il) {
 
-        PickList f = new PickList();
+        PickList pl = new PickList();
 
         // Supply num input as an argument.
         Bundle args = new Bundle();
         args.putString("name",name);
         args.putLong("dBid",id);
         args.putBoolean("inList",il);
-        f.setArguments(args);
-        return f;
+        pl.setArguments(args);
+        return pl;
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+
         super.onCreate(savedInstanceState);
         context = getActivity();
         setListener((Listener) getActivity());
         View pickView = inflater.inflate(R.layout.pick_list, container, false);
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(context,
+        ArrayAdapter<String> srchAdapter = new ArrayAdapter<String>(context,
                 R.layout.dropdown_layout,srchItems);
+        //
         nameView = (AutoCompleteTextView)
                 pickView.findViewById(R.id.name);
-        nameView.setAdapter(adapter);
-        InputMethodManager imm = (InputMethodManager) context.getSystemService(INPUT_METHOD_SERVICE);
+        nameView.setAdapter(srchAdapter);
         nameView.requestFocus();
-        imm.showSoftInput(nameView, InputMethodManager.SHOW_IMPLICIT);
         name = getArguments().getString("name");
         nameView.setText(name);
+        TextView food_cats = pickView.findViewById(R.id.food_cats);
         inLists = getArguments().getBoolean("inLists");
         dBid = (int) getArguments().getLong("_id");
         checkView = (Button) pickView.findViewById(R.id.pick_button);
         freq = -1;
 
-        ArrayAdapter<CharSequence> freq_adapter = ArrayAdapter.createFromResource(context,
+        final ArrayAdapter<CharSequence> freq_adapter = ArrayAdapter.createFromResource(context,
                 R.array.frequencies,R.layout.dropdown_layout);
         frequency = (Spinner) pickView.findViewById(R.id.freq);
         frequency.setAdapter(freq_adapter);
@@ -122,24 +127,28 @@ public class PickList extends DialogFragment implements AdapterView.OnItemSelect
         frequency.setOnItemSelectedListener(this);
         db = MainActivity.itemDb.getWritableDatabase();
         if(inLists) {
-            Item item = getDbItem(name.toString());
-            if(item.last_avg < 433600)
+            item = getDbItem(name.toString());
+            item.last_time = item.last_time+1;
+            if(item.last_avg < 453600)
                 frequency.setSelection(0);
             else if(item.last_avg <907200)
                 frequency.setSelection(1);
-            else if(item.last_avg < 1900800)
+            else if(item.last_avg < 1814400)
                 frequency.setSelection(2);
-            else if(item.last_avg < 3888000)
+            else if(item.last_avg < 3628800)
                 frequency.setSelection(3);
-            else if(item.last_avg == 36500*day)
+            else if(item.last_avg < 6048000)
                 frequency.setSelection(4);
+            else if(item.last_avg < 8467200)
+                frequency.setSelection(5);
+            else if(item.last_avg == 36500*day)
+                frequency.setSelection(6);
+        } else {
+            frequency.setSelection(3);
+            freq = (long) (8*week);
         }
-        expListView = (ExpandableListView) pickView.findViewById(R.id.lvExp);
-        expListAdapter = new ExpandableListAdapter(context, catagories, pickItems);
-        // setting list adapter
-        expListView.setAdapter(expListAdapter);
         nameView.addTextChangedListener(new TextWatcher(){      // Set up text listener
-             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
             }
             public void onTextChanged(CharSequence s, int start, int before, int count) {
 //                logF("onTC: %s\t%s\t%d\t%d\t%d", s,
@@ -152,99 +161,111 @@ public class PickList extends DialogFragment implements AdapterView.OnItemSelect
             public void afterTextChanged(Editable s) {
             }
         });
-        // Listview Group click listener
-        expListView.setOnGroupClickListener(new ExpandableListView.OnGroupClickListener() {
+        if(!inLists) {
+            expListView = (ExpandableListView) pickView.findViewById(R.id.lvExp);
+            expListAdapter = new ExpandableListAdapter(context, catagories, pickItems);
+            // setting list adapter
+            expListView.setAdapter(expListAdapter);
+            // Listview Group click listener
+            expListView.setOnGroupClickListener(new ExpandableListView.OnGroupClickListener() {
 
-            @Override
-            public boolean onGroupClick(ExpandableListView parent, View v,
-                                        int groupPosition, long id) {
-/*                Toast.makeText(getApplicationContext(),
-                "Group Clicked " + catagories.get(groupPosition),
-                Toast.LENGTH_SHORT).show();
-*/
-                return false;   // continue click processing
-            }
-        });
-
-        // Listview Group expanded listener
-        expListView.setOnGroupExpandListener(new ExpandableListView.OnGroupExpandListener() {
-
-            @Override
-            public void onGroupExpand(int groupPosition) {
-/*                Toast.makeText(getApplicationContext(),
-                        catagories.get(groupPosition) + " Expanded",
-                        Toast.LENGTH_SHORT).show();
-*/            }
-        });
-
-        // Listview Group collasped listener
-        expListView.setOnGroupCollapseListener(new ExpandableListView.OnGroupCollapseListener() {
-
-            @Override
-            public void onGroupCollapse(int groupPosition) {
-/*                Toast.makeText(context,
-                        catagories.get(groupPosition) + " Collapsed",
-                        Toast.LENGTH_SHORT).show();
-*/
-            }
-        });
-
-        // Listview on child click listener
-        expListView.setOnChildClickListener(new ExpandableListView.OnChildClickListener() {
-
-            @Override
-            public boolean onChildClick(ExpandableListView parent, View v,
-                                        int groupPosition, int childPosition, long id) {
-                groupPos = groupPosition;
-                childPos = childPosition;
-                String name = pickItems.get(groupPosition).get(childPosition).substring(1);
-                if(inDb(name)) {      // if already in dB
-                    showToast("Item already in lists");
-                } else {
-                    addItem(name, 1, MainActivity.getTime(), (long) 3.5 * day, 0.0);
-                    showToast(" Added");
-                    listener.pickDone();
+                @Override
+                public boolean onGroupClick(ExpandableListView parent, View v,
+                                            int groupPosition, long id) {
+    /*                Toast.makeText(getApplicationContext(),
+                    "Group Clicked " + catagories.get(groupPosition),
+                    Toast.LENGTH_SHORT).show();
+    */
+                    return false;   // continue click processing
                 }
-//                MainActivity.updateAdapters(context,listView,suggestView);
-//                nameView.setText(pickItems.get(groupPosition).get(childPosition).substring(1));
-                return false;
-            }
-        });
+            });
+
+            // Listview Group expanded listener
+            expListView.setOnGroupExpandListener(new ExpandableListView.OnGroupExpandListener() {
+
+                @Override
+                public void onGroupExpand(int groupPosition) {
+    /*                Toast.makeText(getApplicationContext(),
+                            catagories.get(groupPosition) + " Expanded",
+                            Toast.LENGTH_SHORT).show();
+    */
+                }
+            });
+
+            // Listview Group collasped listener
+            expListView.setOnGroupCollapseListener(new ExpandableListView.OnGroupCollapseListener() {
+
+                @Override
+                public void onGroupCollapse(int groupPosition) {
+    /*                Toast.makeText(context,
+                            catagories.get(groupPosition) + " Collapsed",
+                            Toast.LENGTH_SHORT).show();
+    */
+                }
+            });
+
+            // Listview on child click listener
+            expListView.setOnChildClickListener(new ExpandableListView.OnChildClickListener() {
+
+                @Override
+                public boolean onChildClick(ExpandableListView parent, View v,
+                                            int groupPosition, int childPosition, long id) {
+                    groupPos = groupPosition;
+                    childPos = childPosition;
+                    String name = pickItems.get(groupPosition).get(childPosition).substring(1);
+//                    if (inDb(name)) {      // if already in dB
+//                        values.clear();
+//                        values.put("flags", 1);
+//                        db.update("'" + MainActivity.currList + "'", values, "_id=" + Long.toString(inDb_id), null);
+                    if((item = getDbItem(name))!=null) {      // if already in dB
+                        item.flags = 1;
+                        item.last_time+=1;  // Increase last_time to force update of cloud on sync
+                        changeItem(item);
+                        if (inDb_flags <= 1) {
+                            showToast("Item already in lists!");
+                        } else {
+                            showToast("item added");
+                            listener.pickDone();
+                        }
+                    } else {
+                        item = item.newItem(name);
+                        item.last_time = getTime();
+                        item.last_avg = freq;
+                        addItem(item);
+                        showToast("item added!");
+                        listener.pickDone();
+                    }
+                    return false;
+                }
+            });
+        }
+        else
+            food_cats.setText("");
 
         // Select listener
+        //  name = name passed from clicking name in list, blank if called from "add" button
+        //  formName   = name from form
         checkView.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                Item item;
-//                String nm = (nameView.getText().toString()).replaceAll(" ","");
-                String nm = (nameView.getText().toString()).trim();
-                if (nm.length() != 0) {
-                    logF("freq = %d", freq);
-                    if (inLists) {      // Edit (item selected from list) ?
-                        item = getDbItem(name.toString());   // update db entry
-                        if (!(nm.equals(name))) {      // if name has been changed ?
-                            item.name = nm;
-                            if (freq > 0)
+                String formName = (nameView.getText().toString()).trim();     // Get name from form
+                if (formName.length()!= 0) {
+/*                    if (inLists) {      // Edit (item selected from shopping list) ?
+                        if(item == null)
+                            item = getDbItem(name.toString());   // get item from database
+                        if (freq > 0)
+                            item.last_avg = freq;
+                        item.last_time += item.last_time;
+                        changeItem(item);
+*/                  if(!inLists) {                // new name edited or entered directly
+                        if ((item = getDbItem(formName))!=null) {      // if already in dB
+                            item.flags = 1;
+                            item.last_time+=1;  // In case cloud copy has same last_time
+                            if(freq>0)
                                 item.last_avg = freq;
                             changeItem(item);
-                        } else if (freq > 0) {
-                            item.last_avg = freq;
-                            changeItem(item);
-                        }
-                    } else {                // new name edited or entered directly
-                        if (inDb(nm)) {      // if already in dB
-                            if (inDb_flags > 1) {
-                                values.clear();
-                                values.put("flags", inDb_flags & 1);
-                                db.update("'" + MainActivity.currList + "'", values, "_id=" + Long.toString(inDb_id), null);
-    //                            getDialog().dismiss();
-                            } else {
-                                showToast("Item already in lists!");
-                            }
+                            showToast("Item added (already in lists!");
                         } else {
-                            item = Item.newItem(nm);
-                            item.last_time = getTime();
-                            item.last_avg = freq;
-                            addItem(item);
+                            addItem(formName, 1, MainActivity.getTime(), 30 * MainActivity.day, 0);
                             showToast("item added!");
                         }
                     }
@@ -255,19 +276,23 @@ public class PickList extends DialogFragment implements AdapterView.OnItemSelect
                 listener.pickDone();
             }
         });
+        nameView.requestFocus();
+        InputMethodManager imm = (InputMethodManager) context.getSystemService(INPUT_METHOD_SERVICE);
+        imm.showSoftInput(nameView, InputMethodManager.SHOW_IMPLICIT);
         return pickView;
     }
     static long inDb_id;
     static int inDb_flags;
+    static String inDb_name;
     public boolean inDb(String name) {
         Cursor curs = db.query("'"+MainActivity.currList+"'",cols,
-                "name='"+name+"\'",null,"","","name ASC");
+                "UPPER(name)=UPPER('"+name+"')",null,"","","name ASC");
         int cnt = curs.getCount();
         boolean found = cnt!=0;
         if(curs.moveToFirst()) {
             inDb_id = curs.getLong(0);
             inDb_flags = curs.getInt(2);
-            logF("id = %d, flags = %d",inDb_id,inDb_flags);
+            inDb_name = curs.getString(1);
             curs.close();
         } else
             log("Not found");
@@ -278,6 +303,7 @@ public class PickList extends DialogFragment implements AdapterView.OnItemSelect
         // An item was selected. You can retrieve the selected item using
         // parent.getItemAtPosition(pos)
 //        logF("item = %s",parent.getItemAtPosition(pos));
+        newFreq = true;
         switch(pos){
             case 0: freq = (long) (3.5*day);
                 break;
@@ -285,9 +311,13 @@ public class PickList extends DialogFragment implements AdapterView.OnItemSelect
                 break;
             case 2: freq = 14*day;
                 break;
-            case 3: freq = 30*day;
+            case 3: freq = 31*day;
                 break;
-            case 4: freq = 36500*day;
+            case 4: freq = 62*day;
+                break;
+            case 5: freq = 93*day;
+                break;
+            case 6: freq = 36500*day;
                 break;
         }
         //    logF("selected item %d",pos);
@@ -298,21 +328,15 @@ public class PickList extends DialogFragment implements AdapterView.OnItemSelect
 
     public Item getDbItem(String name) {
         Cursor curs =db.query("'"+MainActivity.currList+"'",cols,
-                "name=\'"+name+"\'",null,"","","name ASC");
-        curs.moveToFirst();
-        Item c = new Item(curs.getLong(0), curs.getString(1), curs.getInt(2), curs.getLong(3), curs.getLong(4), curs.getFloat(5));
-        boolean hasCount = curs.getCount()>0;
-        curs.close();
-        if(hasCount)
+                "UPPER(name)=UPPER('"+name+"')",null,"","","name ASC");
+        if(curs.moveToFirst()) {
+            Item c = new Item(curs.getLong(0), curs.getString(1), curs.getInt(2), curs.getLong(3), curs.getLong(4), curs.getFloat(5));
+            curs.close();
             return c;
-        else
+        } else {
+            curs.close();
             return null;
-    }
-    public void showToast(String text){
-        Toast toast = Toast.makeText(context,
-                "\n"+text+"\n",Toast.LENGTH_LONG);
-        toast.setGravity(Gravity.TOP, 0, 200);
-        toast.show();
+        }
     }
     public void addItem(Item item) {
         addItem(item.name,(int) item.flags,item.last_time,item.last_avg,item.ratio);
@@ -341,7 +365,7 @@ public class PickList extends DialogFragment implements AdapterView.OnItemSelect
         db.insert("'"+MainActivity.currList+"'", null, listValues);
     }
     public static void newItem(String nm){
-        addItem(nm, 1, MainActivity.getTime(), 3 * MainActivity.day, 0);
+        addItem(nm, 1, MainActivity.getTime(), 30 * MainActivity.day, 0);
     }
     /*
      * Preparing the list data
@@ -355,30 +379,29 @@ public class PickList extends DialogFragment implements AdapterView.OnItemSelect
         String currCat;
         catagories = new ArrayList<>();
 
-        try{
+        try {
             input = MainActivity.assetManager.open("Master_Grocery_List.txt");
             rdr = new BufferedReader(new InputStreamReader(input));
             boolean first = true;
             int chr;
 //            for(chr=rdr.read(); chr!=-1; chr=rdr.read()){
-            for(;;){
+            for (; ; ) {
                 chr = rdr.read();
-                if(chr==-1) break;
-                if(!(chr==61551)) {      // is a Catagory
-                    if(!first) {
+                if (chr == -1) break;
+                if (!(chr == 61551)) {      // is a Catagory
+                    if (!first) {
                         pickItems.add(currItems);
 //                        first = false;
                     }
                     first = false;
-                    if((currCat = rdr.readLine())==null) break;
-                    currCat = ((char) chr)+currCat;
+                    if ((currCat = rdr.readLine()) == null) break;
+                    currCat = ((char) chr) + currCat;
                     catagories.add(currCat);
                     currItems = new ArrayList<>();
 //                    logF("Catagory = %s",currCat);
 
-                }
-                else {                      // is item
-                    String itm =rdr.readLine();
+                } else {                      // is item
+                    String itm = rdr.readLine();
                     currItems.add(itm);
                     srchItems.add(itm);
 //                    logF("item = %s",itm);
@@ -387,7 +410,19 @@ public class PickList extends DialogFragment implements AdapterView.OnItemSelect
         } catch (IOException e) {
             e.printStackTrace();
         }
-   }
+        String[] cols = {"_id","name"};
+        db = MainActivity.itemDb.getWritableDatabase();
+        Cursor curs = db.query("'" + MainActivity.currList + "'", cols, "flags=0 or flags=1", null, "", "", null);
+        for (curs.moveToFirst(); !curs.isAfterLast(); curs.moveToNext()) {
+            String nm = curs.getString(1);
+            srchItems.add(nm);
+        }
+    }
+    void showToast(String txt){
+        MainActivity.showToast(context,txt,Toast.LENGTH_LONG);
+    }
+
+
     @Override public void onPause() {
         super.onPause();
         log("Pausing PickList");
