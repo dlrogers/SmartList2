@@ -126,9 +126,10 @@ public class PickList extends DialogFragment implements AdapterView.OnItemSelect
 //        frequency.setPopupBackgroundResource(R.drawable.dialog_bk);
         frequency.setOnItemSelectedListener(this);
         db = MainActivity.itemDb.getWritableDatabase();
-        if(inLists) {
+        if(inLists) {   //inLists set if called from clicking on name (already has data)
             item = getDbItem(name.toString());
             item.last_time = item.last_time+1;
+            freq = item.last_avg;
             if(item.last_avg < 453600)
                 frequency.setSelection(0);
             else if(item.last_avg <907200)
