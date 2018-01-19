@@ -1,5 +1,6 @@
 package com.symdesign.smartlist;
 
+// cmdsync branch
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
@@ -92,7 +93,7 @@ class SyncList extends AsyncTask<Void,Void,Boolean>  {
             //          Send list items to server
             String str = "";
             db = MainActivity.itemDb.getWritableDatabase();
-            long ct = MainActivity.getTime() ;
+            long ct = MainActivity.getTime();
             cursor = db.query("'" + MainActivity.currList + "'", SLAdapter.cols, "flags=1 OR flags=3", null, "", "", null);
             for (cursor.moveToFirst(); !cursor.isAfterLast(); cursor.moveToNext()) {
                 int flgs = cursor.getInt(2);
@@ -150,7 +151,7 @@ class SyncList extends AsyncTask<Void,Void,Boolean>  {
 //                        } else {//                           db.delete("'"+currList+"'",null,null);
 //                        }
                         break;
-                    case "i":   //Item added to server, insert into database
+                    case "i" :   //Item added to server, insert into database
                         values.clear();
                         values.put("name", cols[1]);
                         values.put("flags", cols[2]);
