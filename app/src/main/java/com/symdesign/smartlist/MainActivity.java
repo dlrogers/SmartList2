@@ -77,7 +77,7 @@ import static com.symdesign.smartlist.SLAdapter.itemsList;
 import static com.symdesign.smartlist.SLHandler.MSG_SYNC;
 import static com.symdesign.smartlist.SLHandler.MSG_REPEAT;
 
-// Version of SmartList that uses file to store databae on phone.
+// Version of SmartList that uses file to store databae on phone
 
 public class MainActivity extends AppCompatActivity implements AdminDialog.AdminDialogListener,
         NewListDialog.Listener, LongClickDialog.Listener, PickList.Listener, GetLists.LoginListener{
