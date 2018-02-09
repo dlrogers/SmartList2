@@ -161,21 +161,21 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
 
 //        Code to do one time install code
 
-        installed = prefs.getString("installed","no");
-        String syncEnabled = prefs.getString("sync","no");
+        installed = prefs.getString("installed", "no");
+        String syncEnabled = prefs.getString("sync", "no");
 //        db.execSQL("DROP TABLE lists");
 //        installed = "no";
-        if(installed.equals("no")) {
+        if (installed.equals("no")) {
             db.execSQL("drop table if exists Groceries");   // Remove any exisitng Groceries
             db.execSQL("drop table if exists lists");
             SharedPreferences.Editor ed = prefs.edit();     // Initialize shared preferences
-            ed.putString("installed","yes");
-            ed.putString("currList","Groceries");
-            ed.putString("email","no_email");
-            ed.putString("passwd","no_passwd");
-            ed.putBoolean("syncReg",false);
-            ed.putBoolean("autoSync",true);
-            ed.putBoolean("vibrate",true);
+            ed.putString("installed", "yes");
+            ed.putString("currList", "Groceries");
+            ed.putString("email", "no_email");
+            ed.putString("passwd", "no_passwd");
+            ed.putBoolean("syncReg", false);
+            ed.putBoolean("autoSync", true);
+            ed.putBoolean("vibrate", true);
             ed.apply();
             db.execSQL(SQL_LISTS);                          // Create "lists" table
             NewListDialog.addToLists("Groceries");
@@ -187,12 +187,12 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
         showLists(context);
         printLists();
 
-        email = prefs.getString("email","no_email");
-        passwd = prefs.getString("passwd","no_passwd");
-        syncReg = prefs.getBoolean("syncReg",false);
-        currList = prefs.getString("currList","Groceries");
-        autoSync = prefs.getBoolean("autoSync",true);
-        vibrate = prefs.getBoolean("vibrate",true);
+        email = prefs.getString("email", "no_email");
+        passwd = prefs.getString("passwd", "no_passwd");
+        syncReg = prefs.getBoolean("syncReg", false);
+        currList = prefs.getString("currList", "Groceries");
+        autoSync = prefs.getBoolean("autoSync", true);
+        vibrate = prefs.getBoolean("vibrate", true);
 //        currList = "Groceries";
 /*        SharedPreferences.Editor ed = prefs.edit();     // Initialize shared preferences
         ed.putBoolean("syncReg",true);
@@ -209,11 +209,11 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
         ed.putString("currList","Groceries");
         ed.apply();
 */
-        currTable = prefs.getString("currTable","Groceries");
+        currTable = prefs.getString("currTable", "Groceries");
 
         assetManager = getAssets();
         PickList.prepareListData();
-                    // Get view links
+        // Get view links
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         scrollView = (ScrollView) findViewById(R.id.scroll_view);
 
@@ -227,10 +227,10 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
 //        toolbar.setNavigationIcon(R.drawable.ic_menu_moreoverflow_normal_holo_dark);
         toolbar.setNavigationIcon(android.R.drawable.ic_menu_more);
         toolbar.setNavigationOnClickListener(new View.OnClickListener() {
-             @Override
-             public void onClick(View view) {
-                 drawers.openDrawer(navList);
-             }
+            @Override
+            public void onClick(View view) {
+                drawers.openDrawer(navList);
+            }
         });
         clickLocation = ClickLocation.none;
 
@@ -238,18 +238,18 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
 
         listView = (ListView) findViewById(R.id.list_view);
         suggestView = (ListView) findViewById(R.id.suggest_view);
-        headFont = Typeface.createFromAsset(getAssets(),"fonts/Kalam-Regular.ttf");
+        headFont = Typeface.createFromAsset(getAssets(), "fonts/Kalam-Regular.ttf");
         listHeading = (TextView) findViewById(R.id.list_heading);
-        listHeading.setTypeface(headFont,1);
+        listHeading.setTypeface(headFont, 1);
         TextView suggestHeading = (TextView) findViewById(R.id.suggest_heading);
         suggestHeading.setTypeface(headFont);
 
-        slHandler = new SLHandler(context,listView,suggestView);
+        slHandler = new SLHandler(context, listView, suggestView);
 
 //        Setup task handler
 
         Message repeat = Message.obtain(slHandler, MSG_REPEAT);
-        slHandler.sendMessageDelayed(repeat, 1000*sync_time);
+        slHandler.sendMessageDelayed(repeat, 1000 * sync_time);
 
         Display display = getWindowManager().getDefaultDisplay();
         Point size = new Point();
@@ -264,12 +264,12 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
             @Override
             public void onClick(View view) {
                 FragmentTransaction ft = getFragmentManager().beginTransaction();
-                pickList = PickList.newInstance("",0,false);
-                pickList.show(ft,"dialog");
+                pickList = PickList.newInstance("", 0, false);
+                pickList.show(ft, "dialog");
             }
         });
-        log(String.format(Locale.getDefault(),"Starting MainActivity, time=%d", getTime()));
-        updateAdapters(context,listView,suggestView);
+        log(String.format(Locale.getDefault(), "Starting MainActivity, time=%d", getTime()));
+        updateAdapters(context, listView, suggestView);
 
         // Handle Shopping List item tap.
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -278,20 +278,21 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
                 EditText nameView = (EditText) item.findViewById(R.id.name);
                 values.clear();
                 long dBid = itemsList.get(position).id;
-                if(db == null) db = MainActivity.itemDb.getWritableDatabase();
+                if (db == null) db = MainActivity.itemDb.getWritableDatabase();
                 String name = itemsList.get(position).name;
-                Vibrator vb = (Vibrator)   getSystemService(Context.VIBRATOR_SERVICE);
+                Vibrator vb = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+                final String[] avgCols = {"last_time", "last_avg", "flags"};
                 switch (clickLocation) {
                     case box:
                         clickLocation = ClickLocation.none;
                         time_millis = System.currentTimeMillis();
-                        if(vibrate)
+                        if (vibrate)
                             vb.vibrate(25);
-                        updateAvg(dBid,0);
-                        if(autoSync) {
+                        updateAvg(dBid, 0);
+                        if (autoSync) {
                             slHandler.removeMessages(MSG_SYNC);
                             Message syncmsg = Message.obtain(slHandler, MSG_SYNC);
-                            slHandler.sendMessageDelayed(syncmsg, 1000*autosync_time);
+                            slHandler.sendMessageDelayed(syncmsg, 1000 * autosync_time);
                             log("Sent autosync message");
                         }
                         break;
@@ -307,15 +308,16 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
                         pickList.setArguments(bundle);
                         pickList.show(ft,"dialog");
                         break;
-*/                    case del:
+*/
+                    case del:
                         values.clear();
-                        values.put("flags",3);
-                        values.put("last_time",getTime());
-                        db.update("'"+currList+"'",values,"_id="+Long.toString(dBid),null);
-                        vb = (Vibrator)   getSystemService(Context.VIBRATOR_SERVICE);
-                        if(vibrate)
+                        values.put("flags",6);  //  unset "inList" flag and set "delete" and "change" flags
+                        values.put("last_time", getTime());
+                        db.update("'" + currList + "'", values, "_id=" + Long.toString(dBid), null);
+                        vb = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+                        if (vibrate)
                             vb.vibrate(25);
-                        updateAdapters(context,listView,suggestView);
+                        updateAdapters(context, listView, suggestView);
                 }
             }
         });
@@ -330,29 +332,30 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
                 values.clear();
                 long dBid = itemsSuggest.get(position).id;
                 String name = itemsSuggest.get(position).name;
-                Vibrator vb = (Vibrator)   getSystemService(Context.VIBRATOR_SERVICE);
+                Vibrator vb = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+                final String[] avgCols = {"last_time", "last_avg", "flags"};
                 switch (clickLocation) {
                     case box:
                         clickLocation = ClickLocation.none;
                         time_millis = System.currentTimeMillis();
-                        if(vibrate)
+                        if (vibrate)
                             vb.vibrate(25);
-                        final String[] avgCols = {"last_time", "last_avg", "flags"};
-                        Cursor curs = db.query("'"+currList+"'", avgCols, "_id=" + Long.toString(dBid), null, "", "", "name ASC");
+//                        final String[] avgCols = {"last_time", "last_avg", "flags"};
+                        Cursor curs = db.query("'" + currList + "'", avgCols, "_id=" + Long.toString(dBid), null, "", "", "name ASC");
                         curs.moveToFirst();
                         long last = curs.getLong(0);
                         long avg = curs.getLong(1);
                         long ct = getTime();
-                        values.put("flags", 1);     // set flgs=1
-                        values.put("last_time",last+1);
-                        db.update("'"+currList+"'", values,
+                        values.put("flags",5);     // set "Inlist" and "changed" flags, clear "delete" flag
+                        values.put("last_time", last + 1);
+                        db.update("'" + currList + "'", values,
                                 "_id=" + Long.toString(dBid), null);
                         curs.close();
-                        updateAdapters(context,listView,suggestView);
-                        if(autoSync) {
+                        updateAdapters(context, listView, suggestView);
+                        if (autoSync) {
                             slHandler.removeMessages(MSG_SYNC);
                             Message syncmsg = Message.obtain(slHandler, MSG_SYNC);
-                            slHandler.sendMessageDelayed(syncmsg, 1000*autosync_time);
+                            slHandler.sendMessageDelayed(syncmsg, 1000 * autosync_time);
                         }
                         break;
 /*                    case name:
@@ -367,16 +370,17 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
                         pickList.setArguments(bundle);
                         pickList.show(ft,"dialog");
                         break;
-*/                    case del:
-                        if(vibrate)
+*/
+                    case del:
+                        if (vibrate)
                             vb.vibrate(25);
                         values.clear();
 //                        values.put("flags",(itemsSuggest.get(position).flags)|2);
-                        values.put("flags",2);
-                        values.put("last_time",getTime());
+                        values.put("flags",7);  //  set "inList", "delete" and "change" flags
+                        values.put("last_time", getTime());
                         db = itemDb.getWritableDatabase();
-                        db.update("'"+currList+"'",values,"_id="+Long.toString(dBid),null);
-                        updateAdapters(context,listView,suggestView);
+                        db.update("'" + currList + "'", values, "_id=" + Long.toString(dBid), null);
+                        updateAdapters(context, listView, suggestView);
                         break;
                 }
             }
@@ -386,7 +390,54 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
         client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
     }
 
-/*    /**
+        /**
+         * Update Frequency averages in database for item with given id.
+         *
+         * @param id     ID of currently selected item
+         * @param flags New state of flags entry
+         */
+
+        final String[] avgCols = {"last_time", "last_avg", "_id"};
+
+    public void updateAvg(long id, int flags) {
+
+        logF("start updateAvg = %d ms", System.currentTimeMillis() - time_millis);
+        if (db == null)
+            db = itemDb.getWritableDatabase();
+        Cursor curs = db.query("'" + currList + "'", avgCols, "_id=" + Long.toString(id), null, "", "", "name ASC");
+        curs.moveToFirst();
+        long last = curs.getLong(0);
+        long avg = curs.getLong(1);
+        long ct = getTime();
+        values.clear();
+        //            values.put("last_avg",(long) (0.33333*(ct-last)+0.66667*avg));
+        if (avg > 36499 * day) { // Check for "one time item"
+            db.delete("'" + currList + "'", "_id=" + Long.toString(id), null); // and delete
+        } else
+            values.put("last_avg", running_avg(ct - last, avg));
+        values.put("flags",4);  //  clear "inList" and "delete" flag, and set "changed" flag
+//        values.put("flags", Math.abs(flags));   // set flags, and dbChg true
+        values.put("last_time", ct + 1);
+        logF("last_time = %d\t current time = %d\t, last_avg = %d\t, elapsed = %d", last, ct, avg, ct - last);
+        db.update("'" + currList + "'", values, "_id=" + Long.toString(id), null);
+        updateAdapters(context, listView, suggestView);
+        logF("after updateAvg end = %d ms", System.currentTimeMillis() - time_millis);
+        curs.close();
+    }
+    /**
+     * running_avg(elapsed_time,last_avg:
+     *      Calculates new average buy time from last buy time and the last average
+     *
+     * @param elapsed_time
+     * @param last_avg
+     * @return
+     */
+    public long running_avg(long elapsed_time, long last_avg) {
+        return (long) (0.75 * elapsed_time + 0.25 * last_avg);
+    }
+
+
+    /*    /**
      * addItem(View): called from add_button ("+")
      * @param View
      */
@@ -639,52 +690,6 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
     }
 
     /**
-     * Update Frequency averages in database for item with given id.
-     *
-     * @param id     ID of currently selected item
-     * @param flags New state of flags entry
-     */
-
-    final String[] avgCols = {"last_time", "last_avg", "_id"};
-
-    public void updateAvg(long id, int flags) {
-
-        logF("start updateAvg = %d ms",System.currentTimeMillis()-time_millis);
-        if(db==null)
-            db = itemDb.getWritableDatabase();
-        Cursor curs = db.query("'"+currList+"'", avgCols, "_id=" + Long.toString(id), null, "", "", "name ASC");
-        curs.moveToFirst();
-        long last = curs.getLong(0);
-        long avg = curs.getLong(1);
-        long ct = getTime();
-        values.clear();
-        //            values.put("last_avg",(long) (0.33333*(ct-last)+0.66667*avg));
-        if (avg > 36499 * day) { // Check for "one time item"
-            db.delete("'"+currList+"'", "_id=" + Long.toString(id), null); // and delete
-        } else
-            values.put("last_avg", running_avg(ct - last, avg));
-        values.put("flags", Math.abs(flags));   // set flags, and dbChg true
-        values.put("last_time", ct+1);
-        logF("last_time = %d\t current time = %d\t, last_avg = %d\t, elapsed = %d",last,ct,avg,ct-last);
-        db.update("'"+currList+"'", values, "_id=" + Long.toString(id), null);
-        updateAdapters(context,listView,suggestView);
-        logF("after updateAvg end = %d ms",System.currentTimeMillis()-time_millis);
-        curs.close();
-    }
-
-    /**
-     * running_avg(elapsed_time,last_avg:
-     *      Calculates new average buy time from last buy time and the last average
-     *
-     * @param elapsed_time
-     * @param last_avg
-     * @return
-     */
-    public long running_avg(long elapsed_time, long last_avg) {
-        return (long) (0.75 * elapsed_time + 0.25 * last_avg);
-    }
-
-    /**
      * update Adapters:
      *      1.  Scans Shopping and Suggestions list updating
      *          the list arrays itemsList and itemsSuggest.
@@ -705,11 +710,16 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
 
     static void updateAdapters(Context context,ListView listView,ListView suggestView) {
         db = itemDb.getWritableDatabase();
-        listCursor = db.query("'"+MainActivity.currList+"'", cols, "flags=1", null, "", "", null);
+        listCursor = db.query("'"+MainActivity.currList+"'", cols, "", null, "", "", null);
+        for (listCursor.moveToFirst(); !listCursor.isAfterLast(); listCursor.moveToNext()) {
+            logF("name = %s, flags = %d", listCursor.getString(1), listCursor.getInt(2));
+        }
+        listCursor = db.query("'"+MainActivity.currList+"'", cols, "flags=1 or flags=5", null, "", "", null);
         itemsList.clear();
         int n = 0;
         long time_secs = System.currentTimeMillis()/1000;
         for (listCursor.moveToFirst(); !listCursor.isAfterLast(); listCursor.moveToNext()) {
+            logF("list name = %s, flags = %d",listCursor.getString(1),listCursor.getInt(2));
             float ratio = Math.abs(((float) (getTime()-listCursor.getLong(3)))/((float) listCursor.getLong(4)));
             if((time_secs-listCursor.getLong(3))>max_time){
                 values.clear();
@@ -727,11 +737,12 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
         listAdapter.checked = false;
         listView.setAdapter(listAdapter);
         // get cursor for suggestion list
-        suggestCursor = db.query("'"+MainActivity.currList+"'", cols, "flags=0", null, "", "",
+        suggestCursor = db.query("'"+MainActivity.currList+"'", cols, "flags=0 or flags=4", null, "", "",
                 "ratio DESC");
         itemsSuggest.clear();
         n = 0;
         for (suggestCursor.moveToFirst(); !suggestCursor.isAfterLast(); suggestCursor.moveToNext()) {
+            logF("suggest name = %s, flags = %d",suggestCursor.getString(1),suggestCursor.getInt(2));
             float ratio = Math.abs(((float) (getTime()-suggestCursor.getLong(3)))/((float) suggestCursor.getLong(4)));
             if((time_secs-suggestCursor.getLong(3))>max_time){
                 values.clear();
@@ -814,20 +825,20 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
         addItem("wine", 0, date, 30, 0.0);
     }
 
-    public static void addItem(String nm, int il, long lt, long la, double r) {
+    public static void addItem(String nm, int flgs, long lt, long la, double r) {
         values.clear();
         values.put("name", nm);
-        values.put("flags", il);
+        values.put("flags", flgs);
         values.put("last_time", lt);
         values.put("last_avg", la);
         values.put("ratio", r);
         db.insert("'"+currList+"'", null, values);
     }
 
-    public static void changeItem(String nm, int il, long lt, long la, double r, long id) {
+    public static void changeItem(String nm, int flgs, long lt, long la, double r, long id) {
         values.clear();
         values.put("name", nm);
-        values.put("flags", il);
+        values.put("flags", flgs);
         values.put("last_time", Math.abs(lt));
         values.put("last_avg", la);
         values.put("ratio", r);

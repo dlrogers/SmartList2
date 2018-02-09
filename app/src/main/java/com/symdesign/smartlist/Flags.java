@@ -13,9 +13,11 @@ public class Flags {
     boolean inList() {
         return (flgs&1)>0;
     }
-
-    boolean changed() {
+    boolean deleted() {
         return (flgs&2)>0;
+    }
+    boolean changed() {
+        return (flgs&4)>0;
     }
 
     void setList() {
