@@ -343,7 +343,7 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
                         long last = curs.getLong(0);
                         long avg = curs.getLong(1);
                         long ct = getTime();
-                        values.put("flags", 1);     // set il=1
+                        values.put("flags", 1);     // set flgs=1
                         values.put("last_time",last+1);
                         db.update("'"+currList+"'", values,
                                 "_id=" + Long.toString(dBid), null);
