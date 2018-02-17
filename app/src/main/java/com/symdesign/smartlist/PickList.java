@@ -1,5 +1,5 @@
 package com.symdesign.smartlist;
-// branch cmdsync
+
 import android.app.Activity;
 import android.app.DialogFragment;
 import android.content.ContentValues;
