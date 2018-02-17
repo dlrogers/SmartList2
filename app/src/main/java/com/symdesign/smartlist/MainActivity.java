@@ -712,14 +712,16 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
         db = itemDb.getWritableDatabase();
         listCursor = db.query("'"+MainActivity.currList+"'", cols, "", null, "", "", null);
         for (listCursor.moveToFirst(); !listCursor.isAfterLast(); listCursor.moveToNext()) {
-            logF("name = %s, flags = %d", listCursor.getString(1), listCursor.getInt(2));
+            logF("name = %s, flags = %d,_id = %d",
+                    listCursor.getString(1), listCursor.getInt(2),listCursor.getInt(0));
         }
         listCursor = db.query("'"+MainActivity.currList+"'", cols, "flags=1 or flags=5", null, "", "", null);
         itemsList.clear();
         int n = 0;
         long time_secs = System.currentTimeMillis()/1000;
         for (listCursor.moveToFirst(); !listCursor.isAfterLast(); listCursor.moveToNext()) {
-            logF("list name = %s, flags = %d",listCursor.getString(1),listCursor.getInt(2));
+            logF("list name = %s, flags = %d,_id = %d",
+                    listCursor.getString(1),listCursor.getInt(2),listCursor.getInt(0));
             float ratio = Math.abs(((float) (getTime()-listCursor.getLong(3)))/((float) listCursor.getLong(4)));
             if((time_secs-listCursor.getLong(3))>max_time){
                 values.clear();
@@ -742,7 +744,8 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
         itemsSuggest.clear();
         n = 0;
         for (suggestCursor.moveToFirst(); !suggestCursor.isAfterLast(); suggestCursor.moveToNext()) {
-            logF("suggest name = %s, flags = %d",suggestCursor.getString(1),suggestCursor.getInt(2));
+            logF("suggest name = %s, flags = %d, id = %d",
+                    suggestCursor.getString(1),suggestCursor.getInt(2),suggestCursor.getInt(0));
             float ratio = Math.abs(((float) (getTime()-suggestCursor.getLong(3)))/((float) suggestCursor.getLong(4)));
             if((time_secs-suggestCursor.getLong(3))>max_time){
                 values.clear();

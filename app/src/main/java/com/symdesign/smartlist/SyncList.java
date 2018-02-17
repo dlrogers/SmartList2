@@ -93,21 +93,30 @@ class SyncList extends AsyncTask<Void,Void,Boolean>  {
             String str = "";
             db = MainActivity.itemDb.getWritableDatabase();
             long ct = MainActivity.getTime() ;
-            cursor = db.query("'" + MainActivity.currList + "'", SLAdapter.cols, "flags=1 OR flags=3", null, "", "", null);
+            cursor = db.query("'" + MainActivity.currList + "'", SLAdapter.cols,
+                    "flags=1 OR flags=5 OR flags=3", null, "", "", null);
             for (cursor.moveToFirst(); !cursor.isAfterLast(); cursor.moveToNext()) {
                 int flgs = cursor.getInt(2);
+                int dBid = cursor.getInt(0);
                 str = String.format(Locale.getDefault(), "%s,%d,%d,%d,%.6e\n",
                         cursor.getString(1), flgs, cursor.getInt(3), cursor.getInt(4), cursor.getFloat(5));
                 bos.write(str.getBytes("UTF-8"));
                 if ((flgs & 2) > 0) { // If being deleted, delete copy in phone database
                     db.delete("'" + currList + "'", "name='" + cursor.getString(1) + "'", null);
                 }
+                if ((flgs & 4) > 0) {  // If changed bit set, clear it
+                    values.clear();
+                    values.put("flags",flgs & 3);
+                    db.update("'" + MainActivity.currList + "'",values,"_id="+Long.toString(dBid),null);
+                }
                 log(str + "\n");
 // ;
             }
-            cursor = db.query("'" + MainActivity.currList + "'", SLAdapter.cols, "flags=0 OR flags=2", null, "", "", null);
+            cursor = db.query("'" + MainActivity.currList + "'", SLAdapter.cols,
+                    "flags=0 OR flags=4 OR flags=6 OR flags=2", null, "", "", null);
             for (cursor.moveToFirst(); !cursor.isAfterLast(); cursor.moveToNext()) {
                 int flgs = cursor.getInt(2);
+                int dBid = cursor.getInt(0);
                 if (flgs == 0 || flgs == 2) {
                     str = String.format(Locale.getDefault(), "%s,%d,%d,%d,%.6e\n",
                             cursor.getString(1), flgs, cursor.getInt(3), cursor.getInt(4), cursor.getFloat(5));
@@ -115,6 +124,11 @@ class SyncList extends AsyncTask<Void,Void,Boolean>  {
                 }
                 if ((flgs & 2) > 0) { //If being deleted, delete copy in phone database
                     db.delete("'" + currList + "'", "name='" + cursor.getString(1) + "'", null);
+                }
+                if ((flgs & 4) > 0) {  // If changed bit set, clear it
+                    values.clear();
+                    values.put("flags",flgs & 3);
+                    db.update("'" + MainActivity.currList + "'",values,"_id="+Long.toString(dBid),null);
                 }
                 log(str + "\n");
             }
