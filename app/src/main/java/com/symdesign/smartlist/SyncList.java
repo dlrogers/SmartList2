@@ -1,5 +1,6 @@
 package com.symdesign.smartlist;
 
+// cmdsync branch
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
@@ -29,7 +30,6 @@ import static com.symdesign.smartlist.MainActivity.logF;
 import static com.symdesign.smartlist.MainActivity.currList;
 import static com.symdesign.smartlist.MainActivity.db;
 import static com.symdesign.smartlist.MainActivity.mainActivity;
-import static java.security.AccessController.getContext;
 
 
 /**
@@ -164,7 +164,7 @@ class SyncList extends AsyncTask<Void,Void,Boolean>  {
 //                        } else {//                           db.delete("'"+currList+"'",null,null);
 //                        }
                         break;
-                    case "i":   //Item added to server, insert into database
+                    case "i" :   //Item added to server, insert into database
                         values.clear();
                         values.put("name", cols[1]);
                         values.put("flags", cols[2]);
