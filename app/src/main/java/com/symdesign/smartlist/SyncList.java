@@ -40,7 +40,7 @@ import static com.symdesign.smartlist.MainActivity.mainActivity;
  *          "nok" if account does not exist or password is not valid
  */
 
-class SyncList extends AsyncTask<Void,Void,Boolean>  {
+class SyncList extends AsyncTask<Void,Void,Boolean> {
     static String email,passwd,list;
     private ListView listView,suggestView;
     private MainActivity activity;
