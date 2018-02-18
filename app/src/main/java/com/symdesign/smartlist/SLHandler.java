@@ -14,8 +14,13 @@ import static com.symdesign.smartlist.MainActivity.db;
 
 
 /**
- * Created by dennis on 12/10/15.
+ * @ Copyright Dennis Rogers 2/18/18
+ * Created by dennis on 1/23/18.
+ * Syncs a list on the phone with the server
+ * returns: "ok" if password was ok and sync was successful
+ *          "nok" if account does not exist or password is not valid
  */
+
 public class SLHandler extends Handler {
     Context context;
     ListView listView,suggestView;
