@@ -81,8 +81,16 @@ import static com.symdesign.smartlist.SLHandler.MSG_REPEAT;
 
 // Version of SmartList that uses file to store databae on phone
 
+/**
+ * @ Copyright Dennis Rogers 2/18/18
+ * Created by dennis on 1/23/17.
+ * Syncs a list on the phone with the server
+ * returns: "ok" if password was ok and sync was successful
+ *          "nok" if account does not exist or password is not valid
+ */
+
 public class MainActivity extends AppCompatActivity implements AdminDialog.AdminDialogListener,
-        NewListDialog.Listener, LongClickDialog.Listener, PickList.Listener, GetLists.LoginListener{
+        NewListDialog.Listener, LongClickDialog.Listener, PickList.Listener, GetLists.LoginListener {
 
     private PickList.Listener pickListener;
     static Context context;
