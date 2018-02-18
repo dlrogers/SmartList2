@@ -22,6 +22,14 @@ import static com.symdesign.smartlist.MainActivity.getTime;
  * Adapter class for main display.
  */
 
+/**
+ * @ Copyright Dennis Rogers 2/18/18
+ * Created by dennis on 1/23/18.
+ * Syncs a list on the phone with the server
+ * returns: "ok" if password was ok and sync was successful
+ *          "nok" if account does not exist or password is not valid
+ */
+
 class SLAdapter extends ArrayAdapter<Item>  {
     static ArrayList<Item> itemsList = new ArrayList<>();
     static ArrayList<Item> itemsSuggest = new ArrayList<>();
