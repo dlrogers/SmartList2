@@ -32,7 +32,7 @@ import static com.symdesign.smartlist.MainActivity.mainActivity;
 
 
 /**
- * @ Copyright Dennis Rogers 1/23/17
+ * @ Copyright Dennis Rogers 2/18/18
  * Created by dennis on 1/23/17.
  * Syncs a list on the phone with the server
  * returns: "ok" if password was ok and sync was successful
