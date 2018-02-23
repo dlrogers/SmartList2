@@ -7,8 +7,8 @@
         <option name="externalProjectPath" value="$PROJECT_DIR$" />
         <option name="modules">
           <set>
-            <option value="$USER_HOME$/Mydocs/StudioProjects/SmartList" />
-            <option value="$USER_HOME$/Mydocs/StudioProjects/SmartList/app" />
+            <option value="/ssd/local/StudioProjects/SmartList" />
+            <option value="/ssd/local/StudioProjects/SmartList/app" />
           </set>
         </option>
         <option name="resolveModulePerSourceSet" value="false" />

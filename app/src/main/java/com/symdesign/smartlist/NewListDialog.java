@@ -24,7 +24,7 @@ import static com.symdesign.smartlist.MainActivity.log;
 /**
  * Created by dennis on 10/17/16.
  *
- * Handles short taps on drawere lists
+ * Handles short taps on drawer lists
  *
  */
 

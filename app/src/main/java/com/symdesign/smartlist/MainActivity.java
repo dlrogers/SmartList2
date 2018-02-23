@@ -485,8 +485,10 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
         navList = (LinearLayout) findViewById(R.id.navList);
         newList = (Button) findViewById(R.id.newList);
         lists = (ListView) findViewById(R.id.lists);
+
 //        closeList = (Button) findViewById(R.id.closeList);
             // Create list
+
         newList.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -543,9 +545,11 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+
         // Handle action bar item clicks here. The action bar will
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
+
         FragmentManager fm=getSupportFragmentManager();
         int id = item.getItemId();
         switch (item.getItemId()) {
@@ -560,7 +564,6 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
                 return true;
             case R.id.sync:     // Sync
                 if(email.equals("no_email")){ // New user
-//                if(true){ // New user
                     AdminDialog adminDialog = new AdminDialog();
                     adminDialog.show(fm,"dialog");
                 } else {
