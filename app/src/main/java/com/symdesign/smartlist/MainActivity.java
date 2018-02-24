@@ -95,8 +95,9 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
     private PickList.Listener pickListener;
     static Context context;
     static ItemDb itemDb;
-//    static String serverAddr="http://sym-designs.com/cgi-bin//
-    static String serverAddr="http://symdesign.us/php/";
+    static String serverAddr="192.168.1.21/php/";
+//    static String serverAddr="http://sym-designs.com/php/";
+//    static String serverAddr="http://symdesign.us/php/";
     static ContentValues values = new ContentValues();
     public static SQLiteDatabase db;
     public static ListView listView, suggestView,lists;
@@ -563,7 +564,8 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
                 SpeechRecognitionHelper.run(mainActivity);
                 return true;
             case R.id.sync:     // Sync
-                if(email.equals("no_email")){ // New user
+//                if(email.equals("no_email")){ // New user
+                if(true){
                     AdminDialog adminDialog = new AdminDialog();
                     adminDialog.show(fm,"dialog");
                 } else {

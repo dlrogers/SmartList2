@@ -1,3 +1,4 @@
+auth.php	
 <?php
 // @ Copyright 2017 Dennis Rogers
 //
@@ -24,8 +25,9 @@ error_reporting(E_ALL);
 logError("starting auth");
 
 // Get username and password for mysql and log in
+
 $config = parse_ini_file("../../config/config.ini");
-$db = new mysqli('localhost','symdesig_dennis','f0rspark$');
+$db = new mysqli('localhost',$config['username'],$config['password']);
 $db->set_charset("UTF-8");
 
 // Open data stream and read in command, uid, pw, and list
@@ -54,7 +56,7 @@ if( ($rslt->fetch_assoc()) == null) {
 	$row = $rslt->fetch_assoc();
 	$id = $row['id'];
 	logError(sprintf("id = %d",$id));
-	db_query("CREATE TABLE T".sprintf("%d",$id)."(name VARCHAR(128), flags INT, last_time INT, last_avg INT, ratio REAL)");
+	db_query("CREATE TABLE T".sprintf("%d",$id)."(id int not null auto_increment, name VARCHAR(128), flags INT, last_time INT, last_avg INT, ratio REAL, primary key(id))");		
 	print("ok");
 } else {
 	logError("adding list");
