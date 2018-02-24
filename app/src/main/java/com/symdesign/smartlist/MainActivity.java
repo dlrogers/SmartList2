@@ -1,4 +1,4 @@
-// cmdsync branch version
+// cmdsync branch
 
 package com.symdesign.smartlist;
 
