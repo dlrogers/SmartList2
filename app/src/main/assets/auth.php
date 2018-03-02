@@ -1,4 +1,3 @@
-auth.php	
 <?php
 // @ Copyright 2017 Dennis Rogers
 //
@@ -16,9 +15,10 @@ auth.php
 //	else 
 //					returns "exists"
 // Set up php
-ini_set("log_errors",1) ;
-ini_set("error_log","php_error.log");
-ini_set("max_execution_time",5);
+//ini_set('display_errors','on');
+ini_set('log_errors','on');
+ini_set('error_log','php_error.log');
+ini_set('max_execution_time',5);
 //ini_set("ignore_user_abort",1);
 error_reporting(E_ALL);
 
@@ -49,6 +49,7 @@ logError($email.",".$passwd.",".$list);
 $db->query("use symdesig_smartlist");
 $rslt = $db->query("SELECT * from users where email='".$email."'");
 if($rslt ==  false) logError("rslt is false");
+if($rslt!=false){
 if( ($rslt->fetch_assoc()) == null) {
 	logError("adding email and list");
 	db_query("INSERT INTO users SET email='".$email."',passwd='".$passwd."',list='".$list."',rem=0");	
@@ -72,7 +73,9 @@ if( ($rslt->fetch_assoc()) == null) {
 	} else
 		print("exists");
 }
-
+} else 
+	print("No Database");
+	
 register_shutdown_function('shutdown');
 
 function read_data(){
@@ -89,5 +92,4 @@ function db_query($cmd) {
 function logError($str){
 	error_log($str,0);
 }
-
 ?>

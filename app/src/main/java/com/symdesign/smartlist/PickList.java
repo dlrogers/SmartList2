@@ -103,6 +103,7 @@ public class PickList extends DialogFragment implements AdapterView.OnItemSelect
         super.onCreate(savedInstanceState);
         context = getActivity();
         setListener((Listener) getActivity());
+        db = MainActivity.itemDb.getWritableDatabase();
         View pickView = inflater.inflate(R.layout.pick_list, container, false);
         ArrayAdapter<String> srchAdapter = new ArrayAdapter<String>(context,
                 R.layout.dropdown_layout,srchItems);
@@ -125,7 +126,6 @@ public class PickList extends DialogFragment implements AdapterView.OnItemSelect
         frequency.setAdapter(freq_adapter);
 //        frequency.setPopupBackgroundResource(R.drawable.dialog_bk);
         frequency.setOnItemSelectedListener(this);
-        db = MainActivity.itemDb.getWritableDatabase();
         if(inLists) {   //inLists set if called from clicking on name (already has data)
             item = getDbItem(name.toString());
             item.last_time = item.last_time+1;
@@ -392,7 +392,6 @@ public class PickList extends DialogFragment implements AdapterView.OnItemSelect
                 if (!(chr == 61551)) {      // is a Catagory
                     if (!first) {
                         pickItems.add(currItems);
-//                        first = false;
                     }
                     first = false;
                     if ((currCat = rdr.readLine()) == null) break;

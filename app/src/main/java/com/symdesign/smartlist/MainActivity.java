@@ -95,8 +95,8 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
     private PickList.Listener pickListener;
     static Context context;
     static ItemDb itemDb;
-//    static String serverAddr="http://192.168.1.21/php/";
-    static String serverAddr="http://sym-designs.com/php/";
+    static String serverAddr="http://192.168.1.21/php/";
+//    static String serverAddr="http://sym-designs.com/php/";
 //    static String serverAddr="http://symdesign.us/php/";
     static ContentValues values = new ContentValues();
     public static SQLiteDatabase db;
@@ -596,7 +596,7 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
         return super.onOptionsItemSelected(item);
     }
     @Override
-    public void onFinishAdminDialog(String nemail,String npasswd,Boolean reg) {
+    public void onFinishAdminDialog(String nemail,String npasswd,Boolean register) {
 
         if(!android.util.Patterns.EMAIL_ADDRESS.matcher(nemail).matches()) {
             showToast(getContext(), "Invalid email address!", Toast.LENGTH_LONG);
@@ -608,7 +608,7 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
                     ViewGroup.LayoutParams.WRAP_CONTENT);
             TextView textView = (TextView) popupView.findViewById(R.id.text);
             Button abortButton = (Button) popupView.findViewById(R.id.abort_button);
-            if (reg) {
+            if (register) {
                 email = nemail;
                 passwd = npasswd;
                 SharedPreferences.Editor ed = MainActivity.prefs.edit();
