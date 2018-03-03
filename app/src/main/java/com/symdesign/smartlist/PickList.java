@@ -372,6 +372,9 @@ public class PickList extends DialogFragment implements AdapterView.OnItemSelect
      * Preparing the list data
      *   Read data from "Master_Grocery_List.txt"
       *  into pickItems ArrayList
+      *
+      *  srchItems: Array of strings containing item names
+      *  catagories: Array of strings containing catagory names
      */
     public static void prepareListData() {
 
@@ -412,7 +415,7 @@ public class PickList extends DialogFragment implements AdapterView.OnItemSelect
         }
         String[] cols = {"_id","name"};
         db = MainActivity.itemDb.getWritableDatabase();
-        Cursor curs = db.query("'" + MainActivity.currList + "'", cols, "flags=0 or flags=1", null, "", "", null);
+        Cursor curs = db.query("'" + MainActivity.currList + "'", cols, "flags=0 or flags=4", null, "", "", null);
         for (curs.moveToFirst(); !curs.isAfterLast(); curs.moveToNext()) {
             String nm = curs.getString(1);
             srchItems.add(nm);
