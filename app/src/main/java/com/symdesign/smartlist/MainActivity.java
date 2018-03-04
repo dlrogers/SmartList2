@@ -114,7 +114,9 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
             "CREATE TABLE Groceries(_id INTEGER PRIMARY KEY, name TEXT, flags INT, last_time INT, last_avg INT, ratio REAL)";
         // name =       name of list item
         // flags =     flags: bito ? (in shopping list) : 1 (in suggest list)
-        //                     bit1 ? (to be deleted) : (normal)
+        //                    bit1 ? (to be deleted) : (normal)
+        //                    bit2 ? (changed since last sync) : (normal)
+        //                    bit3 ? has cloud sync id : no cloud sync id
         // last_time =  Last time item bought (in seconds since epoch
         // last_avg =   Running averate of times between buys
         // ratio =      (time since last purchase)/last_avg
