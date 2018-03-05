@@ -93,13 +93,13 @@ class SyncList extends AsyncTask<Void,Void,Boolean> {
             db = MainActivity.itemDb.getWritableDatabase();
             long ct = MainActivity.getTime() ;
             cursor = db.query("'" + MainActivity.currList + "'", SLAdapter.cols,
-                    "flags in (1,3,5,7,9,11,13,15)", null, "", "", null);
+                    null, null, "", "", null);
             for (cursor.moveToFirst(); !cursor.isAfterLast(); cursor.moveToNext()) {
                 Flags flgs = new Flags(cursor.getInt(2));
-                int dBid = cursor.getInt(0);
+                int cloudId = cursor.getInt(0);
                 if(flgs.synced()) {
                     str = String.format(Locale.getDefault(), "&s,%d,%d,%d,%d,%.6e\n",
-                            "u",flgs.bits, dBid, cursor.getInt(3),
+                            "u",flgs.bits, cloudId, cursor.getInt(3),
                             cursor.getInt(4), cursor.getFloat(5));
                 } else {
                     str = String.format(Locale.getDefault(), "%s,%d,%s,%d,%d,%.6e\n",
@@ -114,35 +114,15 @@ class SyncList extends AsyncTask<Void,Void,Boolean> {
                     flgs.clrChg();
                     values.clear();
                     values.put("flags",flgs.bits);
-                    db.update("'" + MainActivity.currList + "'",values,"_id="+Long.toString(dBid),null);
+                    db.update("'" + MainActivity.currList + "'",values,"_id="+Long.toString(cloudId),null);
                 }
                 log(str + "\n");
 // ;
             }
-            cursor = db.query("'" + MainActivity.currList + "'", SLAdapter.cols,
-                    "flags in (0,2,4,6,8,10,12,14)", null, "", "", null);
-            for (cursor.moveToFirst(); !cursor.isAfterLast(); cursor.moveToNext()) {
-                Flags flgs = new Flags(cursor.getInt(2));
-                int dBid = cursor.getInt(0);
-                if (flgs.inList() || flgs.deleted()) {
-                    str = String.format(Locale.getDefault(), "%s,%d,%d,%d,%.6e\n",
-                            cursor.getString(1), flgs.bits, cursor.getInt(3), cursor.getInt(4), cursor.getFloat(5));
-                    bos.write(str.getBytes("UTF-8"));
-                }
-                if (flgs.deleted()) { //If being deleted, delete copy in phone database
-                    db.delete("'" + currList + "'", "name='" + cursor.getString(1) + "'", null);
-                }
-                if (flgs.changed()) {  // If changed bit set, clear it
-                    flgs.clrChg();
-                    values.clear();
-                    values.put("flags",flgs.bits);
-                    db.update("'" + MainActivity.currList + "'",values,"_id="+Long.toString(dBid),null);
-                }
-                log(str + "\n");
-            }
             cursor.close();
             bos.flush();
             //          Receive items from server that are not on phone
+            //              or items that need cloudId
             is = link.getInputStream();
             BufferedReader reader = new BufferedReader(new InputStreamReader(is));
             log("Reading back from phone");

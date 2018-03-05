@@ -111,7 +111,8 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
             max_time = 60*day;
     static int scrn_width, scrn_height, VOICE_RECOGNITION_REQUEST_CODE = 2;
     static final String SQL_CREATE_GROCERIES =
-            "CREATE TABLE Groceries(_id INTEGER PRIMARY KEY, name TEXT, flags INT, last_time INT, last_avg INT, ratio REAL)";
+            "CREATE TABLE Groceries(_id INTEGER, name TEXT, flags INT, last_time INT, last_avg INT, ratio REAL)";
+        // _id          cloud id, id in cloud database
         // name =       name of list item
         // flags =     flags: bito ? (in shopping list) : 1 (in suggest list)
         //                    bit1 ? (to be deleted) : (normal)
