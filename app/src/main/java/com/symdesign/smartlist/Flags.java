@@ -18,7 +18,6 @@ public class Flags {
     public Flags(int flags){
         bits = flags;
     }
-
     public Flags() {
         bits = 0;
     }
@@ -33,7 +32,6 @@ public class Flags {
         return (bits&4)>0;
     }
     boolean synced()    { return (bits&8)>0; }
-
 
     void setList() {bits = bits | 1 ;}
     void setDeleted() {

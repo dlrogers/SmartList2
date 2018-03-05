@@ -97,13 +97,13 @@ class SyncList extends AsyncTask<Void,Void,Boolean> {
             for (cursor.moveToFirst(); !cursor.isAfterLast(); cursor.moveToNext()) {
                 Flags flgs = new Flags(cursor.getInt(2));
                 int dBid = cursor.getInt(0);
-                if(flgs.changed()) {
-                    str = String.format(Locale.getDefault(), "%d,%d,%d,%d,%.6e\n",
-                            flgs.bits, dBid, cursor.getInt(3),
+                if(flgs.synced()) {
+                    str = String.format(Locale.getDefault(), "&s,%d,%d,%d,%d,%.6e\n",
+                            "u",flgs.bits, dBid, cursor.getInt(3),
                             cursor.getInt(4), cursor.getFloat(5));
                 } else {
-                    str = String.format(Locale.getDefault(), "%d,%s,%d,%d,%.6e\n",
-                            flgs.bits, cursor.getString(1), cursor.getInt(3),
+                    str = String.format(Locale.getDefault(), "%s,%d,%s,%d,%d,%.6e\n",
+                            "a",flgs.bits, cursor.getString(1), cursor.getInt(3),
                             cursor.getInt(4), cursor.getFloat(5));
                 }
                 bos.write(str.getBytes("UTF-8"));
@@ -120,7 +120,7 @@ class SyncList extends AsyncTask<Void,Void,Boolean> {
 // ;
             }
             cursor = db.query("'" + MainActivity.currList + "'", SLAdapter.cols,
-                    "flags in (0,2,4,6,8,10,12,14", null, "", "", null);
+                    "flags in (0,2,4,6,8,10,12,14)", null, "", "", null);
             for (cursor.moveToFirst(); !cursor.isAfterLast(); cursor.moveToNext()) {
                 Flags flgs = new Flags(cursor.getInt(2));
                 int dBid = cursor.getInt(0);

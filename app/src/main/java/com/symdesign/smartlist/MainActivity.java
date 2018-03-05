@@ -566,8 +566,8 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
                 SpeechRecognitionHelper.run(mainActivity);
                 return true;
             case R.id.sync:     // Sync
-//                if(email.equals("no_email")){ // New user
-                if(true){
+                if(email.equals("no_email")){ // New user
+//                if(true){
                     AdminDialog adminDialog = new AdminDialog();
                     adminDialog.show(fm,"dialog");
                 } else {
