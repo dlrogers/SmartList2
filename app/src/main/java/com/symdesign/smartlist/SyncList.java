@@ -62,7 +62,6 @@ class SyncList extends AsyncTask<Void,Void,Boolean> {
 
     @Override
     protected Boolean doInBackground(Void... arg0) {
-
         sync(activity,email,passwd,list,listView,suggestView);
         SystemClock.sleep(2000)  ;
         return true;
@@ -161,6 +160,11 @@ class SyncList extends AsyncTask<Void,Void,Boolean> {
                         values.put("ratio", cols[5]);
                         db.insert("'" + currList + "'", null, values);
                         break;    // logF("cols changed = %d",id);
+                    case "s":   //Fetch sync id
+                        values.clear();
+                        values.put("name", cols[1]);
+                        values.put("_id", cols[2]);
+                        db.update("'" + MainActivity.currList + "'",values,"name='" + cols[1] + "'",null);
 //                log(col);
 //                String[] st = text.split(",");
                 }

@@ -259,14 +259,15 @@ public class PickList extends DialogFragment implements AdapterView.OnItemSelect
                         changeItem(item);
 */                  if(!inLists) {                // new name edited or entered directly
                         if ((item = getDbItem(formName))!=null) {      // if already in dB
-                            item.flags = 1;
-                            item.last_time+=1;  // In case cloud copy has same last_time
-                            if(freq>0)
-                                item.last_avg = freq;
-                            changeItem(item);
-                            showToast("Item added (already in lists!");
+                            if(!((item.flags&1)>0)){   // if in suggestions
+                                item.flags |= 5;       //   Mark as changed and move to list
+                                changeItem(item);
+                                showToast("Item added (already in lists!");
+                                if(freq>0)
+                                    item.last_avg = freq;
+                            }
                         } else {
-                            addItem(formName, 1, MainActivity.getTime(), 30 * MainActivity.day, 0);
+                            addItem(formName, 5, MainActivity.getTime(), 30 * MainActivity.day, 0);
                             showToast("item added!");
                         }
                     }
@@ -355,11 +356,11 @@ public class PickList extends DialogFragment implements AdapterView.OnItemSelect
         listValues.put("ratio", r);
         db.update("'"+MainActivity.currList+"'", listValues, "_id=" + Long.toString(id), null);
     }
-    public static void addItem(String nm,int il,long lt,long la,double r) {
+    public static void addItem(String nm,int flgs,long lt,long la,double r) {
         ContentValues listValues = new ContentValues();
         listValues.clear();
         listValues.put("name",nm);
-        listValues.put("flags", il);
+        listValues.put("flags", flgs);
         listValues.put("last_time", lt);
         listValues.put("last_avg", la);
         listValues.put("ratio", r);

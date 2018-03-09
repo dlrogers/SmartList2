@@ -6,9 +6,10 @@ package com.symdesign.smartlist;
 public class Item implements Comparable<Item>  {
     long id;
     String name;
-    long flags,last_time,last_avg;
+    long last_time,last_avg;
+    int flags;
     float ratio;
-    public Item(long _id,String nm,long flgs,long lt,long la,float rat) {
+    public Item(long _id,String nm,int flgs,long lt,long la,float rat) {
         this.id = _id;
         this.name = nm;
         this.flags = flgs;
