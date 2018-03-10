@@ -747,7 +747,7 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
                 db.update("'"+currList+"'", values, "_id=" + listCursor.getInt(0), null);
             } else {
                 itemsList.add(new Item(listCursor.getLong(0), listCursor.getString(1),
-                        listCursor.getLong(2), listCursor.getLong(3), listCursor.getLong(4),
+                        listCursor.getInt(2), listCursor.getLong(3), listCursor.getLong(4),
                         ratio));
                 n++;
             }
@@ -771,7 +771,7 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
                 db.update("'"+currList+"'", values, "_id=" + suggestCursor.getInt(0), null);
             } else {
                 itemsSuggest.add(new Item(suggestCursor.getLong(0), suggestCursor.getString(1),
-                        suggestCursor.getLong(2), suggestCursor.getLong(3), suggestCursor.getLong(4),
+                        suggestCursor.getInt(2), suggestCursor.getLong(3), suggestCursor.getLong(4),
                         ratio));
                 n++;
             }

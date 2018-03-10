@@ -129,7 +129,6 @@ class SyncList extends AsyncTask<Void,Void,Boolean> {
             if (!(ans.equals("ok")))
                 log("Sync failed!");
             while (null != (col = reader.readLine())) {
-//                log(col);
                 col = col.replaceAll("\n", "");
                 String[] cols = col.split(",");
                 switch (cols[0]) {
@@ -138,18 +137,13 @@ class SyncList extends AsyncTask<Void,Void,Boolean> {
                         db.delete("'" + currList + "'", "name='" + cols[1] + "'", null);
                         break;
                     case "u":   //Time changed on server, update item
-//                        int delbit = (Integer.parseInt(cols[2]))&2;
-//                        if(delbit<1) {
                         values.clear();
                         values.put("name", cols[1]);
                         values.put("flags", cols[2]);
                         values.put("last_time", cols[3]);
                         values.put("last_avg", cols[4]);
                         values.put("ratio", cols[5]);
-//                            log("name='"+cols[1]+"'");
                         db.update("'" + currList + "'", values, "name='" + cols[1] + "'", null);
-//                        } else {//                           db.delete("'"+currList+"'",null,null);
-//                        }
                         break;
                     case "i":   //Item added to server, insert into database
                         values.clear();
@@ -162,11 +156,9 @@ class SyncList extends AsyncTask<Void,Void,Boolean> {
                         break;    // logF("cols changed = %d",id);
                     case "s":   //Fetch sync id
                         values.clear();
-                        values.put("name", cols[1]);
                         values.put("_id", cols[2]);
-                        db.update("'" + MainActivity.currList + "'",values,"name='" + cols[1] + "'",null);
-//                log(col);
-//                String[] st = text.split(",");
+                        db.update("'" + currList + "'", values, "name=" + cols[1], null);
+                        break;
                 }
             }
             db = MainActivity.itemDb.getWritableDatabase();
@@ -193,9 +185,8 @@ class SyncList extends AsyncTask<Void,Void,Boolean> {
                 mainActivity.popupWindow = null;
             }
             errmsg = "Connection failed";
-        } finally {
-            log("Disconnecting Sync");
         }
+        log("Disconnecting Sync");
     }
     @Override
     protected void onPreExecute() {
