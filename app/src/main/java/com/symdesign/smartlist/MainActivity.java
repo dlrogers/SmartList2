@@ -121,7 +121,7 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
         // last_time =  Last time item bought (in seconds since epoch
         // last_avg =   Running averate of times between buys
         // ratio =      (time since last purchase)/last_avg
-    static final String SQL_LISTS = "CREATE TABLE lists(_id INTEGER PRIMARY KEY, name TEXT)";
+    static final String SQL_LISTS = "CREATE TABLE lists(_id INTEGER, name TEXT)";
     static AssetManager assetManager;
     static Toast toast;
     static ArrayList<String> deleteList = new ArrayList<>();
@@ -354,7 +354,6 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
                         time_millis = System.currentTimeMillis();
                         if (vibrate)
                             vb.vibrate(25);
-//                        final String[] avgCols = {"last_time", "last_avg", "flags"};
                         Cursor curs = db.query("'" + currList + "'", avgCols, "_id=" + Long.toString(dBid), null, "", "", "name ASC");
                         curs.moveToFirst();
                         long last = curs.getLong(0);
@@ -733,21 +732,21 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
             logF("name = %s, flags = %d,_id = %d",
                     listCursor.getString(1), listCursor.getInt(2),listCursor.getInt(0));
         }
-        listCursor = db.query("'"+MainActivity.currList+"'", cols, "flags=1 or flags=5", null, "", "", null);
+        listCursor = db.query("'"+MainActivity.currList+"'", cols, "flags in (1,3,5,7,9,11,13,15)", null, "", "", null);
         itemsList.clear();
         int n = 0;
         long time_secs = System.currentTimeMillis()/1000;
         for (listCursor.moveToFirst(); !listCursor.isAfterLast(); listCursor.moveToNext()) {
-            logF("list name = %s, flags = %d,_id = %d",
-                    listCursor.getString(1),listCursor.getInt(2),listCursor.getInt(0));
+//            logF("list name = %s, flags = %d,_id = %d",
+//                    listCursor.getString(1),listCursor.getInt(2),listCursor.getInt(0));
             float ratio = Math.abs(((float) (getTime()-listCursor.getLong(3)))/((float) listCursor.getLong(4)));
             if((time_secs-listCursor.getLong(3))>max_time){
                 values.clear();
                 values.put("flags",2|listCursor.getInt(2));
                 db.update("'"+currList+"'", values, "_id=" + listCursor.getInt(0), null);
             } else {
-                itemsList.add(new Item(listCursor.getLong(0), listCursor.getString(1),
-                        listCursor.getInt(2), listCursor.getLong(3), listCursor.getLong(4),
+                itemsList.add(new Item(listCursor.getInt(0), listCursor.getString(1),
+                        listCursor.getInt(2), listCursor.getInt(3), listCursor.getInt(4),
                         ratio));
                 n++;
             }
@@ -757,21 +756,21 @@ public class MainActivity extends AppCompatActivity implements AdminDialog.Admin
         listAdapter.checked = false;
         listView.setAdapter(listAdapter);
         // get cursor for suggestion list
-        suggestCursor = db.query("'"+MainActivity.currList+"'", cols, "flags=0 or flags=4", null, "", "",
+        suggestCursor = db.query("'"+MainActivity.currList+"'", cols, "flags in (2,4,6,8,10,12,14)", null, "", "",
                 "ratio DESC");
         itemsSuggest.clear();
         n = 0;
         for (suggestCursor.moveToFirst(); !suggestCursor.isAfterLast(); suggestCursor.moveToNext()) {
-            logF("suggest name = %s, flags = %d, id = %d",
-                    suggestCursor.getString(1),suggestCursor.getInt(2),suggestCursor.getInt(0));
+//            logF("suggest name = %s, flags = %d, id = %d",
+//                    suggestCursor.getString(1),suggestCursor.getInt(2),suggestCursor.getInt(0));
             float ratio = Math.abs(((float) (getTime()-suggestCursor.getLong(3)))/((float) suggestCursor.getLong(4)));
             if((time_secs-suggestCursor.getLong(3))>max_time){
                 values.clear();
                 values.put("flags",2|suggestCursor.getInt(2));
                 db.update("'"+currList+"'", values, "_id=" + suggestCursor.getInt(0), null);
             } else {
-                itemsSuggest.add(new Item(suggestCursor.getLong(0), suggestCursor.getString(1),
-                        suggestCursor.getInt(2), suggestCursor.getLong(3), suggestCursor.getLong(4),
+                itemsSuggest.add(new Item(suggestCursor.getInt(0), suggestCursor.getString(1),
+                        suggestCursor.getInt(2), suggestCursor.getInt(3), suggestCursor.getInt(4),
                         ratio));
                 n++;
             }
