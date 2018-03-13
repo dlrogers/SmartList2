@@ -22,6 +22,7 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Locale;
+import java.util.Scanner;
 
 import static com.symdesign.smartlist.LoginSettings.popupWindow;
 import static com.symdesign.smartlist.MainActivity.log;
@@ -75,6 +76,7 @@ class SyncList extends AsyncTask<Void,Void,Boolean> {
         try {       // Send post request
             log("starting SyncList");
             long lastTime = System.currentTimeMillis();
+
             url = new URL(MainActivity.serverAddr + "sync.php");
             HttpURLConnection link = (HttpURLConnection) url.openConnection();
             link.setRequestMethod("POST");
@@ -90,19 +92,20 @@ class SyncList extends AsyncTask<Void,Void,Boolean> {
             //          Send list items to server
             String str = "";
             db = MainActivity.itemDb.getWritableDatabase();
-            long ct = MainActivity.getTime() ;
+            long ct = MainActivity.getTime();
             cursor = db.query("'" + MainActivity.currList + "'", SLAdapter.cols,
                     null, null, "", "", null);
             for (cursor.moveToFirst(); !cursor.isAfterLast(); cursor.moveToNext()) {
+                int tmp = cursor.getInt(2);
                 Flags flgs = new Flags(cursor.getInt(2));
                 int cloudId = cursor.getInt(0);
-                if(flgs.synced()) {
-                    str = String.format(Locale.getDefault(), "&s,%d,%d,%d,%d,%.6e\n",
-                            "u",flgs.bits, cloudId, cursor.getInt(3),
+                if (flgs.synced()) {
+                    str = String.format(Locale.getDefault(), "%s,%d,%d,%d,%d,%.6e\n",
+                            "u", flgs.bits, cloudId, cursor.getInt(3),
                             cursor.getInt(4), cursor.getFloat(5));
                 } else {
                     str = String.format(Locale.getDefault(), "%s,%d,%s,%d,%d,%.6e\n",
-                            "a",flgs.bits, cursor.getString(1), cursor.getInt(3),
+                            "a", flgs.bits, cursor.getString(1), cursor.getInt(3),
                             cursor.getInt(4), cursor.getFloat(5));
                 }
                 bos.write(str.getBytes("UTF-8"));
@@ -112,11 +115,10 @@ class SyncList extends AsyncTask<Void,Void,Boolean> {
                 if (flgs.changed()) {  // If changed bit set, clear it
                     flgs.clrChg();
                     values.clear();
-                    values.put("flags",flgs.bits);
-                    db.update("'" + MainActivity.currList + "'",values,"_id="+Long.toString(cloudId),null);
+                    values.put("flags", flgs.bits);
+                    db.update("'" + MainActivity.currList + "'", values, "_id=" + Long.toString(cloudId), null);
                 }
                 log(str + "\n");
-// ;
             }
             cursor.close();
             bos.flush();
@@ -154,14 +156,17 @@ class SyncList extends AsyncTask<Void,Void,Boolean> {
                         values.put("ratio", cols[5]);
                         db.insert("'" + currList + "'", null, values);
                         break;    // logF("cols changed = %d",id);
-                    case "s":   //Fetch sync id
+                    case "s":   //Update sync id
+                        String tmp = cols[2];
+                        int flg = new Scanner(cols[3]).nextInt();
+                        flg = flg | 8;
                         values.clear();
                         values.put("_id", cols[2]);
-                        db.update("'" + currList + "'", values, "name=" + cols[1], null);
+                        db.update("'" + MainActivity.currList + "'", values, "name='" + cols[1] + "'", null);
                         break;
                 }
             }
-            db = MainActivity.itemDb.getWritableDatabase();
+            db = MainActivity.itemDb.getWritableDatabase() ;
             Cursor rows = db.query("'" + currList + "'", new String[]{"name", "flags"}, "flags=1", null, null, null, null);
             for (rows.moveToFirst(); !rows.isAfterLast(); rows.moveToNext()) {
 //                logF("name = %s, flags = %d",rows.getString(0),rows.getInt(1));
@@ -180,7 +185,7 @@ class SyncList extends AsyncTask<Void,Void,Boolean> {
                 log(e.getStackTrace()[i].toString());
                 log(String.format(Locale.getDefault(), "    line no. = %d", e.getStackTrace()[i].getLineNumber()));
             }
-            if(mainActivity.popupWindow!=null) {
+            if (mainActivity.popupWindow != null) {
                 mainActivity.popupWindow.dismiss();
                 mainActivity.popupWindow = null;
             }
@@ -189,25 +194,25 @@ class SyncList extends AsyncTask<Void,Void,Boolean> {
         log("Disconnecting Sync");
     }
     @Override
-    protected void onPreExecute() {
+    protected void onPreExecute () {
         super.onPreExecute();
     }
 
     @Override
-    protected void onPostExecute(Boolean exists) {
-        MainActivity.updateAdapters(context,listView,suggestView);
-        if(mainActivity.popupWindow!=null) {
+    protected void onPostExecute (Boolean exists){
+        MainActivity.updateAdapters(context, listView, suggestView);
+        if (mainActivity.popupWindow != null) {
             mainActivity.popupWindow.dismiss();
             mainActivity.popupWindow = null;
         }
-        if(errmsg!=null){
-            Toast toast = Toast.makeText(context,errmsg,Toast.LENGTH_LONG);
+        if (errmsg != null) {
+            Toast toast = Toast.makeText(context, errmsg, Toast.LENGTH_LONG);
             toast.setGravity(Gravity.TOP, toast.getXOffset() / 2, toast.getYOffset() / 2);
             TextView textView = new TextView(context);
             textView.setBackgroundColor(Color.MAGENTA);
             textView.setTextColor(Color.WHITE);
             textView.setTextSize(20);
-            Typeface typeface = Typeface.create("serif",Typeface.BOLD);
+            Typeface typeface = Typeface.create("serif", Typeface.BOLD);
             textView.setTypeface(typeface);
             textView.setPadding(4, 4, 4, 4);
             textView.setText(errmsg);
@@ -217,3 +222,4 @@ class SyncList extends AsyncTask<Void,Void,Boolean> {
         log("SyncList finished");
     }
 }
+
